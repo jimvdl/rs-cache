@@ -15,3 +15,6 @@ path = "src/lib.rs"
 crc = "1.8.1"
 bzip2 = "0.3.3"
 libflate = "0.1.27"
+
+[dev-dependencies]
+sha1 = "0.6.0"

@@ -53,7 +53,7 @@ impl Cache {
             None => return Err(ReadError::ArchiveNotFound(archive_id, index_id))
         };
 
-		Ok(self.main_data.read(archive.sector, archive.length))
+        Ok(self.main_data.read(archive.sector, archive.length))
     }
 
     #[inline]

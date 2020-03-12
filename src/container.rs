@@ -62,6 +62,7 @@ impl Container {
 		Ok(Self::new(compression, buffer, revision))
 	}
 
+	// TODO: improve performance
 	#[inline]
 	pub fn encode(&self) -> Result<Vec<u8>, CacheError> {
 		let compressed_data = match self.compression {
