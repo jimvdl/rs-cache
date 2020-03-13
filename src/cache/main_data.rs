@@ -4,8 +4,9 @@ pub const SECTOR_HEADER_SIZE: usize = 8;
 pub const SECTOR_DATA_SIZE: usize = 512;
 pub const SECTOR_SIZE: usize = SECTOR_HEADER_SIZE + SECTOR_DATA_SIZE;
 
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct MainData {
-	pub data: Vec<u8>,
+	data: Vec<u8>,
 }
 
 impl MainData {

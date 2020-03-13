@@ -25,6 +25,7 @@ use std::{
 pub const MAIN_FILE_CACHE_DAT: &str = "main_file_cache.dat2";
 pub const MAIN_FILE_CACHE_IDX: &str = "main_file_cache.idx";
 
+#[derive(Clone, Debug, Default)]
 pub struct Cache {
     main_data: MainData,
 	indices: HashMap<u8, Index>
@@ -48,7 +49,7 @@ impl Cache {
             None => return Err(ReadError::IndexNotFound(index_id))
         };
 
-        let archive = match index.get_archive(archive_id) {
+        let archive = match index.archive(archive_id) {
             Some(archive) => archive,
             None => return Err(ReadError::ArchiveNotFound(archive_id, index_id))
         };
@@ -80,7 +81,7 @@ impl Cache {
 
                     checksum.push(Entry { 
                         crc: crc32::checksum_ieee(&buffer), 
-                        revision: get_index_version(container_data)?
+                        revision: index_version(container_data)?
                     });
                 }
             };
@@ -126,7 +127,7 @@ fn load_indices(path: &Path) -> Result<HashMap<u8, Index>, CacheError> {
 	Ok(indices)
 }
 
-fn get_index_version(buffer: &[u8]) -> io::Result<u32> {
+fn index_version(buffer: &[u8]) -> io::Result<u32> {
     let format = buffer[0];
 
     let version = if format >= 6 {

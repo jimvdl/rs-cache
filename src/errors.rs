@@ -44,7 +44,7 @@ impl fmt::Display for CacheError {
 	}
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum ReadError {
 	IndexNotFound(u8),
 	ArchiveNotFound(u8, u8),
@@ -66,7 +66,7 @@ impl fmt::Display for ReadError {
 	}
 }
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum CompressionError {
 	UnsupportedType(u8),
 	LengthMismatch(usize, usize),

@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Archive {
     pub sector: u32,
     pub length: usize

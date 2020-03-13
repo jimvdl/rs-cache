@@ -12,7 +12,7 @@ use libflate::gzip::{
 
 use crate::CacheError;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum CompressionType {
 	None,
 	Bzip2,
@@ -30,7 +30,7 @@ impl From<u8> for CompressionType {
 	}
 }
 
-#[derive(Debug)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Container {
 	pub compression: CompressionType,
 	pub data: Vec<u8>,
@@ -62,7 +62,6 @@ impl Container {
 		Ok(Self::new(compression, buffer, revision))
 	}
 
-	// TODO: improve performance
 	#[inline]
 	pub fn encode(&self) -> Result<Vec<u8>, CacheError> {
 		let compressed_data = match self.compression {

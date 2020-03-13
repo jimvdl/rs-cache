@@ -6,7 +6,7 @@ pub struct Entry {
     pub revision: u32,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug, Default)]
 pub struct Checksum {
     entries: Vec<Entry>
 }

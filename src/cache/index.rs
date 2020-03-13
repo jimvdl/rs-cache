@@ -4,9 +4,9 @@ use super::archive::Archive;
 
 pub const INDEX_LENGTH: usize = 6;
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Index {
-	pub archives: HashMap<u8, Archive>,
+	archives: HashMap<u8, Archive>,
 }
 
 impl Index {
@@ -28,7 +28,7 @@ impl Index {
 	}
 
 	#[inline]
-	pub fn get_archive(&self, archive_id: u8) -> Option<&Archive> {
+	pub fn archive(&self, archive_id: u8) -> Option<&Archive> {
 		self.archives.get(&archive_id)
 	}
 }
