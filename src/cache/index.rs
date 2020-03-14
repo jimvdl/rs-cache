@@ -15,16 +15,11 @@ impl Index {
 		let mut archives = HashMap::new();
 
 		for (id, archive_metadata) in buffer.chunks_exact(INDEX_LENGTH).enumerate() {
-			let index_entry = parse_archive(archive_metadata);
-			archives.insert(id as u8, index_entry);
+			let archive = parse_archive(archive_metadata);
+			archives.insert(id as u8, archive);
 		}
 
         Self { archives }
-	}
-
-	#[inline]
-	pub fn archive_count(&self) -> usize {
-		self.archives.len()
 	}
 
 	#[inline]

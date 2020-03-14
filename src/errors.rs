@@ -59,7 +59,7 @@ impl fmt::Display for ReadError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			Self::IndexNotFound(id) => write!(f, "Index {} was not found.", id),
-			Self::ArchiveNotFound(archive_id, index_id) => write!(f, "Archive {} not found in index {}.", archive_id, index_id),
+			Self::ArchiveNotFound(index_id, archive_id) => write!(f, "Index {} does not contain archive {}.", index_id, archive_id),
 			Self::WhirlpoolUnsupported() => write!(f, "Whirlpool is currently unsupported."),
 			Self::RefTblEntryNotFound(id) => write!(f, "Reference Table Entry {} not found.", id),
 		}

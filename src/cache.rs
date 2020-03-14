@@ -4,6 +4,7 @@ mod archive;
 
 use main_data::MainData;
 use index::{ Index };
+use archive::{ Archive, ArchiveData };
 
 use crate::{
     errors::ReadError,
@@ -51,7 +52,7 @@ impl Cache {
 
         let archive = match index.archive(archive_id) {
             Some(archive) => archive,
-            None => return Err(ReadError::ArchiveNotFound(archive_id, index_id))
+            None => return Err(ReadError::ArchiveNotFound(index_id, archive_id))
         };
 
         Ok(self.main_data.read(archive.sector, archive.length))
@@ -60,23 +61,19 @@ impl Cache {
     #[inline]
     pub fn create_checksum(&self) -> Result<Checksum, CacheError> {
         let mut checksum = Checksum::new();
-        let ref_table = match self.indices.get(&255) {
-            Some(ref_table) => ref_table,
-            None => return Err(ReadError::IndexNotFound(255).into()),
-        };
 
-        for archive_id in 0..ref_table.archive_count() as u8 {
-            if archive_id == 16 {
+        for index_id in 0..self.index_count() as u8 {
+            if index_id == 16 {
                 checksum.push(Entry { crc: 0, revision: 0 });
                 continue;
             }
 
-            if let Ok(buffer) = &self.read(255, archive_id) {	
+            if let Ok(buffer) = &self.read(255, index_id) {	
                 let buffer = buffer.to_vec();
 
                 if !buffer.is_empty() {
                     let mut buf = buffer[..].as_ref();
-                    let container = Container::decode(&mut buf)?;
+                    let container = Container::decompress(&mut buf)?;
                     let container_data = container.data();
 
                     checksum.push(Entry { 
@@ -91,9 +88,40 @@ impl Cache {
     }
 
     #[inline]
-    pub fn huffman_table(&self) -> &Vec<u8> {
-        unimplemented!()
+    pub fn huffman_table(&self) -> Result<Vec<u8>, CacheError> {
+        let index_id = 10;
+        let archive = self.archive_by_name(index_id, "huffman")?;
+
+        let mut buffer = &self.main_data.read(archive.sector, archive.length).to_vec()[..];
+		let container = Container::decompress(&mut buffer)?;
+		
+		Ok(container.data().to_vec())
     }
+
+    #[inline]
+	pub fn archive_by_name(&self, index_id: u8, name: &str) -> Result<Archive, CacheError> {
+        let index = match self.indices.get(&index_id) {
+            Some(index) => index,
+            None => return Err(ReadError::IndexNotFound(index_id).into())
+        };
+        let identifier = djd2::hash(name);
+
+        let mut buffer = &self.read(255, index_id)?.to_vec()[..];
+        let container = Container::decompress(&mut buffer)?;
+
+        let archives = ArchiveData::decode(&mut container.data())?;
+
+        for archive_data in archives {
+            if archive_data.identifier == identifier {
+                match index.archive(archive_data.id as u8) {
+                    Some(archive) => return Ok(*archive),
+                    None => return Err(ReadError::ArchiveNotFound(index_id, archive_data.id as u8).into()),
+                }
+            }
+        }
+
+        Err(ReadError::ArchiveNotFound(index_id, 0).into())
+	}
 
     #[inline]
     pub fn index_count(&self) -> usize {
@@ -137,4 +165,14 @@ fn index_version(buffer: &[u8]) -> io::Result<u32> {
     };
 
     Ok(version)
+}
+
+mod djd2 {
+    pub fn hash(string: &str) -> i32 {
+        let mut hash = 0;
+        for index in 0..string.len() {
+            hash = string.chars().nth(index).unwrap() as i32 + ((hash << 5) - hash);
+        }
+        hash
+    }
 }

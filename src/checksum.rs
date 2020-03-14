@@ -40,6 +40,6 @@ impl Checksum {
             buffer.extend_from_slice(&u32::to_be_bytes(entry.revision));
         }
 
-		Ok(Container::new(CompressionType::None, buffer, -1).encode()?)
+		Ok(Container::new(CompressionType::None, buffer, -1).compress()?)
     }
 }

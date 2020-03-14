@@ -63,15 +63,16 @@ fn validate_checksum() {
     assert_eq!(true, valid);
 }
 
-// #[test]
-// fn get_huffman_table() {
-//     let cache = setup();
+#[test]
+fn get_huffman_table() {
+    let cache = setup();
 
-//     let huffman_table = cache.huffman_table();
+    let huffman_table = cache.huffman_table().unwrap().to_vec();
+    println!("{:?} {}", &huffman_table[..50], huffman_table.len());
 
-//     let mut m = sha1::Sha1::new();
-//     m.update(&huffman_table);
+    let mut m = sha1::Sha1::new();
+    m.update(&huffman_table);
 
-//     assert_eq!("10664786762202039525", &m.digest().to_string());
-//     assert_eq!(173, huffman_table.len());
-// }
+    assert_eq!("664e89cf25a0af7da138dd0f3904ca79cd1fe767", &m.digest().to_string());
+    assert_eq!(256, huffman_table.len());
+}

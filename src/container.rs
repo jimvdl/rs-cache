@@ -44,7 +44,7 @@ impl Container {
 	}
 
 	#[inline]
-	pub fn decode<R: Read>(reader: &mut R) -> Result<Self, CacheError> {
+	pub fn decompress<R: Read>(reader: &mut R) -> Result<Self, CacheError> {
 		let mut buf = [0; 1];
 		reader.read_exact(&mut buf)?;
 		let compression: CompressionType = buf[0].into();
@@ -63,7 +63,7 @@ impl Container {
 	}
 
 	#[inline]
-	pub fn encode(&self) -> Result<Vec<u8>, CacheError> {
+	pub fn compress(&self) -> Result<Vec<u8>, CacheError> {
 		let compressed_data = match self.compression {
 			CompressionType::None => self.data.clone(),
 			CompressionType::Bzip2 => compress_bzip2(self.data.clone())?,
