@@ -2,7 +2,7 @@ use rscache::Cache;
 use rscache::CacheError;
 
 fn main() -> Result<(), CacheError> {
-    let cache = Cache::new("./tests/cache")?;
+    let cache = Cache::new("./data/cache")?;
     let checksum = cache.create_checksum()?;
 
     let crcs = vec![1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 686540367, 

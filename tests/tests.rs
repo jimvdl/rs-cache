@@ -1,7 +1,7 @@
 use rscache::{ Cache, LinkedListExt };
 
 fn setup() -> Cache {
-    Cache::new("./tests/cache").expect("Error loading cache")
+    Cache::new("./data/cache").expect("Error loading cache")
 }
 
 #[test]

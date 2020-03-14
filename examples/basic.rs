@@ -2,7 +2,7 @@ use rscache::Cache;
 use rscache::CacheError;
 
 fn main() -> Result<(), CacheError> {
-    let cache = Cache::new("./tests/cache")?;
+    let cache = Cache::new("./data/cache")?;
 
     let index_id = 2; // Config index.
     let archive_id = 10; // random archive.
