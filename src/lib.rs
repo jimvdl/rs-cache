@@ -78,11 +78,11 @@
 mod cache;
 mod checksum;
 mod errors;
-mod container;
 mod traits;
+pub mod compression;
 
 pub use cache::Cache;
 pub use checksum::Checksum;
 pub use errors::*;
 pub use traits::*;
-pub use container::{ Container, CompressionType };
+pub use compression::*;

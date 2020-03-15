@@ -10,8 +10,8 @@ use crate::{
     errors::ReadError,
     Checksum, CacheError,
     checksum::Entry,
-    Container,
-    LinkedListExt
+    LinkedListExt,
+    compression
 };
 
 use crc::crc32;
@@ -73,12 +73,11 @@ impl Cache {
 
                 if !buffer.is_empty() {
                     let mut buf = buffer[..].as_ref();
-                    let container = Container::decompress(&mut buf)?;
-                    let container_data = container.data();
+                    let data = compression::decompress(&mut buf)?;
 
                     checksum.push(Entry { 
                         crc: crc32::checksum_ieee(&buffer), 
-                        revision: index_version(container_data)?
+                        revision: index_version(&data)?
                     });
                 }
             };
@@ -93,9 +92,8 @@ impl Cache {
         let archive = self.archive_by_name(index_id, "huffman")?;
 
         let mut buffer = &self.main_data.read(archive.sector, archive.length).to_vec()[..];
-		let container = Container::decompress(&mut buffer)?;
 		
-		Ok(container.data().to_vec())
+		Ok(compression::decompress(&mut buffer)?)
     }
 
     #[inline]
@@ -107,9 +105,9 @@ impl Cache {
         let identifier = djd2::hash(name);
 
         let mut buffer = &self.read(255, index_id)?.to_vec()[..];
-        let container = Container::decompress(&mut buffer)?;
+        let mut data = &compression::decompress(&mut buffer)?[..];
 
-        let archives = ArchiveData::decode(&mut container.data())?;
+        let archives = ArchiveData::decode(&mut data)?;
 
         for archive_data in archives {
             if archive_data.identifier == identifier {

@@ -3,7 +3,6 @@ use std::io::{ self, Read };
 use bzip2::{
 	read::BzDecoder,
 	write::BzEncoder,
-	Compression,
 };
 use libflate::gzip::{
 	Decoder,
@@ -13,13 +12,13 @@ use libflate::gzip::{
 use crate::CacheError;
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-pub enum CompressionType {
+pub enum Compression {
 	None,
 	Bzip2,
 	Gzip
 }
 
-impl From<u8> for CompressionType {
+impl From<u8> for Compression {
 	#[inline]
 	fn from(compression: u8) -> Self {
 		match compression {
@@ -31,76 +30,58 @@ impl From<u8> for CompressionType {
 	}
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-pub struct Container {
-	pub compression: CompressionType,
-	pub data: Vec<u8>,
-	pub revision: i16,
+#[inline]
+pub fn compress(compression: Compression, data: &[u8], revision: Option<i16>) -> Result<Vec<u8>, CacheError> {
+	let compressed_data = match compression {
+		Compression::None => data.to_owned(),
+		Compression::Bzip2 => compress_bzip2(data)?,
+		Compression::Gzip => compress_gzip(data)?,
+	};
+
+	let mut buffer = Vec::new();
+	buffer.push(compression as u8);
+	buffer.extend_from_slice(&u32::to_be_bytes(compressed_data.len() as u32));
+	
+	if compression != Compression::None {
+		buffer.extend_from_slice(&u32::to_be_bytes(data.len() as u32));
+	}
+
+	buffer.extend(compressed_data);
+
+	let revision = revision.unwrap_or(-1);
+	if revision != -1 {
+		buffer.extend_from_slice(&i16::to_be_bytes(revision));
+	}
+
+	Ok(buffer)
 }
 
-impl Container {
-	#[inline]
-	pub fn new(compression: CompressionType, data: Vec<u8>, revision: i16) -> Self {
-		Self { compression, data, revision }
-	}
+#[inline]
+pub fn decompress<R: Read>(reader: &mut R) -> Result<Vec<u8>, CacheError> {
+	let mut buf = [0; 1];
+	reader.read_exact(&mut buf)?;
+	let compression: Compression = buf[0].into();
 
-	#[inline]
-	pub fn compress(&self) -> Result<Vec<u8>, CacheError> {
-		let compressed_data = match self.compression {
-			CompressionType::None => self.data.clone(),
-			CompressionType::Bzip2 => compress_bzip2(self.data.clone())?,
-			CompressionType::Gzip => compress_gzip(self.data.clone())?,
-		};
+	let mut buf = [0; 4];
+	reader.read_exact(&mut buf)?;
+	let len = u32::from_be_bytes(buf) as usize;
 
-		let mut buffer = Vec::new();
-		buffer.push(self.compression as u8);
-		buffer.extend_from_slice(&u32::to_be_bytes(compressed_data.len() as u32));
-		
-		if self.compression != CompressionType::None {
-			buffer.extend_from_slice(&u32::to_be_bytes(self.data.len() as u32));
-		}
+	let (_revision, buffer) = match compression {
+		Compression::None => decompress_none(reader, len)?,
+		Compression::Bzip2 => decompress_bzip2(reader, len)?,
+		Compression::Gzip => decompress_gzip(reader, len)?,
+	};
 
-		buffer.extend(compressed_data);
-
-		if self.revision != -1 {
-			buffer.extend_from_slice(&i16::to_be_bytes(self.revision));
-		}
-
-		Ok(buffer)
-	}
-
-	#[inline]
-	pub fn decompress<R: Read>(reader: &mut R) -> Result<Self, CacheError> {
-		let mut buf = [0; 1];
-		reader.read_exact(&mut buf)?;
-		let compression: CompressionType = buf[0].into();
-
-		let mut buf = [0; 4];
-		reader.read_exact(&mut buf)?;
-		let len = u32::from_be_bytes(buf) as usize;
-
-		let (revision, buffer) = match compression {
-			CompressionType::None => decompress_none(reader, len)?,
-			CompressionType::Bzip2 => decompress_bzip2(reader, len)?,
-			CompressionType::Gzip => decompress_gzip(reader, len)?,
-		};
-
-		Ok(Self::new(compression, buffer, revision))
-	}
-
-	#[inline]
-	pub fn data(&self) -> &[u8] {
-		&self.data[..]
-	}
+	Ok(buffer)
 }
 
-fn compress_bzip2(data: Vec<u8>) -> Result<Vec<u8>, io::Error> {
-	let compressor = Encoder::new(data)?;
+fn compress_bzip2(data: &[u8]) -> Result<Vec<u8>, io::Error> {
+	let compressor = Encoder::new(data.to_owned())?;
 	compressor.finish().into_result()
 }
 
-fn compress_gzip(data: Vec<u8>) -> Result<Vec<u8>, io::Error> {
-	let compressor = BzEncoder::new(data, Compression::Default);
+fn compress_gzip(data: &[u8]) -> Result<Vec<u8>, io::Error> {
+	let compressor = BzEncoder::new(data.to_owned(), bzip2::Compression::Default);
 	let mut compressed_data = compressor.finish()?;
 	compressed_data.drain(0..4);
 

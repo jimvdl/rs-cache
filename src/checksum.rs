@@ -1,4 +1,4 @@
-use crate::{ CacheError, Container, CompressionType };
+use crate::{ CacheError, Compression, compression };
 
 #[derive(Debug, Clone)]
 pub struct Entry {
@@ -40,6 +40,6 @@ impl Checksum {
             buffer.extend_from_slice(&u32::to_be_bytes(entry.revision));
         }
 
-		Ok(Container::new(CompressionType::None, buffer, -1).compress()?)
+        Ok(compression::compress(Compression::None, &buffer, None)?)
     }
 }
