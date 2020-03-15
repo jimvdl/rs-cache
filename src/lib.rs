@@ -59,7 +59,7 @@
 //! 
 //! for data_block in buffer.iter() {
 //!     // data_block contains 512 byte slices that directly link into the MainData buffer.
-//!     // this can be useful when formatting the buffer before sending it to the client.
+//!     // this can be useful when creating a new formatted buffer.
 //! }
 //! #    Ok(())
 //! # }
