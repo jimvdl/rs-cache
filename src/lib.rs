@@ -18,18 +18,24 @@
 //! and get the correct data to send to the client.
 //! 
 //! ```rust
+//! # use std::net::TcpStream;
+//! # use std::io::Write;
 //! use rscache::{ Cache, CacheError, LinkedListExt };
-//! 
-//! let cache = Cache::new("path/to/cache")?;
+//! # struct UpdatePacket { 
+//! #   pub index_id: u8,
+//! #   pub archive_id: u8
+//! # }
 //! 
 //! fn process_update(packet: UpdatePacket, stream: &mut TcpStream) -> Result<(), CacheError> {
+//! #    let cache = Cache::new("path/to/cache")?;
 //!     // read the specified archive from the given index to an owned vector.
 //!     let buffer = cache.read(packet.index_id, packet.archive_id)?.to_vec();
 //!     
 //!     // ... format buffer.
+//! #    let formatted_buffer = buffer;
 //! 
 //!     // send formatted_buffer to client.
-//!     stream.write_all(&formated_buffer)?;
+//!     stream.write_all(&formatted_buffer)?;
 //! 
 //!     Ok(())
 //! }
@@ -39,12 +45,24 @@
 //! You can also use the `LinkedList<&[u8]>` to `iter()` over the `data_block`s instead of making the bytes owned.
 //! 
 //! ```rust
+//! # use std::net::TcpStream;
+//! # use std::io::Write;
+//! # use rscache::{ Cache, CacheError, LinkedListExt };
+//! # struct UpdatePacket { 
+//! #   pub index_id: u8,
+//! #   pub archive_id: u8
+//! # }
+//! # fn process_update(packet: UpdatePacket, stream: &mut TcpStream) -> Result<(), CacheError> {
+//! #    let cache = Cache::new("path/to/cache")?;
+//! #    // read the specified archive from the given index to an owned vector.
 //! let buffer = cache.read(packet.index_id, packet.archive_id)?;
 //! 
 //! for data_block in buffer.iter() {
 //!     // data_block contains 512 byte slices that directly link into the MainData buffer.
 //!     // this can be useful when formatting the buffer before sending it to the client.
 //! }
+//! #    Ok(())
+//! # }
 //! ```
 
 #![warn(clippy::all, clippy::nursery, clippy::clone_on_ref_ptr, clippy::redundant_clone, clippy::default_trait_access, clippy::expl_impl_clone_on_copy,
