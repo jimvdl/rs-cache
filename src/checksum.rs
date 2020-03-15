@@ -1,4 +1,4 @@
-use crate::{ CacheError, Compression, compression };
+use crate::{ CacheError, compression::Compression, compression };
 
 #[derive(Debug, Clone)]
 pub struct Entry {

@@ -85,4 +85,3 @@ pub use cache::Cache;
 pub use checksum::Checksum;
 pub use errors::*;
 pub use traits::*;
-pub use compression::*;
