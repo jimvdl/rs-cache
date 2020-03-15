@@ -20,6 +20,7 @@ pub enum CompressionType {
 }
 
 impl From<u8> for CompressionType {
+	#[inline]
 	fn from(compression: u8) -> Self {
 		match compression {
 			0 => Self::None,
@@ -41,25 +42,6 @@ impl Container {
 	#[inline]
 	pub fn new(compression: CompressionType, data: Vec<u8>, revision: i16) -> Self {
 		Self { compression, data, revision }
-	}
-
-	#[inline]
-	pub fn decompress<R: Read>(reader: &mut R) -> Result<Self, CacheError> {
-		let mut buf = [0; 1];
-		reader.read_exact(&mut buf)?;
-		let compression: CompressionType = buf[0].into();
-
-		let mut buf = [0; 4];
-		reader.read_exact(&mut buf)?;
-		let len = u32::from_be_bytes(buf) as usize;
-
-		let (revision, buffer) = match compression {
-			CompressionType::None => decompress_none(reader, len)?,
-			CompressionType::Bzip2 => decompress_bzip2(reader, len)?,
-			CompressionType::Gzip => decompress_gzip(reader, len)?,
-		};
-
-		Ok(Self::new(compression, buffer, revision))
 	}
 
 	#[inline]
@@ -87,9 +69,42 @@ impl Container {
 		Ok(buffer)
 	}
 
+	#[inline]
+	pub fn decompress<R: Read>(reader: &mut R) -> Result<Self, CacheError> {
+		let mut buf = [0; 1];
+		reader.read_exact(&mut buf)?;
+		let compression: CompressionType = buf[0].into();
+
+		let mut buf = [0; 4];
+		reader.read_exact(&mut buf)?;
+		let len = u32::from_be_bytes(buf) as usize;
+
+		let (revision, buffer) = match compression {
+			CompressionType::None => decompress_none(reader, len)?,
+			CompressionType::Bzip2 => decompress_bzip2(reader, len)?,
+			CompressionType::Gzip => decompress_gzip(reader, len)?,
+		};
+
+		Ok(Self::new(compression, buffer, revision))
+	}
+
+	#[inline]
 	pub fn data(&self) -> &[u8] {
 		&self.data[..]
 	}
+}
+
+fn compress_bzip2(data: Vec<u8>) -> Result<Vec<u8>, io::Error> {
+	let compressor = Encoder::new(data)?;
+	compressor.finish().into_result()
+}
+
+fn compress_gzip(data: Vec<u8>) -> Result<Vec<u8>, io::Error> {
+	let compressor = BzEncoder::new(data, Compression::Default);
+	let mut compressed_data = compressor.finish()?;
+	compressed_data.drain(0..4);
+
+	Ok(compressed_data)
 }
 
 fn decompress_none<R: Read>(reader: &mut R, len: usize) -> Result<(i16, Vec<u8>), CacheError> {
@@ -135,19 +150,6 @@ fn decompress_gzip<R: Read>(reader: &mut R, len: usize) -> Result<(i16, Vec<u8>)
 	decoder.read_exact(&mut decompressed_data)?;
 
 	Ok((revision, decompressed_data))
-}
-
-fn compress_bzip2(data: Vec<u8>) -> Result<Vec<u8>, io::Error> {
-	let compressor = Encoder::new(data)?;
-	compressor.finish().into_result()
-}
-
-fn compress_gzip(data: Vec<u8>) -> Result<Vec<u8>, io::Error> {
-	let compressor = BzEncoder::new(data, Compression::Default);
-	let mut compressed_data = compressor.finish()?;
-	compressed_data.drain(0..4);
-
-	Ok(compressed_data)
 }
 
 fn read_revision<R: Read>(reader: &mut R) -> Result<i16, CacheError> {
