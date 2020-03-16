@@ -17,7 +17,7 @@
 //! The example listed below quickly shows how you can pass the `index_id` and the `archive_id` to the cache
 //! and get the correct data to send to the client.
 //! 
-//! ```rust
+//! ```
 //! # use std::net::TcpStream;
 //! # use std::io::Write;
 //! use rscache::{ Cache, CacheError, LinkedListExt };
@@ -44,7 +44,7 @@
 //! In the above example the data that was read from the cache is transformed into a vector of bytes.
 //! You can also use the `LinkedList<&[u8]>` to `iter()` over the `data_block`s instead of making the bytes owned.
 //! 
-//! ```rust
+//! ```
 //! # use std::net::TcpStream;
 //! # use std::io::Write;
 //! # use rscache::{ Cache, CacheError, LinkedListExt };

@@ -33,6 +33,22 @@ pub struct Cache {
 }
 
 impl Cache {
+    /// Constructs a new `Cache`.
+    ///
+    /// The cache loads every file into memory.
+    ///
+    /// # Errors
+    /// 
+    /// If this function encounters any form of I/O or other error, a `CacheError`
+    /// is returned which wrapps the underlying error.
+    /// 
+    /// # Examples
+    ///
+    /// ```
+    /// use rscache::Cache;
+    /// 
+    /// let cache = Cache::new("path/to/cache");
+    /// ```
     #[inline]
     pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, CacheError> {
         let path = path.as_ref();
@@ -43,6 +59,32 @@ impl Cache {
         Ok(Self { main_data, indices })
     }
 
+    /// Reads from the internal `main_file_cache.dat2` buffer.
+    /// 
+    /// A lookup is performed on the specified index to find the sector id and the total length
+    /// of the buffer that needs to be read from the `main_file_cache.dat2` buffer.
+    /// 
+    /// If the lookup is successfull the data is gathered into a `LinkedList<&[u8]>`.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
+    /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
+    /// 
+    /// # Examples
+    /// ```
+    /// # use rscache::{ Cache, CacheError };
+    /// # fn main() -> Result<(), CacheError> {
+    /// # let path = "./data/cache";
+    /// let cache = Cache::new(path)?;
+    /// 
+    /// let index_id = 2; // Config index
+    /// let archive_id = 10; // Random archive.
+    /// 
+    /// let buffer = cache.read(index_id, archive_id)?;
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
     pub fn read(&self, index_id: u8, archive_id: u8) -> Result<LinkedList<&[u8]>, ReadError> {
         let index = match self.indices.get(&index_id) {
@@ -58,6 +100,30 @@ impl Cache {
         Ok(self.main_data.read(archive.sector, archive.length))
     }
 
+    /// Creates a `Checksum` which can be used to validate the cache data
+    /// that the client received during the update protocol.
+    /// 
+    /// NOTE: The RuneScape client doesn't have a valid crc for index 16.
+    /// This checksum sets the crc and revision for index 16 both to 0.
+    /// The crc for index 16 should be skipped.
+    /// 
+    /// # Errors
+    /// 
+    /// Can return a `CacheError` when a buffer read from the reference
+    /// table cannot be decompressed.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use rscache::Cache;
+    /// # use rscache::CacheError;
+    /// # fn main() -> Result<(), CacheError> {
+    /// # let path = "./data/cache";
+    /// # let cache = Cache::new(path)?;
+    /// let checksum = cache.create_checksum()?;
+    /// #    Ok(())
+    /// # }
+    /// ```
     #[inline]
     pub fn create_checksum(&self) -> Result<Checksum, CacheError> {
         let mut checksum = Checksum::new();
@@ -77,7 +143,7 @@ impl Cache {
 
                     checksum.push(Entry { 
                         crc: crc32::checksum_ieee(&buffer), 
-                        revision: index_version(&data)?
+                        revision: index_version(&data)
                     });
                 }
             };
@@ -86,6 +152,27 @@ impl Cache {
         Ok(checksum)
     }
 
+    /// Constructs a buffer which contains the huffman table, in a ready state.
+    /// 
+    /// # Errors
+    /// 
+    /// Can returns an error if the huffman archive could not be found or 
+    /// if the decompression of the huffman table failed.
+    /// 
+    /// # Examples
+    /// ```
+    /// # use rscache::{ Cache, CacheError };
+    /// # struct Huffman;
+    /// # impl Huffman {
+    /// #   pub fn new(buffer: Vec<u8>) -> Self { Self {} }
+    /// # }
+    /// # fn main() -> Result<(), CacheError> {
+    /// # let cache = Cache::new("./data/cache")?;
+    /// let huffman_table = cache.huffman_table()?;
+    /// let huffman = Huffman::new(huffman_table);
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
     pub fn huffman_table(&self) -> Result<Vec<u8>, CacheError> {
         let index_id = 10;
@@ -97,7 +184,7 @@ impl Cache {
     }
 
     #[inline]
-	pub fn archive_by_name(&self, index_id: u8, name: &str) -> Result<Archive, CacheError> {
+	fn archive_by_name(&self, index_id: u8, name: &str) -> Result<Archive, CacheError> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,
             None => return Err(ReadError::IndexNotFound(index_id).into())
@@ -113,7 +200,9 @@ impl Cache {
             if archive_data.identifier == identifier {
                 match index.archive(archive_data.id as u8) {
                     Some(archive) => return Ok(*archive),
-                    None => return Err(ReadError::ArchiveNotFound(index_id, archive_data.id as u8).into()),
+                    None => return Err(
+                        ReadError::ArchiveNotFound(index_id, archive_data.id as u8).into()
+                    ),
                 }
             }
         }
@@ -121,6 +210,23 @@ impl Cache {
         Err(ReadError::ArchiveNotFound(index_id, 0).into())
 	}
 
+    /// Simply returns the index count, by getting the `len()` of 
+    /// the underlying `indices` vector.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use rscache::{ Cache, CacheError };
+    /// # fn main() -> Result<(), CacheError> {
+    /// # let cache = Cache::new("./data/cache")?;
+    /// for index in cache.index_count() {
+    ///     // ...
+    /// }
+    /// 
+    /// assert_eq!(22, cache.index_count());
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
     pub fn index_count(&self) -> usize {
         self.indices.len()
@@ -153,16 +259,14 @@ fn load_indices(path: &Path) -> Result<HashMap<u8, Index>, CacheError> {
 	Ok(indices)
 }
 
-fn index_version(buffer: &[u8]) -> io::Result<u32> {
+fn index_version(buffer: &[u8]) -> u32 {
     let format = buffer[0];
 
-    let version = if format >= 6 {
+    if format >= 6 {
         u32::from_be_bytes([buffer[1], buffer[2], buffer[3], buffer[4]])
     } else {
         0
-    };
-
-    Ok(version)
+    }
 }
 
 mod djd2 {
