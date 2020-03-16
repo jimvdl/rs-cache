@@ -109,8 +109,8 @@ impl Cache {
     /// 
     /// # Errors
     /// 
-    /// Can return a `CacheError` when a buffer read from the reference
-    /// table cannot be decompressed.
+    /// Returns an error when a buffer read from the reference
+    /// table could not be decompressed.
     /// 
     /// # Examples
     /// 
@@ -156,7 +156,7 @@ impl Cache {
     /// 
     /// # Errors
     /// 
-    /// Can returns an error if the huffman archive could not be found or 
+    /// Returns an error if the huffman archive could not be found or 
     /// if the decompression of the huffman table failed.
     /// 
     /// # Examples
@@ -219,7 +219,7 @@ impl Cache {
     /// # use rscache::{ Cache, CacheError };
     /// # fn main() -> Result<(), CacheError> {
     /// # let cache = Cache::new("./data/cache")?;
-    /// for index in cache.index_count() {
+    /// for index in 0..cache.index_count() {
     ///     // ...
     /// }
     /// 
