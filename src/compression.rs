@@ -1,4 +1,5 @@
 use std::io::{ self, Read };
+use std::convert::TryFrom;
 
 use bzip2::{
 	read::BzDecoder,
@@ -9,7 +10,7 @@ use libflate::gzip::{
 	Encoder,
 };
 
-use crate::CacheError;
+use crate::{ CacheError, CompressionError };
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Compression {
@@ -18,14 +19,27 @@ pub enum Compression {
 	Gzip
 }
 
-impl From<u8> for Compression {
+impl From<Compression> for u8 {
 	#[inline]
-	fn from(compression: u8) -> Self {
+	fn from(compression: Compression) -> Self {
 		match compression {
-			0 => Self::None,
-			1 => Self::Bzip2,
-			2 => Self::Gzip,
-			_ => unreachable!(),
+			Compression::None => 0,
+			Compression::Bzip2 => 1,
+			Compression::Gzip => 2,
+		}
+	}
+}
+
+impl TryFrom<u8> for Compression {
+	type Error = CompressionError;
+
+	#[inline]
+	fn try_from(compression: u8) -> Result<Self, Self::Error> {
+		match compression {
+			0 => Ok(Self::None),
+			1 => Ok(Self::Bzip2),
+			2 => Ok(Self::Gzip),
+			_ => Err(CompressionError::Unsupported(compression))
 		}
 	}
 }
@@ -60,7 +74,7 @@ pub fn compress(compression: Compression, data: &[u8], revision: Option<i16>) ->
 pub fn decompress<R: Read>(reader: &mut R) -> Result<Vec<u8>, CacheError> {
 	let mut buf = [0; 1];
 	reader.read_exact(&mut buf)?;
-	let compression: Compression = buf[0].into();
+	let compression = Compression::try_from(buf[0])?;
 
 	let mut buf = [0; 4];
 	reader.read_exact(&mut buf)?;

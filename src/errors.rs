@@ -68,7 +68,7 @@ impl fmt::Display for ReadError {
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum CompressionError {
-	UnsupportedType(u8),
+	Unsupported(u8),
 	LengthMismatch(usize, usize),
 }
 
@@ -78,7 +78,7 @@ impl fmt::Display for CompressionError {
 	#[inline]
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
-			Self::UnsupportedType(tp) => write!(f, "Unsupported compression type {}.", tp),
+			Self::Unsupported(compression) => write!(f, "Invalid compression: {} is unsupported.", compression),
 			Self::LengthMismatch(expected, actual) => write!(f, "Uncompressed length mismatch: expected length {} but length was {}.", expected, actual),
 		}
 	}
