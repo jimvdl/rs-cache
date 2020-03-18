@@ -26,6 +26,7 @@ use std::{
 pub const MAIN_FILE_CACHE_DAT: &str = "main_file_cache.dat2";
 pub const MAIN_FILE_CACHE_IDX: &str = "main_file_cache.idx";
 
+/// Main struct which offers basic cache utilities and interactions.
 #[derive(Clone, Debug, Default)]
 pub struct Cache {
     main_data: MainData,
@@ -152,7 +153,7 @@ impl Cache {
         Ok(checksum)
     }
 
-    /// Constructs a buffer which contains the huffman table, in a ready state.
+    /// Constructs a buffer which contains the huffman table.
     /// 
     /// # Errors
     /// 

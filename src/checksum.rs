@@ -6,6 +6,7 @@ pub struct Entry {
     pub revision: u32,
 }
 
+/// Used to check the validity of the cache.
 #[derive(Clone, Debug, Default)]
 pub struct Checksum {
     entries: Vec<Entry>
@@ -57,7 +58,7 @@ impl Checksum {
 
     /// Consumes the `Checksum` and encodes it into a byte buffer.
     /// 
-    /// After encoding the checksum it can be send to the client.
+    /// After encoding the checksum it can be sent to the client.
     /// 
     /// # Errors
     /// 

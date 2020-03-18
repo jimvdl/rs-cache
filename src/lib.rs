@@ -1,4 +1,4 @@
-//! Utilities for RuneScape cache interaction.
+//! Utilities for [RuneScape] cache interaction.
 //! 
 //! # Features
 //! 
@@ -7,8 +7,8 @@
 //! - Huffman buffer access.
 //! - Checksum with simple-to-use validation.
 //! - Compression and decompression:
-//!   - Gzip
-//!   - Bzip2
+//!   - [Gzip]
+//!   - [Bzip2]
 //! 
 //! # Quick Start
 //! 
@@ -64,6 +64,10 @@
 //! #    Ok(())
 //! # }
 //! ```
+//! 
+//! [RuneScape]: https://oldschool.runescape.com/
+//! [Gzip]: https://crates.io/crates/libflate
+//! [Bzip2]: https://crates.io/crates/bzip2
 
 #![warn(clippy::all, clippy::nursery, clippy::clone_on_ref_ptr, clippy::redundant_clone, clippy::default_trait_access, clippy::expl_impl_clone_on_copy,
     clippy::explicit_into_iter_loop, clippy::explicit_iter_loop, clippy::filter_map, clippy::filter_map_next, clippy::find_map, clippy::get_unwrap,
