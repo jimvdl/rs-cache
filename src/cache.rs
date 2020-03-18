@@ -11,7 +11,7 @@ use crate::{
     Checksum, CacheError,
     checksum::Entry,
     LinkedListExt,
-    compression
+    codec
 };
 
 use crc::crc32;
@@ -110,7 +110,7 @@ impl Cache {
     /// # Errors
     /// 
     /// Returns an error when a buffer read from the reference
-    /// table could not be decompressed.
+    /// table could not be decoded / decompressed.
     /// 
     /// # Examples
     /// 
@@ -139,7 +139,7 @@ impl Cache {
 
                 if !buffer.is_empty() {
                     let mut buf = buffer[..].as_ref();
-                    let data = compression::decompress(&mut buf)?;
+                    let data = codec::decode(&mut buf)?;
 
                     checksum.push(Entry { 
                         crc: crc32::checksum_ieee(&buffer), 
@@ -157,7 +157,7 @@ impl Cache {
     /// # Errors
     /// 
     /// Returns an error if the huffman archive could not be found or 
-    /// if the decompression of the huffman table failed.
+    /// if the decode / decompression of the huffman table failed.
     /// 
     /// # Examples
     /// ```
@@ -180,7 +180,7 @@ impl Cache {
 
         let mut buffer = &self.main_data.read(archive.sector, archive.length).to_vec()[..];
 		
-		Ok(compression::decompress(&mut buffer)?)
+		Ok(codec::decode(&mut buffer)?)
     }
 
     #[inline]
@@ -192,7 +192,7 @@ impl Cache {
         let identifier = djd2::hash(name);
 
         let mut buffer = &self.read(255, index_id)?.to_vec()[..];
-        let mut data = &compression::decompress(&mut buffer)?[..];
+        let mut data = &codec::decode(&mut buffer)?[..];
 
         let archives = ArchiveData::decode(&mut data)?;
 

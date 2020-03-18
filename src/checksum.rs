@@ -1,4 +1,4 @@
-use crate::{ CacheError, compression::Compression, compression };
+use crate::{ CacheError, codec::Compression, codec };
 
 #[derive(Debug, Clone)]
 pub struct Entry {
@@ -12,22 +12,13 @@ pub struct Checksum {
 }
 
 impl Checksum {
-    /// Constructs a new, empty Checksum.
-    /// 
-    /// If you want to validate crc values from the cache use the `create_checksum()` 
-    /// function on the `Cache` struct instead.
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// # use rscache::Checksum;
-    /// let checksum = Checksum::new();
-    /// ```
+    #[doc(hidden)]
     #[inline]
     pub const fn new() -> Self {
         Self { entries: Vec::new() }
     }
 
+    #[doc(hidden)]
     #[inline]
     pub fn push(&mut self, entry: Entry) {
         self.entries.push(entry);
@@ -94,6 +85,6 @@ impl Checksum {
             buffer.extend_from_slice(&u32::to_be_bytes(entry.revision));
         }
 
-        Ok(compression::compress(Compression::None, &buffer, None)?)
+        Ok(codec::encode(Compression::None, &buffer, None)?)
     }
 }

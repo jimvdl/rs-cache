@@ -79,7 +79,7 @@ mod cache;
 mod checksum;
 mod errors;
 mod traits;
-pub mod compression;
+pub mod codec;
 
 pub use cache::Cache;
 pub use checksum::Checksum;

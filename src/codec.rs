@@ -45,7 +45,7 @@ impl TryFrom<u8> for Compression {
 }
 
 #[inline]
-pub fn compress(compression: Compression, data: &[u8], revision: Option<i16>) -> Result<Vec<u8>, CacheError> {
+pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> Result<Vec<u8>, CacheError> {
 	let compressed_data = match compression {
 		Compression::None => data.to_owned(),
 		Compression::Bzip2 => compress_bzip2(data)?,
@@ -71,7 +71,7 @@ pub fn compress(compression: Compression, data: &[u8], revision: Option<i16>) ->
 }
 
 #[inline]
-pub fn decompress<R: Read>(reader: &mut R) -> Result<Vec<u8>, CacheError> {
+pub fn decode<R: Read>(reader: &mut R) -> Result<Vec<u8>, CacheError> {
 	let mut buf = [0; 1];
 	reader.read_exact(&mut buf)?;
 	let compression = Compression::try_from(buf[0])?;
