@@ -6,6 +6,8 @@ edition = "2018"
 license = "MIT"
 description = "A simple RuneScape cache utility."
 repository = "https://github.com/jimvdl/rs-cache"
+readme = "README.md"
+keywords = ["runescape", "osrs"]
 
 [lib]
 name = "rscache"
