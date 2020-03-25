@@ -1,12 +1,29 @@
-use rscache::CacheError;
+use rscache::{ Cache, CacheError };
 
 mod common;
 
 #[test]
 fn initialize_cache() -> Result<(), CacheError> {
+    let cache = common::setup();
+
+    assert!(cache.is_ok());
+    assert_eq!(22, cache.unwrap().index_count());
+    Ok(())
+}
+
+#[test]
+fn initialize_cache_fails() -> Result<(), CacheError> {
+    let cache = Cache::new("./wrong/path");
+
+    assert!(cache.is_err());
+    Ok(())
+}
+
+#[test]
+fn create_checksum() -> Result<(), CacheError> {
     let cache = common::setup()?;
 
-    assert_eq!(22, cache.index_count());
+    assert!(cache.create_checksum().is_ok());
     Ok(())
 }
 

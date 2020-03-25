@@ -66,3 +66,11 @@ fn read_from_7_24918() -> Result<(), CacheError> {
     assert_eq!(803, archive.len());
     Ok(())
 }
+
+#[test]
+fn read_from_2_25000_fails() -> Result<(), CacheError> {
+    let cache = common::setup()?;
+
+    assert!(cache.read(2, 25000).is_err());
+    Ok(())
+}
