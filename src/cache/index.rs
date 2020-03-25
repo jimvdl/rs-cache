@@ -6,7 +6,7 @@ pub const INDEX_LENGTH: usize = 6;
 
 #[derive(Clone, Debug, Default)]
 pub struct Index {
-	archives: HashMap<u8, Archive>,
+	archives: HashMap<u16, Archive>,
 }
 
 impl Index {
@@ -16,14 +16,14 @@ impl Index {
 
 		for (id, archive_metadata) in buffer.chunks_exact(INDEX_LENGTH).enumerate() {
 			let archive = parse_archive(archive_metadata);
-			archives.insert(id as u8, archive);
+			archives.insert(id as u16, archive);
 		}
 
         Self { archives }
 	}
 
 	#[inline]
-	pub fn archive(&self, archive_id: u8) -> Option<&Archive> {
+	pub fn archive(&self, archive_id: u16) -> Option<&Archive> {
 		self.archives.get(&archive_id)
 	}
 }

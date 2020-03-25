@@ -19,20 +19,25 @@ impl MainData {
 		let mut remaining = size;
 
 		loop {
-			let current = sector as usize * SECTOR_SIZE;
-
-			if remaining >= SECTOR_SIZE {
-				let data_block = &self.data[current..current + SECTOR_SIZE];
+			let offset = sector as usize * SECTOR_SIZE;
+			
+			if remaining >= SECTOR_DATA_SIZE {
+				let data_block = &self.data[offset..offset + SECTOR_SIZE];
 				data.push_back(&data_block[SECTOR_HEADER_SIZE..]);
-
-				sector = ((data_block[4] as u32).overflowing_shl(16)).0 | ((data_block[5] as u32).overflowing_shl(8)).0 | data_block[6] as u32;
+				
+				sector =  u32::from(data_block[4]) << 16 
+						| u32::from(data_block[5]) << 8 
+						| u32::from(data_block[6]);
 				remaining -= SECTOR_DATA_SIZE;
 			} else {
 				if remaining == 0 {
 					break;
 				}
 
-				data.push_back(&self.data[current + SECTOR_HEADER_SIZE..current + SECTOR_HEADER_SIZE + remaining]);
+				let offset = offset + SECTOR_HEADER_SIZE;
+				let data_block = &self.data[offset..offset + remaining];
+
+				data.push_back(data_block);
 				break;
 			}
 		}

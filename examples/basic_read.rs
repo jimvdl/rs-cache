@@ -9,7 +9,7 @@ fn main() -> Result<(), CacheError> {
     let buffer = cache.read(index_id, archive_id)?;
 
     for data_block in buffer.iter() {
-        println!("data_block: {:?}", &data_block[..25]);
+        println!("data_block: {:?}, length: {}", &data_block[..25], data_block.len());
     }
 
     Ok(())

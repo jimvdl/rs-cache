@@ -26,7 +26,7 @@ use std::{
 pub const MAIN_FILE_CACHE_DAT: &str = "main_file_cache.dat2";
 pub const MAIN_FILE_CACHE_IDX: &str = "main_file_cache.idx";
 
-/// Main struct which offers basic cache utilities and interactions.
+/// Main struct which provides basic cache utilities and interactions.
 #[derive(Clone, Debug, Default)]
 pub struct Cache {
     main_data: MainData,
@@ -87,7 +87,7 @@ impl Cache {
     /// # }
     /// ```
     #[inline]
-    pub fn read(&self, index_id: u8, archive_id: u8) -> Result<LinkedList<&[u8]>, ReadError> {
+    pub fn read(&self, index_id: u8, archive_id: u16) -> Result<LinkedList<&[u8]>, ReadError> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,
             None => return Err(ReadError::IndexNotFound(index_id))
@@ -129,7 +129,7 @@ impl Cache {
     pub fn create_checksum(&self) -> Result<Checksum, CacheError> {
         let mut checksum = Checksum::new();
 
-        for index_id in 0..self.index_count() as u8 {
+        for index_id in 0..self.index_count() as u16 {
             if index_id == 16 {
                 checksum.push(Entry { crc: 0, revision: 0 });
                 continue;
@@ -192,17 +192,17 @@ impl Cache {
         };
         let identifier = djd2::hash(name);
 
-        let mut buffer = &self.read(255, index_id)?.to_vec()[..];
+        let mut buffer = &self.read(255, index_id as u16)?.to_vec()[..];
         let mut data = &codec::decode(&mut buffer)?[..];
 
         let archives = ArchiveData::decode(&mut data)?;
 
         for archive_data in archives {
-            if archive_data.identifier == identifier {
-                match index.archive(archive_data.id as u8) {
+            if archive_data.identifier() == identifier {
+                match index.archive(archive_data.id()) {
                     Some(archive) => return Ok(*archive),
                     None => return Err(
-                        ReadError::ArchiveNotFound(index_id, archive_data.id as u8).into()
+                        ReadError::ArchiveNotFound(index_id, archive_data.id()).into()
                     ),
                 }
             }

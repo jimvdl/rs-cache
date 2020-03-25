@@ -23,7 +23,7 @@
 //! use rscache::{ Cache, CacheError, LinkedListExt };
 //! # struct UpdatePacket { 
 //! #   pub index_id: u8,
-//! #   pub archive_id: u8
+//! #   pub archive_id: u16
 //! # }
 //! 
 //! fn process_update(packet: UpdatePacket, stream: &mut TcpStream) -> Result<(), CacheError> {
@@ -50,7 +50,7 @@
 //! # use rscache::{ Cache, CacheError, LinkedListExt };
 //! # struct UpdatePacket { 
 //! #   pub index_id: u8,
-//! #   pub archive_id: u8
+//! #   pub archive_id: u16
 //! # }
 //! # fn process_update(packet: UpdatePacket, stream: &mut TcpStream) -> Result<(), CacheError> {
 //! #    let cache = Cache::new("path/to/cache")?;

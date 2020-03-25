@@ -10,8 +10,8 @@ pub struct Archive {
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ArchiveData {
-    pub id: u16,
-    pub identifier: i32,
+    id: u16,
+    identifier: i32,
     crc: u32,
     revision: u32
 }
@@ -73,5 +73,15 @@ impl ArchiveData {
         }
 
         Ok(archives)
+    }
+
+    #[inline]
+    pub const fn id(&self) -> u16 {
+        self.id
+    }
+
+    #[inline]
+    pub const fn identifier(&self) -> i32 {
+        self.identifier
     }
 }
