@@ -1,3 +1,12 @@
+//! Provides two functions to encode/decode buffers.
+//! 
+//! 
+//! Includes compression and decompression.
+//! 
+//! NOTE: decoding only works on buffers that are fetched 
+//! from the cache. It cannot decode buffers that were encoded
+//! using the `encode()` function.
+
 use std::io::{ self, Read };
 use std::convert::TryFrom;
 
@@ -12,6 +21,10 @@ use libflate::gzip::{
 
 use crate::{ CacheError, CompressionError };
 
+/// Compression types that are supported by the encode and decode functions.
+/// 
+/// If you select `Compression::None` when encoding the buffer is simply formatted.
+/// The formatting is explained [here](fn.encode.html).
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Compression {
 	None,
@@ -44,6 +57,48 @@ impl TryFrom<u8> for Compression {
 	}
 }
 
+/// Encodes a buffer, with the selected `Compression` format. Revision is an optional argument
+/// that encodes the version of this buffer into it, if no revision should be encoded
+/// pass None.
+/// 
+/// The following process takes place when encoding:
+/// 1. Compress the buffer with the selected compression format.
+/// 2. Allocate a new buffer.
+/// 3. Push the compression type as a byte into the new buffer.
+/// 4. Push the length (u32) into the buffer of the compressed data from step 1.
+/// 5. If a compression type was selected (and not `Compression::None`) insert the uncompressed length as u32.
+/// 6. Extend the buffer with the compressed data.
+/// 7. Add the `revision` as i16 if present.
+/// 8. Encode complete.
+/// 
+/// Supported compression types:
+/// - Gzip
+/// - Bzip2
+/// 
+/// **NOTE: When compressing with gzip the header is removed 
+/// before the compressed data is returned.
+/// The encoded buffer will not contain the gzip header.**
+/// 
+/// # Errors
+/// 
+/// Returns an error if the data couldn't be compressed or is invalid.
+/// 
+/// # Examples
+/// 
+/// ```
+/// # use rscache::Cache;
+/// # use rscache::CacheError;
+/// # use rscache::LinkedListExt;
+/// use rscache::codec::Compression;
+/// 
+/// # fn main() -> Result<(), CacheError> {
+/// # let buffer = vec![0; 20];
+/// let encoded_buffer = rscache::codec::encode(Compression::Bzip2, &buffer, None)?;
+/// 
+/// assert_eq!(Compression::Bzip2 as u8, encoded_buffer[0]);
+/// # Ok(())
+/// # }
+/// ```
 #[inline]
 pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> Result<Vec<u8>, CacheError> {
 	let compressed_data = match compression {
@@ -70,6 +125,33 @@ pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> R
 	Ok(buffer)
 }
 
+/// Decodes a buffer. The buffer needs to have the `Read` trait implemented.
+/// 
+/// The following process takes place when decoding:
+/// 1. Read the first byte to determine which compression should be used to decompress.
+/// 2. Read the length of the rest of the buffer.
+/// 3. Decompress the remaining bytes.
+/// 
+/// # Errors
+/// 
+/// Returns an error if the remaining bytes couldn't be decompressed.
+/// 
+/// # Examples
+/// 
+/// ```
+/// # use rscache::Cache;
+/// # use rscache::CacheError;
+/// # use rscache::LinkedListExt;
+/// use rscache::codec::Compression;
+/// 
+/// # fn main() -> Result<(), CacheError> {
+/// # let path = "./data/cache";
+/// # let cache = Cache::new(path)?;
+/// let buffer = cache.read(2, 10)?.to_vec();
+/// let decoded_buffer = rscache::codec::decode(&mut buffer.as_slice())?;
+/// # Ok(())
+/// # }
+/// ```
 #[inline]
 pub fn decode<R: Read>(reader: &mut R) -> Result<Vec<u8>, CacheError> {
 	let mut buf = [0; 1];
