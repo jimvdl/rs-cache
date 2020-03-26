@@ -4,6 +4,7 @@
 [![Revision](https://img.shields.io/badge/RuneScape-180-blue)]()
 [![API](https://docs.rs/rs-cache/badge.svg)](https://docs.rs/rs-cache)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.41%2B-yellow)](https://blog.rust-lang.org/2020/01/30/Rust-1.41.0.html)
+[![License](https://img.shields.io/crates/l/rs-cache?color=black)](https://github.com/jimvdl/rs-cache/blob/master/LICENSE)
 
 A simple-to-use basic RuneScape cache utility. RS-Cache provides utilities to interact with the RuneScape cache.
 
