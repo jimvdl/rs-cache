@@ -29,19 +29,7 @@ Add this to your `Cargo.toml`:
 rs-cache = "0.1"
 ```
 
-Basic example:
-```rust
-let cache = Cache::new("path/to/cache")?;
-
-let index_id = 2; // Config index.
-let archive_id = 10; // random archive.
-let buffer = cache.read(index_id, archive_id)?;
-
-for data_block in buffer.iter() {
-    // ...
-}
-```
-This example can also be found in the [examples](https://github.com/jimvdl/rs-cache/tree/master/examples) directory, along with a few others.
+Examples can be found in the [examples](examples/) directory. These examples include the basic use cases and the more advanced use cases.
 
 ## Sources
 
