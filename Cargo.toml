@@ -8,6 +8,7 @@ description = "A simple RuneScape cache utility."
 repository = "https://github.com/jimvdl/rs-cache"
 readme = "README.md"
 keywords = ["runescape", "osrs"]
+exclude = ["data/cache"]
 
 [lib]
 name = "rscache"
