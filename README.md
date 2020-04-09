@@ -29,7 +29,7 @@ Add this to your `Cargo.toml`:
 rs-cache = "0.1"
 ```
 
-Examples can be found in the [examples](examples/) directory. These examples include the basic use cases and the more advanced use cases.
+Examples can be found in the [examples](examples/) directory. These examples include basic use cases and more advanced use cases such as the update protocol.
 
 ## Sources
 
