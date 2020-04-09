@@ -6,6 +6,7 @@ edition = "2018"
 license = "MIT"
 description = "A simple RuneScape cache utility."
 repository = "https://github.com/jimvdl/rs-cache"
+documentation = "https://docs.rs/rs-cache"
 readme = "README.md"
 keywords = ["runescape", "osrs"]
 exclude = ["data/cache"]
