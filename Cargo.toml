@@ -1,5 +1,5 @@
 [package]
-name = "rs-cache"
+name = "rscache"
 version = "0.2.1"
 authors = ["jimvdl <jimvdlind@gmail.com>"]
 edition = "2018"
@@ -9,11 +9,7 @@ repository = "https://github.com/jimvdl/rs-cache"
 documentation = "https://docs.rs/rs-cache"
 readme = "README.md"
 keywords = ["runescape", "osrs"]
-exclude = ["data/cache"]
-
-[lib]
-name = "rscache"
-path = "src/lib.rs"
+exclude = [".gitignore", "data/cache"]
 
 [dependencies]
 crc = "1.8.1"
