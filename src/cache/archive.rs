@@ -13,7 +13,8 @@ pub struct ArchiveData {
     id: u16,
     identifier: i32,
     crc: u32,
-    revision: u32
+    revision: u32,
+    entry_count: usize
 }
 
 impl Archive {
@@ -29,7 +30,8 @@ impl ArchiveData {
         let protocol = buffer[0];
 
         if protocol >= 6 {
-            reader.take(4);
+            let mut buffer = [0; 4];
+			reader.read_exact(&mut buffer)?;
         }
         
         let mut buffer = [0; 1];
@@ -72,6 +74,13 @@ impl ArchiveData {
             archive_data.revision = u32::from_be_bytes(buffer);
         }
 
+        for archive_data in archives.iter_mut().take(archive_count) {
+            let mut buffer = [0; 2];
+			reader.read_exact(&mut buffer)?;
+
+            archive_data.entry_count = u16::from_be_bytes(buffer) as usize;
+        }
+        
         Ok(archives)
     }
 
@@ -83,5 +92,10 @@ impl ArchiveData {
     #[inline]
     pub const fn identifier(&self) -> i32 {
         self.identifier
+    }
+
+    #[inline]
+    pub const fn entry_count(&self) -> usize {
+        self.entry_count
     }
 }

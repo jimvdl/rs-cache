@@ -1,6 +1,6 @@
 mod main_data;
 mod index;
-mod archive;
+pub mod archive;
 
 use main_data::MainData;
 use index::{ Index };
@@ -209,7 +209,7 @@ impl Cache {
         }
 
         Err(ReadError::ArchiveNotFound(index_id, 0).into())
-	}
+    }
 
     /// Simply returns the index count, by getting the `len()` of 
     /// the underlying `indices` vector.

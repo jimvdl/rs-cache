@@ -83,9 +83,11 @@ mod cache;
 mod checksum;
 mod errors;
 mod traits;
+mod definitions;
 pub mod codec;
 
 pub use cache::Cache;
 pub use checksum::Checksum;
 pub use errors::*;
 pub use traits::*;
+pub use definitions::*;
