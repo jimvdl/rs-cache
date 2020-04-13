@@ -6,6 +6,8 @@ use std::{
 	collections::HashMap,
 };
 
+use utils::ReadExt;
+
 pub struct ItemDefinition {
 	pub id: u16,
 	pub inventory_model: u16,
@@ -103,86 +105,86 @@ impl ItemDefinition {
 		let mut reader = BufReader::new(&buffer[..]);
 
 		loop {
-			let opcode = read_u8(&mut reader);
+			let opcode = reader.read_u8();
 
 			match opcode {
 				0 => break,
-				1 => { inventory_model = read_u16(&mut reader); },
-				2 => { name = read_string(&mut reader); },
-				4 => { zoom2d = read_u16(&mut reader); },
-				5 => { x_an2d = read_u16(&mut reader); },
-				6 => { y_an2d = read_u16(&mut reader); },
-				7 => { x_offset2d = read_u16(&mut reader); },
-				8 => { y_offset2d = read_u16(&mut reader); },
+				1 => { inventory_model = reader.read_u16(); },
+				2 => { name = reader.read_string(); },
+				4 => { zoom2d = reader.read_u16(); },
+				5 => { x_an2d = reader.read_u16(); },
+				6 => { y_an2d = reader.read_u16(); },
+				7 => { x_offset2d = reader.read_u16(); },
+				8 => { y_offset2d = reader.read_u16(); },
 				11 => stackable = true,
-				12 => { cost = read_i32(&mut reader); },
+				12 => { cost = reader.read_i32(); },
 				16 => members_only = true,
 				23 => {
-					male_model10 = read_u16(&mut reader);
-					male_model_offset = read_u8(&mut reader);
+					male_model10 = reader.read_u16();
+					male_model_offset = reader.read_u8();
 				},
-				24 => { male_model1 = read_u16(&mut reader); },
+				24 => { male_model1 = reader.read_u16(); },
 				25 => {
-					female_model10 = read_u16(&mut reader);
-					female_model_offset = read_u8(&mut reader);
+					female_model10 = reader.read_u16();
+					female_model_offset = reader.read_u8();
 				},
-				26 => { female_model1 = read_u16(&mut reader); },
-				30..=34 => { options[opcode as usize - 30] = read_string(&mut reader); },
-				35..=39 => { interface_options[opcode as usize - 35] = read_string(&mut reader); },
+				26 => { female_model1 = reader.read_u16(); },
+				30..=34 => { options[opcode as usize - 30] = reader.read_string(); },
+				35..=39 => { interface_options[opcode as usize - 35] = reader.read_string(); },
 				40 => {
-					let len = read_u8(&mut reader);
+					let len = reader.read_u8();
 					for _ in 0..len {
-						color_find.push(read_u16(&mut reader));
-						color_replace.push(read_u16(&mut reader));
+						color_find.push(reader.read_u16());
+						color_replace.push(reader.read_u16());
 					}
 				},
 				41 => {
-					let len = read_u8(&mut reader);
+					let len = reader.read_u8();
 					for _ in 0..len {
-						texture_find.push(read_u16(&mut reader));
-						texture_replace.push(read_u16(&mut reader));
+						texture_find.push(reader.read_u16());
+						texture_replace.push(reader.read_u16());
 					}
 				},
-				42 => { read_u8(&mut reader); },
+				42 => { reader.read_u8(); },
 				65 => stockmarket = true,
-				78 => { male_model12 = read_u16(&mut reader); },
-				79 => { female_model12 = read_u16(&mut reader); },
-				90 => { male_head_model1 = read_u16(&mut reader); },
-				91 => { female_head_model1 = read_u16(&mut reader); },
-				92 => { male_head_model2 = read_u16(&mut reader); },
-				93 => { female_head_model2 = read_u16(&mut reader); },
-				95 => { zan2d = read_u16(&mut reader); },
-				97 => { noted_id = read_u16(&mut reader); },
-				98 => { noted_template = read_u16(&mut reader); stackable = true; },
+				78 => { male_model12 = reader.read_u16(); },
+				79 => { female_model12 = reader.read_u16(); },
+				90 => { male_head_model1 = reader.read_u16(); },
+				91 => { female_head_model1 = reader.read_u16(); },
+				92 => { male_head_model2 = reader.read_u16(); },
+				93 => { female_head_model2 = reader.read_u16(); },
+				95 => { zan2d = reader.read_u16(); },
+				97 => { noted_id = reader.read_u16(); },
+				98 => { noted_template = reader.read_u16(); stackable = true; },
 				100..=109 => {
 					if count_obj.is_none() {
 						count_obj = Some([0; 10]);
 						count_co = [0; 10];
 					}
-					read_u16(&mut reader);
+					reader.read_u16();
 					//count_obj[opcode as usize - 100] = c_obj;
-					count_co[opcode as usize - 100] = read_u16(&mut reader);
+					count_co[opcode as usize - 100] = reader.read_u16();
 				},
-				110 => { resize_x = read_u16(&mut reader); },
-				111 => { resize_y = read_u16(&mut reader); },
-				112 => { resize_z = read_u16(&mut reader); },
-				113 => { ambient = read_i8(&mut reader); },
-				114 => { contrast = read_i8(&mut reader); },
-				115 => { team = read_u8(&mut reader); },
-				139 => { bought_link = read_u16(&mut reader); },
-				140 => { bought_tempalte = read_u16(&mut reader); },
-				148 | 149 => { read_u16(&mut reader); },
+				110 => { resize_x = reader.read_u16(); },
+				111 => { resize_y = reader.read_u16(); },
+				112 => { resize_z = reader.read_u16(); },
+				113 => { ambient = reader.read_i8(); },
+				114 => { contrast = reader.read_i8(); },
+				115 => { team = reader.read_u8(); },
+				139 => { bought_link = reader.read_u16(); },
+				140 => { bought_tempalte = reader.read_u16(); },
+				148 | 149 => { reader.read_u16(); },
 				249 => {
-					let len = read_u8(&mut reader);
+					let len = reader.read_u8();
 
 					for _ in 0..len {
-						let is_string = read_u8(&mut reader) == 1;
-						let key = read_u24(&mut reader);
+						let is_string = reader.read_u8() == 1;
+						let key = reader.read_u24();
 						
 						let value = if is_string {
-							read_string(&mut reader)
+							reader.read_string()
 						} else {
-							read_i32(&mut reader).to_string()
+							reader.read_i32().to_string()
 						};
 
 						params.insert(key, value);
@@ -240,51 +242,4 @@ impl ItemDefinition {
 		}
 	}
 
-}
-
-fn read_u8(reader: &mut BufReader<&[u8]>) -> u8 {
-	let mut buffer = [0; 1];
-	reader.read_exact(&mut buffer).unwrap();
-	u8::from_be_bytes(buffer)
-}
-
-fn read_i8(reader: &mut BufReader<&[u8]>) -> i8 {
-	let mut buffer = [0; 1];
-	reader.read_exact(&mut buffer).unwrap();
-	i8::from_be_bytes(buffer)
-}
-
-fn read_u16(reader: &mut BufReader<&[u8]>) -> u16 {
-	let mut buffer = [0; 2];
-	reader.read_exact(&mut buffer).unwrap();
-	u16::from_be_bytes(buffer)
-}
-
-fn read_u24(reader: &mut BufReader<&[u8]>) -> u32 {
-	let mut buffer = [0; 3];
-	reader.read_exact(&mut buffer).unwrap();
-	((buffer[0] as u32) << 16) | ((buffer[1] as u32) << 8) | (buffer[2] as u32)
-}
-
-fn read_i32(reader: &mut BufReader<&[u8]>) -> i32 {
-	let mut buffer = [0; 4];
-	reader.read_exact(&mut buffer).unwrap();
-	i32::from_be_bytes(buffer)
-}
-
-fn read_string(reader: &mut BufReader<&[u8]>) -> String {
-	let mut bytes = Vec::new();
-
-	loop {
-		let mut buffer = [0; 1];
-		reader.read_exact(&mut buffer).unwrap();
-		let byte = u8::from_be_bytes(buffer);
-		if byte != 0 {
-			bytes.push(byte);
-		} else {
-			break;
-		}
-	}
-
-	String::from_utf8_lossy(&bytes[..]).to_string()
 }
