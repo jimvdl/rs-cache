@@ -65,6 +65,41 @@
 //! # }
 //! ```
 //! 
+//! # Definitions
+//! 
+//! Currently only item definitions are supported.
+//! These definitions are fields that can be looked up for a certain item id.
+//! i.e. you need to know if a certain item is stackable or members only the [ItemDefinition](struct.ItemDefinition.html) struct
+//! contains that information.
+//! 
+//! See the [ItemDefinition](struct.ItemDefinition.html) struct to view the available fields each item might have.
+//! 
+//! ### Example
+//! 
+//! ```
+//! # use rscache::{ Cache, CacheError };
+//! use rscache::ItemLoader;
+//! 
+//! # fn main() -> Result<(), CacheError> {
+//! # let path = "./data/cache";
+//! # let cache = Cache::new(path)?;
+//! let item_loader = ItemLoader::new(&cache)?;
+//! 
+//! // magic logs id = 1513
+//! let magic_logs = item_loader.load(1513);
+//! 
+//! match magic_logs {
+//!     Some(item_def) => {
+//!         assert_eq!("Magic logs", item_def.name);
+//!         assert_eq!(false, item_def.stackable);
+//!         assert_eq!(true, item_def.members_only);
+//!     },
+//!     None => (),
+//! }
+//! # Ok(())
+//! # }
+//! ```
+//! 
 //! [RuneScape]: https://oldschool.runescape.com/
 //! [Gzip]: https://crates.io/crates/libflate
 //! [Bzip2]: https://crates.io/crates/bzip2
@@ -91,3 +126,4 @@ pub use checksum::Checksum;
 pub use errors::*;
 pub use traits::*;
 pub use definitions::*;
+pub use utils::ReadExt;
