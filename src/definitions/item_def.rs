@@ -4,7 +4,7 @@ use std::{
 	collections::HashMap,
 };
 
-use utils::ReadExt;
+use crate::ReadExt;
 
 /// Contains all the information about a certain item fetched from the cache through
 /// the `ItemLoader`.
