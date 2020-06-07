@@ -190,7 +190,7 @@ impl Cache {
             Some(index) => index,
             None => return Err(ReadError::IndexNotFound(index_id).into())
         };
-        let identifier = utils::djd2::hash(name);
+        let identifier = crate::djd2::hash(name);
 
         let mut buffer = &self.read(255, index_id as u16)?.to_vec()[..];
         let mut data = &codec::decode(&mut buffer)?[..];
