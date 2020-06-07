@@ -1,6 +1,6 @@
 mod main_data;
 mod index;
-mod archive;
+pub mod archive;
 
 use main_data::MainData;
 use index::{ Index };
@@ -190,7 +190,7 @@ impl Cache {
             Some(index) => index,
             None => return Err(ReadError::IndexNotFound(index_id).into())
         };
-        let identifier = djd2::hash(name);
+        let identifier = utils::djd2::hash(name);
 
         let mut buffer = &self.read(255, index_id as u16)?.to_vec()[..];
         let mut data = &codec::decode(&mut buffer)?[..];
@@ -209,7 +209,7 @@ impl Cache {
         }
 
         Err(ReadError::ArchiveNotFound(index_id, 0).into())
-	}
+    }
 
     /// Simply returns the index count, by getting the `len()` of 
     /// the underlying `indices` vector.
@@ -267,17 +267,5 @@ fn index_version(buffer: &[u8]) -> u32 {
         u32::from_be_bytes([buffer[1], buffer[2], buffer[3], buffer[4]])
     } else {
         0
-    }
-}
-
-mod djd2 {
-    pub fn hash(string: &str) -> i32 {
-        let mut hash = 0;
-
-        for index in 0..string.len() {
-            hash = string.chars().nth(index).unwrap() as i32 + ((hash << 5) - hash);
-        }
-        
-        hash
     }
 }

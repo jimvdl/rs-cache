@@ -50,7 +50,7 @@ fn read_from_2_10() -> Result<(), CacheError> {
     let hash = common::hash(&archive);
 
     assert_eq!("c6ee1518e9a39a42ecaf946c6c84a942cb3102f4", &hash);
-    assert_eq!(260537, archive.len());
+    assert_eq!(260_537, archive.len());
     Ok(())
 }
 
@@ -71,6 +71,6 @@ fn read_from_7_24918() -> Result<(), CacheError> {
 fn read_from_2_25000_fails() -> Result<(), CacheError> {
     let cache = common::setup()?;
 
-    assert!(cache.read(2, 25000).is_err());
+    assert!(cache.read(2, 25_000).is_err());
     Ok(())
 }
