@@ -1,6 +1,10 @@
-use crate::CacheError;
+use std::{
+    io,
+    io::Read,
+    collections::HashMap,
+};
 
-use std::io::Read;
+use crate::CacheError;
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Archive {
@@ -20,7 +24,39 @@ pub struct ArchiveData {
 impl Archive {
     pub const fn new(sector: u32, length: usize) -> Self {
 		Self { sector, length }
-	}
+    }
+    
+    pub fn decode(buffer: &[u8], entry_count: usize) -> io::Result<HashMap<u16, Vec<u8>>> {
+        let chunks = buffer[buffer.len() - 1] as usize;
+        let mut data = HashMap::new();
+        let mut cached_chunks = Vec::new();
+        let mut read_ptr = buffer.len() - 1 - chunks * entry_count * 4;
+    
+        for _ in 0..chunks {
+            let mut chunk_size = 0;
+    
+            for entry_id in 0..entry_count {
+                let mut bytes = [0; 4];
+                bytes.copy_from_slice(&buffer[read_ptr..read_ptr + 4]);
+                let delta = i32::from_be_bytes(bytes);
+                
+                read_ptr += 4;
+                chunk_size += delta;
+    
+                cached_chunks.push((entry_id as u16, chunk_size as usize));
+            }
+        }
+    
+        read_ptr = 0;
+        for (entry_id, chunk_size) in cached_chunks {
+            let buf = buffer[read_ptr..read_ptr + chunk_size].to_vec();
+    
+            data.insert(entry_id, buf);
+            read_ptr += chunk_size;
+        }
+    
+        Ok(data)
+    }
 }
 
 impl ArchiveData {
