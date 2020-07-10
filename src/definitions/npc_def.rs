@@ -60,9 +60,9 @@ impl NpcDefinition {
 	#[doc(hidden)]
 	pub fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
 		let mut reader = BufReader::new(&buffer[..]);
-		let item_def = decode_buffer(id, &mut reader)?;
+		let npc_def = decode_buffer(id, &mut reader)?;
 
-		Ok(item_def)
+		Ok(npc_def)
 	}
 }
 
