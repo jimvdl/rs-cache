@@ -138,7 +138,8 @@ mod djd2 {
         let mut hash = 0;
 
         for index in 0..string.len() {
-            hash = string.chars().nth(index).unwrap() as i32 + ((hash << 5) - hash);
+            hash = string.chars()
+                .nth(index).expect(format!("index {} not valid in str len {}", index, string.len())) as i32 + ((hash << 5) - hash);
         }
         
         hash

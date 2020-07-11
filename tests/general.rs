@@ -7,7 +7,7 @@ fn initialize_cache() -> Result<(), CacheError> {
     let cache = common::setup();
 
     assert!(cache.is_ok());
-    assert_eq!(22, cache.unwrap().index_count());
+    assert_eq!(22, cache?.index_count());
 
     Ok(())
 }
