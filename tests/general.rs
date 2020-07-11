@@ -8,6 +8,7 @@ fn initialize_cache() -> Result<(), CacheError> {
 
     assert!(cache.is_ok());
     assert_eq!(22, cache.unwrap().index_count());
+
     Ok(())
 }
 
@@ -16,6 +17,7 @@ fn initialize_cache_fails() -> Result<(), CacheError> {
     let cache = Cache::new("./wrong/path");
 
     assert!(cache.is_err());
+
     Ok(())
 }
 
@@ -24,6 +26,7 @@ fn create_checksum() -> Result<(), CacheError> {
     let cache = common::setup()?;
 
     assert!(cache.create_checksum().is_ok());
+
     Ok(())
 }
 
@@ -35,9 +38,9 @@ fn encode_checksum() -> Result<(), CacheError> {
     let buffer = checksum.encode()?;
 
     let hash = common::hash(&buffer);
-
     assert_eq!("1a7cd53f7766970d5f8d7aa9c3fc7a0984d1d7d5", &hash);
     assert_eq!(173, buffer.len());
+
     Ok(())
 }
 
@@ -52,7 +55,8 @@ fn validate_checksum() -> Result<(), CacheError> {
                     153718440, 3849392898, 0, 2813112885, 1461700456, 2751169400, 2927815226];
     let valid = checksum.validate_crcs(&crcs);
 
-    assert_eq!(true, valid);
+    assert!(valid);
+
     Ok(())
 }
 
@@ -63,8 +67,8 @@ fn get_huffman_table() -> Result<(), CacheError> {
     let huffman_table = cache.huffman_table()?.to_vec();
 
     let hash = common::hash(&huffman_table);
-
     assert_eq!("664e89cf25a0af7da138dd0f3904ca79cd1fe767", &hash);
     assert_eq!(256, huffman_table.len());
+
     Ok(())
 }

@@ -9,6 +9,7 @@ use crate::{
 };
 
 /// Caches all the item definitions that were loaded.
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ItemLoader {
     pub items: HashMap<u16, ItemDefinition>
 }
@@ -77,8 +78,8 @@ impl ItemLoader {
     /// match blue_partyhat {
     ///     Some(blue_partyhat) => {
     ///         assert_eq!("Blue partyhat", blue_partyhat.name);
-    ///         assert_eq!(false, blue_partyhat.stackable);
-    ///         assert_eq!(false, blue_partyhat.members_only);
+    ///         assert!(!blue_partyhat.stackable);
+    ///         assert!(!blue_partyhat.members_only);
     ///     },
     ///     None => (),
     /// }

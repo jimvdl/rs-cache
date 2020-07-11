@@ -8,11 +8,35 @@ use crate::{
     cache::archive::{ Archive, ArchiveData }
 };
 
+/// Caches all the npc definitions that were loaded.
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct NpcLoader {
     pub npcs: HashMap<u16, NpcDefinition>
 }
 
 impl NpcLoader {
+    /// Constructs a new `NpcLoader`.
+    ///
+    /// It loads all the npc definitions and caches them.
+    ///
+    /// # Errors
+    /// 
+    /// If this function encounters any errors it will be wrapped
+    /// in a `CacheError`. (`ReadError`s or I/O errors)
+    /// 
+    /// # Examples
+    ///
+    /// ```
+    /// # use rscache::{ Cache, CacheError };
+    /// use rscache::NpcLoader;
+    /// # fn main() -> Result<(), CacheError> {
+    /// # let path = "./data/cache";
+    /// # let cache = Cache::new(path)?;
+    /// 
+    /// let npc_loader = NpcLoader::new(&cache)?;
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
     pub fn new(cache: &Cache) -> Result<Self, CacheError> {    
         let index_id = 2;
@@ -37,6 +61,30 @@ impl NpcLoader {
         Ok(Self { npcs })
     }
 
+    /// Retrieves the `NpcDefinition` for the given npc `id`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use rscache::{ Cache, CacheError };
+    /// # use rscache::NpcLoader;
+    /// # fn main() -> Result<(), CacheError> {
+    /// # let path = "./data/cache";
+    /// # let cache = Cache::new(path)?;
+    /// # let npc_loader = NpcLoader::new(&cache)?;
+    /// // wise old man id = 2108
+    /// let wise_old_man = npc_loader.load(2108);
+    /// 
+    /// match wise_old_man {
+    ///     Some(wise_old_man) => {
+    ///         assert_eq!("Wise Old Man", wise_old_man.name);
+    ///         assert!(wise_old_man.interactable);
+    ///     },
+    ///     None => (),
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
     pub fn load(&self, id: u16) -> Option<&NpcDefinition> {
         self.npcs.get(&id)

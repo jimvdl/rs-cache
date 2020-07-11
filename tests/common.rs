@@ -1,8 +1,12 @@
+#![allow(dead_code)]
+
 use rscache::{ Cache, CacheError };
+
 use rscache::{
     ItemLoader,
     NpcLoader,
 };
+
 use sha1::Sha1;
 
 pub fn setup() -> Result<Cache, CacheError> {

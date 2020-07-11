@@ -6,7 +6,13 @@ use std::{
 
 use crate::ReadExt;
 
-#[derive(Clone, Debug, Default)]
+/// Contains all the information about a certain npc fetched from the cache through
+/// the `NpcLoader`.
+/// 
+/// The [NpcModelData](struct.NpcModelData.html) and the
+/// [NpcAnimationData](struct.NpcAnimationData.html) were hidden in the documents
+/// because these are rarely accessed, they contain useless information in most use-cases. 
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct NpcDefinition {
     pub id: u16,
     pub name: String,
@@ -24,7 +30,7 @@ pub struct NpcDefinition {
     pub params: HashMap<u32, String>,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[doc(hidden)]
 pub struct NpcModelData {
     pub models: Vec<u16>,
@@ -43,7 +49,7 @@ pub struct NpcModelData {
     pub rotate_flag: bool,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[doc(hidden)]
 pub struct NpcAnimationData {
     pub standing: u16,
@@ -69,6 +75,7 @@ impl NpcDefinition {
 fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<NpcDefinition> {
 	let mut npc_def = NpcDefinition::default();
     npc_def.id = id;
+    npc_def.interactable = true;
 
 	loop {
         let opcode = reader.read_u8()?;

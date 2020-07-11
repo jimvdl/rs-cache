@@ -10,8 +10,8 @@ fn load_blue_partyhat() -> Result<(), CacheError> {
     let item = item_loader.load(1042).unwrap();
 
     assert_eq!("Blue partyhat", item.name);
-    assert_eq!(false, item.stackable);
-    assert_eq!(false, item.members_only);
+    assert!(!item.stackable);
+    assert!(!item.members_only);
 
     Ok(())
 }
@@ -24,8 +24,8 @@ fn load_magic_logs() -> Result<(), CacheError> {
     let item = item_loader.load(1513).unwrap();
 
     assert_eq!("Magic logs", item.name);
-    assert_eq!(false, item.stackable);
-    assert_eq!(true, item.members_only);
+    assert!(!item.stackable);
+    assert!(item.members_only);
 
     Ok(())
 }
@@ -37,8 +37,8 @@ fn load_logs_noted() -> Result<(), CacheError> {
 
     let item = item_loader.load(1512).unwrap();
 
-    assert_eq!(true, item.stackable);
-    assert_eq!(false, item.members_only);
+    assert!(item.stackable);
+    assert!(!item.members_only);
 
     Ok(())
 }
@@ -50,7 +50,7 @@ fn incorrect_item_id() -> Result<(), CacheError> {
 
     let item = item_loader.load(65_535);
 
-    assert_eq!(true, item.is_none());
+    assert!(item.is_none());
 
     Ok(())
 }
