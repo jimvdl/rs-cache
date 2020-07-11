@@ -5,7 +5,8 @@ use crate::{
     Cache, CacheError,
     LinkedListExt,
     codec,
-    cache::archive::{ Archive, ArchiveData }
+    cache::archive::{ Archive, ArchiveData },
+    traits::Loader
 };
 
 /// Caches all the npc definitions that were loaded.
@@ -14,7 +15,7 @@ pub struct NpcLoader {
     pub npcs: HashMap<u16, NpcDefinition>
 }
 
-impl NpcLoader {
+impl Loader<NpcDefinition> for NpcLoader {
     /// Constructs a new `NpcLoader`.
     ///
     /// It loads all the npc definitions and caches them.
@@ -28,7 +29,7 @@ impl NpcLoader {
     ///
     /// ```
     /// # use rscache::{ Cache, CacheError };
-    /// use rscache::NpcLoader;
+    /// use rscache::{ Loader, NpcLoader };
     /// # fn main() -> Result<(), CacheError> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
@@ -38,7 +39,7 @@ impl NpcLoader {
     /// # }
     /// ```
     #[inline]
-    pub fn new(cache: &Cache) -> Result<Self, CacheError> {    
+    fn new(cache: &Cache) -> Result<Self, CacheError> {    
         let index_id = 2;
         let archive_id = 9;
         
@@ -67,7 +68,7 @@ impl NpcLoader {
     ///
     /// ```
     /// # use rscache::{ Cache, CacheError };
-    /// # use rscache::NpcLoader;
+    /// # use rscache::{ Loader, NpcLoader };
     /// # fn main() -> Result<(), CacheError> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
@@ -86,7 +87,7 @@ impl NpcLoader {
     /// # }
     /// ```
     #[inline]
-    pub fn load(&self, id: u16) -> Option<&NpcDefinition> {
+    fn load(&self, id: u16) -> Option<&NpcDefinition> {
         self.npcs.get(&id)
     }
 }

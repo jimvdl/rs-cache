@@ -5,7 +5,8 @@ use crate::{
     Cache, CacheError,
     LinkedListExt,
     codec,
-    cache::archive::{ Archive, ArchiveData }
+    cache::archive::{ Archive, ArchiveData },
+    traits::Loader
 };
 
 /// Caches all the item definitions that were loaded.
@@ -14,7 +15,7 @@ pub struct ItemLoader {
     pub items: HashMap<u16, ItemDefinition>
 }
 
-impl ItemLoader {
+impl Loader<ItemDefinition> for ItemLoader {
     /// Constructs a new `ItemLoader`.
     ///
     /// It loads all the item definitions and caches them.
@@ -28,7 +29,7 @@ impl ItemLoader {
     ///
     /// ```
     /// # use rscache::{ Cache, CacheError };
-    /// use rscache::ItemLoader;
+    /// use rscache::{ Loader, ItemLoader };
     /// # fn main() -> Result<(), CacheError> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
@@ -38,7 +39,7 @@ impl ItemLoader {
     /// # }
     /// ```
     #[inline]
-    pub fn new(cache: &Cache) -> Result<Self, CacheError> {    
+    fn new(cache: &Cache) -> Result<Self, CacheError> {    
         let index_id = 2;
         let archive_id = 10;
         
@@ -67,7 +68,7 @@ impl ItemLoader {
     ///
     /// ```
     /// # use rscache::{ Cache, CacheError };
-    /// # use rscache::ItemLoader;
+    /// # use rscache::{ Loader, ItemLoader };
     /// # fn main() -> Result<(), CacheError> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
@@ -87,7 +88,7 @@ impl ItemLoader {
     /// # }
     /// ```
     #[inline]
-    pub fn load(&self, id: u16) -> Option<&ItemDefinition> {
+    fn load(&self, id: u16) -> Option<&ItemDefinition> {
         self.items.get(&id)
     }
 }

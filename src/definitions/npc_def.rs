@@ -7,7 +7,7 @@ use std::{
 use crate::ReadExt;
 
 /// Contains all the information about a certain npc fetched from the cache through
-/// the `NpcLoader`.
+/// the [NpcLoader](struct.NpcLoader.html).
 /// 
 /// The [NpcModelData](struct.NpcModelData.html) and the
 /// [NpcAnimationData](struct.NpcAnimationData.html) were hidden in the documents

@@ -1,8 +1,17 @@
 use std::{
     collections::LinkedList,
     io,
-    io::{ Read, BufReader }
+    io::{ Read, BufReader },
+    marker::Sized,
 };
+
+use crate::{ Cache, CacheError };
+
+/// Adds definition loading.
+pub trait Loader<T> {
+    fn new(cache: &Cache) -> Result<Self, CacheError> where Self: Sized;
+    fn load(&self, id: u16) -> Option<&T>;
+}
 
 /// Adds extensions onto the std collection: [`LinkedList<T>`].
 /// 
@@ -11,7 +20,9 @@ pub trait LinkedListExt {
     fn to_vec(&self) -> Vec<u8>;
 }
 
-/// Adds easy byte reading onto a `Read` instance.
+/// Adds easy byte reading onto a [`Read`] instance.
+/// 
+/// [`Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
 pub trait ReadExt: Read {
     fn read_u8(&mut self) -> io::Result<u8>;
     fn read_i8(&mut self) -> io::Result<i8>;

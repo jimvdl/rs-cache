@@ -7,7 +7,7 @@ use std::{
 use crate::ReadExt;
 
 /// Contains all the information about a certain item fetched from the cache through
-/// the `ItemLoader`.
+/// the [ItemLoader](struct.ItemLoader.html).
 /// 
 /// The [InventoryModelData](struct.InventoryModelData.html) and the
 /// [CharacterModelData](struct.CharacterModelData.html) were hidden in the documents

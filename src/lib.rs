@@ -1,5 +1,7 @@
 //! Utilities for [RuneScape] cache interaction.
 //! 
+//! _Currently only supports the OSRS cache but RS3 support is in the works._
+//! 
 //! # Features
 //! 
 //! The following features are currently provided:
@@ -65,20 +67,23 @@
 //! # }
 //! ```
 //! 
-//! # Definitions
+//! # Loaders & Definitions
 //! 
-//! Currently only item definitions are supported.
-//! These definitions are fields that can be looked up for a certain item id.
+//! Every loader has the [Loader](trait.Loader.html) trait implemented, ensuring every loader works exactly the same.
+//! 
+//! Supported definitions: (so far)
+//! - [ItemDefinition](struct.ItemDefinition.html)
+//! - [NpcDefinition](struct.NpcDefinition.html)
+//! 
+//! These definitions contain fields that can be looked up for a certain item/npc.
 //! i.e. you need to know if a certain item is stackable or members only the [ItemDefinition](struct.ItemDefinition.html) struct
 //! contains that information.
-//! 
-//! See the [ItemDefinition](struct.ItemDefinition.html) struct to view the available fields each item might have.
 //! 
 //! ### Example
 //! 
 //! ```
 //! # use rscache::{ Cache, CacheError };
-//! use rscache::ItemLoader;
+//! use rscache::{ Loader, ItemLoader };
 //! 
 //! # fn main() -> Result<(), CacheError> {
 //! # let path = "./data/cache";
@@ -91,8 +96,8 @@
 //! match magic_logs {
 //!     Some(item_def) => {
 //!         assert_eq!("Magic logs", item_def.name);
-//!         assert_eq!(false, item_def.stackable);
-//!         assert_eq!(true, item_def.members_only);
+//!         assert!(!item_def.stackable);
+//!         assert!(item_def.members_only);
 //!     },
 //!     None => (),
 //! }

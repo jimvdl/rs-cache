@@ -1,4 +1,4 @@
-use rscache::CacheError;
+use rscache::{ Loader, CacheError };
 
 mod common;
 
