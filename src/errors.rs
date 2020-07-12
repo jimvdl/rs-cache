@@ -43,7 +43,7 @@ impl fmt::Display for CacheError {
 			Self::Io(err) => err.fmt(f),
 			Self::Read(err) => err.fmt(f),
 			Self::Compression(err) => err.fmt(f),
-			Self::Parse(err) => err.fmt(f)
+			Self::Parse(_) => write!(f, "Parsing failed."),
 		}
 	}
 }
