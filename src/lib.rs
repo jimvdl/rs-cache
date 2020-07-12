@@ -125,6 +125,7 @@ mod cache;
 mod checksum;
 mod errors;
 mod traits;
+mod parser;
 mod definitions;
 pub mod codec;
 
