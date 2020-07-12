@@ -22,7 +22,7 @@ The minimum supported `rustc` version is `1.41`.
 This crate is passively maintained. Additional features will be implemented once they are needed for my own server.
 __If you require a certain feature feel free to open an issue.__
 
-# Usage
+## Usage
 
 Add this to your `Cargo.toml`:
 
@@ -33,7 +33,7 @@ rs-cache = "0.2"
 
 Examples can be found in the [examples](examples/) directory. These examples include basic use cases and more advanced use cases such as the update protocol.
 
-# Acknowledegments
+## Acknowledgements
 
 The following sources aided with the development of this crate:\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/d/dc/Cosmic_rune_detail.png/800px-Cosmic_rune_detail.png?734d1" width="10"> &nbsp;[OpenRS](https://www.rune-server.ee/runescape-development/rs-503-client-server/downloads/312510-openrs-cache-library.html)\
@@ -43,7 +43,7 @@ The following sources aided with the development of this crate:\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/8/8b/Soul_rune_detail.png/800px-Soul_rune_detail.png?75ada" width="10"> &nbsp;[Librsfs](https://github.com/Velocity-/librsfs)\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/c/c1/Blood_rune_detail.png/800px-Blood_rune_detail.png?2cf9e" width="10"> &nbsp;[OSRSBox](https://www.osrsbox.com/)
 
-# License
+## License
 RS-Cache is distributed under the terms of the MIT license.
 
 See [LICENSE](LICENSE) for details.
