@@ -52,10 +52,6 @@ impl fmt::Display for CacheError {
 pub enum ReadError {
 	IndexNotFound(u8),
 	ArchiveNotFound(u8, u16),
-	IndexRefNotFound(u16),
-	WhirlpoolUnsupported(),
-	RefTblEntryNotFound(u8),
-
 }
 
 impl Error for ReadError {}
@@ -66,9 +62,6 @@ impl fmt::Display for ReadError {
 		match self {
 			Self::IndexNotFound(id) => write!(f, "Index {} was not found.", id),
 			Self::ArchiveNotFound(index_id, archive_id) => write!(f, "Index {} does not contain archive {}.", index_id, archive_id),
-			Self::IndexRefNotFound(index_id) => write!(f, "Index reference with id {} not found.", index_id),
-			Self::WhirlpoolUnsupported() => write!(f, "Whirlpool is currently unsupported."),
-			Self::RefTblEntryNotFound(id) => write!(f, "Reference Table Entry {} not found.", id),
 		}
 	}
 }
@@ -76,7 +69,6 @@ impl fmt::Display for ReadError {
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum CompressionError {
 	Unsupported(u8),
-	LengthMismatch(usize, usize),
 }
 
 impl Error for CompressionError {}
@@ -86,7 +78,6 @@ impl fmt::Display for CompressionError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			Self::Unsupported(compression) => write!(f, "Invalid compression: {} is unsupported.", compression),
-			Self::LengthMismatch(expected, actual) => write!(f, "Uncompressed length mismatch: expected length {} but length was {}.", expected, actual),
 		}
 	}
 }
