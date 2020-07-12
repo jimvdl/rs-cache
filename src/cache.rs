@@ -193,9 +193,9 @@ impl Cache {
         let identifier = crate::djd2::hash(name);
 
         let mut buffer = &self.read(255, index_id as u16)?.to_vec()[..];
-        let mut data = &codec::decode(&mut buffer)?[..];
+        let data = &codec::decode(&mut buffer)?[..];
 
-        let archives = ArchiveData::decode(&mut data)?;
+        let archives = ArchiveData::decode(data)?;
 
         for archive_data in archives {
             if archive_data.identifier() == identifier {

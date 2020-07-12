@@ -5,6 +5,7 @@ pub enum CacheError {
 	Io(io::Error),
 	Read(ReadError),
 	Compression(CompressionError),
+	Parse(nom::Err<()>)
 }
 
 macro_rules! impl_from {
@@ -21,6 +22,7 @@ macro_rules! impl_from {
 impl_from!(io::Error, Io);
 impl_from!(ReadError, Read);
 impl_from!(CompressionError, Compression);
+impl_from!(nom::Err<()>, Parse);
 
 impl Error for CacheError {
 	#[inline]
@@ -29,6 +31,7 @@ impl Error for CacheError {
 			Self::Io(err) => Some(err),
 			Self::Read(err) => Some(err),
 			Self::Compression(err) => Some(err),
+			Self::Parse(err) => Some(err)
 		}
 	}
 }
@@ -40,6 +43,7 @@ impl fmt::Display for CacheError {
 			Self::Io(err) => err.fmt(f),
 			Self::Read(err) => err.fmt(f),
 			Self::Compression(err) => err.fmt(f),
+			Self::Parse(err) => err.fmt(f)
 		}
 	}
 }
@@ -51,6 +55,7 @@ pub enum ReadError {
 	IndexRefNotFound(u16),
 	WhirlpoolUnsupported(),
 	RefTblEntryNotFound(u8),
+
 }
 
 impl Error for ReadError {}

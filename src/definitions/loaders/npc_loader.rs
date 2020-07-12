@@ -6,7 +6,6 @@ use crate::{
     LinkedListExt,
     codec,
     cache::archive::{ Archive, ArchiveData },
-    traits::Loader
 };
 
 /// Caches all the npc definitions that were loaded.
@@ -15,7 +14,7 @@ pub struct NpcLoader {
     pub npcs: HashMap<u16, NpcDefinition>
 }
 
-impl Loader<NpcDefinition> for NpcLoader {
+impl NpcLoader {
     /// Constructs a new `NpcLoader`.
     ///
     /// It loads all the npc definitions and caches them.
@@ -29,7 +28,7 @@ impl Loader<NpcDefinition> for NpcLoader {
     ///
     /// ```
     /// # use rscache::{ Cache, CacheError };
-    /// use rscache::{ Loader, NpcLoader };
+    /// use rscache::NpcLoader;
     /// # fn main() -> Result<(), CacheError> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
@@ -39,14 +38,14 @@ impl Loader<NpcDefinition> for NpcLoader {
     /// # }
     /// ```
     #[inline]
-    fn new(cache: &Cache) -> Result<Self, CacheError> {    
+    pub fn new(cache: &Cache) -> Result<Self, CacheError> {    
         let index_id = 2;
         let archive_id = 9;
         
         let mut buffer = &cache.read(255, index_id)?.to_vec()[..];
-        let mut buffer = &codec::decode(&mut buffer)?[..];
+        let buffer = &codec::decode(&mut buffer)?[..];
         
-        let archives = ArchiveData::decode(&mut buffer)?;
+        let archives = ArchiveData::decode(buffer)?;
         let entry_count = archives[archive_id - 1].entry_count();
         
         let mut buffer = &cache.read(index_id as u8, archive_id as u16)?.to_vec()[..];
@@ -68,7 +67,7 @@ impl Loader<NpcDefinition> for NpcLoader {
     ///
     /// ```
     /// # use rscache::{ Cache, CacheError };
-    /// # use rscache::{ Loader, NpcLoader };
+    /// # use rscache::NpcLoader;
     /// # fn main() -> Result<(), CacheError> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
@@ -87,7 +86,7 @@ impl Loader<NpcDefinition> for NpcLoader {
     /// # }
     /// ```
     #[inline]
-    fn load(&self, id: u16) -> Option<&NpcDefinition> {
+    pub fn load(&self, id: u16) -> Option<&NpcDefinition> {
         self.npcs.get(&id)
     }
 }

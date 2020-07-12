@@ -11,6 +11,9 @@
 //! - Compression and decompression:
 //!   - [Gzip]
 //!   - [Bzip2]
+//! - Loaders & Definitions
+//!   - [ItemLoader](struct.ItemLoader.html) - [ItemDefinition](struct.ItemDefinition.html)
+//!   - [NpcLoader](struct.NpcLoader.html) - [NpcDefinition](struct.NpcDefinition.html)
 //! 
 //! # Quick Start
 //! 
@@ -69,9 +72,9 @@
 //! 
 //! # Loaders & Definitions
 //! 
-//! Every loader has the [Loader](trait.Loader.html) trait implemented, ensuring every loader works exactly the same.
+//! Every loader works exactly the same.
 //! 
-//! Supported definitions: (so far)
+//! Supported definitions:
 //! - [ItemDefinition](struct.ItemDefinition.html)
 //! - [NpcDefinition](struct.NpcDefinition.html)
 //! 
@@ -83,7 +86,7 @@
 //! 
 //! ```
 //! # use rscache::{ Cache, CacheError };
-//! use rscache::{ Loader, ItemLoader };
+//! use rscache::ItemLoader;
 //! 
 //! # fn main() -> Result<(), CacheError> {
 //! # let path = "./data/cache";
@@ -117,8 +120,6 @@
     clippy::result_map_unwrap_or_else, clippy::similar_names, clippy::single_match_else, clippy::too_many_lines, clippy::type_repetition_in_bounds,
     clippy::unseparated_literal_suffix, clippy::used_underscore_binding)]
 
-#![allow(clippy::suspicious_else_formatting)]
-
 mod cache;
 mod checksum;
 mod errors;
@@ -139,7 +140,7 @@ mod djd2 {
 
         for index in 0..string.len() {
             hash = string.chars()
-                .nth(index).expect(format!("index {} not valid in str len {}", index, string.len())) as i32 + ((hash << 5) - hash);
+                .nth(index).unwrap_or_else(|| panic!("index {} not valid in str len {}", index, string.len())) as i32 + ((hash << 5) - hash);
         }
         
         hash

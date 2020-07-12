@@ -2,16 +2,7 @@ use std::{
     collections::LinkedList,
     io,
     io::{ Read, BufReader },
-    marker::Sized,
 };
-
-use crate::{ Cache, CacheError };
-
-/// Adds definition loading.
-pub trait Loader<T> {
-    fn new(cache: &Cache) -> Result<Self, CacheError> where Self: Sized;
-    fn load(&self, id: u16) -> Option<&T>;
-}
 
 /// Adds extensions onto the std collection: [`LinkedList<T>`].
 /// 

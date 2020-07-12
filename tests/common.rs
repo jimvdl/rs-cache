@@ -3,7 +3,6 @@
 use rscache::{ Cache, CacheError };
 
 use rscache::{
-    Loader,
     ItemLoader,
     NpcLoader,
 };

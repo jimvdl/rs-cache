@@ -6,7 +6,6 @@ use crate::{
     LinkedListExt,
     codec,
     cache::archive::{ Archive, ArchiveData },
-    traits::Loader
 };
 
 /// Caches all the item definitions that were loaded.
@@ -15,7 +14,7 @@ pub struct ItemLoader {
     pub items: HashMap<u16, ItemDefinition>
 }
 
-impl Loader<ItemDefinition> for ItemLoader {
+impl ItemLoader {
     /// Constructs a new `ItemLoader`.
     ///
     /// It loads all the item definitions and caches them.
@@ -29,7 +28,7 @@ impl Loader<ItemDefinition> for ItemLoader {
     ///
     /// ```
     /// # use rscache::{ Cache, CacheError };
-    /// use rscache::{ Loader, ItemLoader };
+    /// use rscache::ItemLoader;
     /// # fn main() -> Result<(), CacheError> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
@@ -39,14 +38,14 @@ impl Loader<ItemDefinition> for ItemLoader {
     /// # }
     /// ```
     #[inline]
-    fn new(cache: &Cache) -> Result<Self, CacheError> {    
+    pub fn new(cache: &Cache) -> Result<Self, CacheError> {    
         let index_id = 2;
         let archive_id = 10;
         
         let mut buffer = &cache.read(255, index_id)?.to_vec()[..];
-        let mut buffer = &codec::decode(&mut buffer)?[..];
+        let buffer = &codec::decode(&mut buffer)?[..];
         
-        let archives = ArchiveData::decode(&mut buffer)?;
+        let archives = ArchiveData::decode(buffer)?;
         let entry_count = archives[archive_id - 1].entry_count();
         
         let mut buffer = &cache.read(index_id as u8, archive_id as u16)?.to_vec()[..];
@@ -58,7 +57,7 @@ impl Loader<ItemDefinition> for ItemLoader {
         for (item_id, item_buffer) in item_data {
             items.insert(item_id, ItemDefinition::new(item_id, &item_buffer)?);
         }
-        
+
         Ok(Self { items })
     }
 
@@ -68,7 +67,7 @@ impl Loader<ItemDefinition> for ItemLoader {
     ///
     /// ```
     /// # use rscache::{ Cache, CacheError };
-    /// # use rscache::{ Loader, ItemLoader };
+    /// # use rscache::ItemLoader;
     /// # fn main() -> Result<(), CacheError> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
@@ -88,7 +87,7 @@ impl Loader<ItemDefinition> for ItemLoader {
     /// # }
     /// ```
     #[inline]
-    fn load(&self, id: u16) -> Option<&ItemDefinition> {
+    pub fn load(&self, id: u16) -> Option<&ItemDefinition> {
         self.items.get(&id)
     }
 }
