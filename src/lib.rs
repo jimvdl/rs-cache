@@ -125,7 +125,6 @@ mod cache;
 mod checksum;
 mod errors;
 mod traits;
-mod parser;
 mod definitions;
 pub mod codec;
 
@@ -136,7 +135,6 @@ pub use traits::*;
 pub use definitions::*;
 
 mod djd2 {
-    #[inline]
     pub fn hash(string: &str) -> i32 {
         let mut hash = 0;
 

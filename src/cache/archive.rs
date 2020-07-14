@@ -4,18 +4,19 @@ use std::{
 };
 
 use nom::{
-    multi::many0,
+    multi::{ many0, many_m_n },
     combinator::cond,
     bytes::complete::take,
 	number::complete::{
-		be_u32,
         be_u8,
+        be_u16,
+		be_u32,
         be_i32
     },
 };
 use itertools::izip;
 
-use crate::{ CacheError, parser };
+use crate::CacheError;
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Archive {
@@ -32,13 +33,7 @@ pub struct ArchiveData {
     entry_count: usize
 }
 
-impl Archive {
-    #[inline]
-    pub const fn new(sector: u32, length: usize) -> Self {
-		Self { sector, length }
-    }
-    
-    #[inline]
+impl Archive {  
     pub fn decode(buffer: &[u8], entry_count: usize) -> io::Result<HashMap<u16, Vec<u8>>> {
         let chunks = buffer[buffer.len() - 1] as usize;
         let mut data = HashMap::new();
@@ -73,17 +68,16 @@ impl Archive {
 }
 
 impl ArchiveData {
-    #[inline]
     pub fn decode(buffer: &[u8]) -> Result<Vec<Self>, CacheError> {
         let (buffer, protocol) = be_u8(buffer)?;
         let (buffer, _) = cond(protocol >= 6, be_u32)(buffer)?;
         let (buffer, identified) = parse_identified(buffer)?;
-        let (buffer, archive_count) = parser::parse_usize_from_u16(buffer)?;
-        let (buffer, ids) = parser::parse_n_u16(buffer, archive_count)?;
+        let (buffer, archive_count) = parse_usize_from_u16(buffer)?;
+        let (buffer, ids) = many_m_n(0, archive_count, be_u16)(buffer)?;
         let (buffer, identifiers) = parse_identifiers(buffer, identified, archive_count)?;
-        let (buffer, crcs) = parser::parse_n_u32(buffer, archive_count)?;
-        let (buffer, revisions) = parser::parse_n_u32(buffer, archive_count)?;
-        let (_, entry_counts) = parser::parse_n_u16(buffer, archive_count)?;
+        let (buffer, crcs) = many_m_n(0, archive_count, be_u32)(buffer)?;
+        let (buffer, revisions) = many_m_n(0, archive_count, be_u32)(buffer)?;
+        let (_, entry_counts) = many_m_n(0, archive_count, be_u16)(buffer)?;
 
         let mut archives = Vec::with_capacity(archive_count);
         let archive_data = izip!(&ids, &identifiers, &crcs, &revisions, &entry_counts);
@@ -100,17 +94,14 @@ impl ArchiveData {
         Ok(archives)
     }
 
-    #[inline]
     pub const fn id(&self) -> u16 {
         self.id
     }
 
-    #[inline]
     pub const fn identifier(&self) -> i32 {
         self.identifier
     }
 
-    #[inline]
     pub const fn entry_count(&self) -> usize {
         self.entry_count
     }
@@ -136,3 +127,8 @@ fn parse_identifiers(buffer: &[u8], identified: bool, archive_count: usize) -> R
     Ok((buffer, identifiers))
 }
 
+fn parse_usize_from_u16(buffer: &[u8]) -> Result<(&[u8], usize), CacheError> {
+    let (buffer, value) = be_u16(buffer)?;
+
+    Ok((buffer, value as usize))
+}

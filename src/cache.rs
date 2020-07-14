@@ -184,7 +184,6 @@ impl Cache {
 		Ok(codec::decode(&mut buffer)?)
     }
 
-    #[inline]
 	fn archive_by_name(&self, index_id: u8, name: &str) -> Result<Archive, CacheError> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,
@@ -208,7 +207,7 @@ impl Cache {
             }
         }
 
-        Err(ReadError::ArchiveNotFound(index_id, 0).into())
+        Err(ReadError::NameNotInArchive(identifier, name.to_owned(), index_id).into())
     }
 
     /// Simply returns the index count, by getting the `len()` of 

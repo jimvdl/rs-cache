@@ -5,7 +5,7 @@ pub enum CacheError {
 	Io(io::Error),
 	Read(ReadError),
 	Compression(CompressionError),
-	Parse(nom::Err<()>)
+	Parse(nom::Err<()>),
 }
 
 macro_rules! impl_from {
@@ -31,7 +31,7 @@ impl Error for CacheError {
 			Self::Io(err) => Some(err),
 			Self::Read(err) => Some(err),
 			Self::Compression(err) => Some(err),
-			Self::Parse(err) => Some(err)
+			Self::Parse(err) => Some(err),
 		}
 	}
 }
@@ -48,10 +48,11 @@ impl fmt::Display for CacheError {
 	}
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum ReadError {
 	IndexNotFound(u8),
 	ArchiveNotFound(u8, u16),
+	NameNotInArchive(i32, String, u8),
 }
 
 impl Error for ReadError {}
@@ -60,8 +61,9 @@ impl fmt::Display for ReadError {
 	#[inline]
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
-			Self::IndexNotFound(id) => write!(f, "Index {} was not found.", id),
+			Self::IndexNotFound(id) => write!(f, "Index {} not found.", id),
 			Self::ArchiveNotFound(index_id, archive_id) => write!(f, "Index {} does not contain archive {}.", index_id, archive_id),
+			Self::NameNotInArchive(hash, name, index_id) => write!(f, "Identifier hash {} for name {} not found in index {}.", hash, name, index_id),
 		}
 	}
 }
