@@ -5,7 +5,7 @@ use crate::{
     Cache, CacheError,
     LinkedListExt,
     codec,
-    cache::archive::{ Archive, ArchiveData },
+    cache::archive,
 };
 
 /// Caches all the npc definitions that were loaded.
@@ -45,13 +45,13 @@ impl NpcLoader {
         let mut buffer = &cache.read(255, index_id)?.to_vec()[..];
         let buffer = &codec::decode(&mut buffer)?[..];
         
-        let archives = ArchiveData::decode(buffer)?;
-        let entry_count = archives[archive_id - 1].entry_count();
+        let archives = archive::parse(buffer)?;
+        let entry_count = archives[archive_id - 1].entry_count;
         
         let mut buffer = &cache.read(index_id as u8, archive_id as u16)?.to_vec()[..];
         let buffer = codec::decode(&mut buffer)?;
         
-        let item_data = Archive::decode(&buffer, entry_count)?;
+        let item_data = archive::decode(&buffer, entry_count)?;
         let mut npcs = HashMap::new();
         
         for (npc_id, npc_buffer) in item_data {

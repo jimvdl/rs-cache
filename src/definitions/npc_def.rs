@@ -178,7 +178,7 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<NpcDefini
 					npc_def.params.insert(key, value);
 				}
 			}
-			_ => { println!("opcode: {}", opcode); unreachable!() }
+			_ => unreachable!(),
 		}
 	}
 

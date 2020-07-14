@@ -32,3 +32,13 @@ fn parse_archive(buffer: &[u8]) -> Archive {
 
 	Archive { sector, length }
 }
+
+pub fn version(buffer: &[u8]) -> u32 {
+    let format = buffer[0];
+
+    if format >= 6 {
+        u32::from_be_bytes([buffer[1], buffer[2], buffer[3], buffer[4]])
+    } else {
+        0
+    }
+}
