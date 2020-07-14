@@ -1,5 +1,7 @@
 //! Utilities for [RuneScape] cache interaction.
 //! 
+//! _Currently only supports the OSRS cache but RS3 support is in the works._
+//! 
 //! # Features
 //! 
 //! The following features are currently provided:
@@ -9,6 +11,9 @@
 //! - Compression and decompression:
 //!   - [Gzip]
 //!   - [Bzip2]
+//! - Loaders & Definitions
+//!   - [ItemLoader](struct.ItemLoader.html) - [ItemDefinition](struct.ItemDefinition.html)
+//!   - [NpcLoader](struct.NpcLoader.html) - [NpcDefinition](struct.NpcDefinition.html)
 //! 
 //! # Quick Start
 //! 
@@ -65,14 +70,18 @@
 //! # }
 //! ```
 //! 
-//! # Definitions
+//! # Loaders & Definitions
 //! 
-//! Currently only item definitions are supported.
-//! These definitions are fields that can be looked up for a certain item id.
+//! Every loader works exactly the same. It has a `new(cache: &Cache)` function to parse and cache 
+//! the definitions and it contains a `load(id: u16)` to fetch the definition that corresponds to the given id.
+//! 
+//! Supported definitions:
+//! - [ItemDefinition](struct.ItemDefinition.html)
+//! - [NpcDefinition](struct.NpcDefinition.html)
+//! 
+//! These definitions contain fields that can be looked up for a certain item/npc.
 //! i.e. you need to know if a certain item is stackable or members only the [ItemDefinition](struct.ItemDefinition.html) struct
 //! contains that information.
-//! 
-//! See the [ItemDefinition](struct.ItemDefinition.html) struct to view the available fields each item might have.
 //! 
 //! ### Example
 //! 
@@ -91,8 +100,8 @@
 //! match magic_logs {
 //!     Some(item_def) => {
 //!         assert_eq!("Magic logs", item_def.name);
-//!         assert_eq!(false, item_def.stackable);
-//!         assert_eq!(true, item_def.members_only);
+//!         assert!(!item_def.stackable);
+//!         assert!(item_def.members_only);
 //!     },
 //!     None => (),
 //! }
@@ -112,8 +121,6 @@
     clippy::result_map_unwrap_or_else, clippy::similar_names, clippy::single_match_else, clippy::too_many_lines, clippy::type_repetition_in_bounds,
     clippy::unseparated_literal_suffix, clippy::used_underscore_binding)]
 
-#![allow(clippy::suspicious_else_formatting)]
-
 mod cache;
 mod checksum;
 mod errors;
@@ -128,12 +135,12 @@ pub use traits::*;
 pub use definitions::*;
 
 mod djd2 {
-    #[inline]
     pub fn hash(string: &str) -> i32 {
         let mut hash = 0;
 
         for index in 0..string.len() {
-            hash = string.chars().nth(index).unwrap() as i32 + ((hash << 5) - hash);
+            hash = string.chars()
+                .nth(index).unwrap_or_else(|| panic!("index {} not valid in str len {}", index, string.len())) as i32 + ((hash << 5) - hash);
         }
         
         hash

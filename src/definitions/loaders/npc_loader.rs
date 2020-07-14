@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::super::item_def::ItemDefinition;
+use super::super::npc_def::NpcDefinition;
 use crate::{
     Cache, CacheError,
     LinkedListExt,
@@ -8,16 +8,16 @@ use crate::{
     cache::archive,
 };
 
-/// Caches all the item definitions that were loaded.
+/// Caches all the npc definitions that were loaded.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
-pub struct ItemLoader {
-    pub items: HashMap<u16, ItemDefinition>
+pub struct NpcLoader {
+    pub npcs: HashMap<u16, NpcDefinition>
 }
 
-impl ItemLoader {
-    /// Constructs a new `ItemLoader`.
+impl NpcLoader {
+    /// Constructs a new `NpcLoader`.
     ///
-    /// It loads all the item definitions and caches them.
+    /// It loads all the npc definitions and caches them.
     ///
     /// # Errors
     /// 
@@ -28,19 +28,19 @@ impl ItemLoader {
     ///
     /// ```
     /// # use rscache::{ Cache, CacheError };
-    /// use rscache::ItemLoader;
+    /// use rscache::NpcLoader;
     /// # fn main() -> Result<(), CacheError> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
     /// 
-    /// let item_loader = ItemLoader::new(&cache)?;
+    /// let npc_loader = NpcLoader::new(&cache)?;
     /// # Ok(())
     /// # }
     /// ```
     #[inline]
     pub fn new(cache: &Cache) -> Result<Self, CacheError> {    
         let index_id = 2;
-        let archive_id = 10;
+        let archive_id = 9;
         
         let mut buffer = &cache.read(255, index_id)?.to_vec()[..];
         let buffer = &codec::decode(&mut buffer)?[..];
@@ -50,36 +50,35 @@ impl ItemLoader {
         
         let mut buffer = &cache.read(index_id as u8, archive_id as u16)?.to_vec()[..];
         let buffer = codec::decode(&mut buffer)?;
-
+        
         let item_data = archive::decode(&buffer, entry_count)?;
-        let mut items = HashMap::new();
-
-        for (item_id, item_buffer) in item_data {
-            items.insert(item_id, ItemDefinition::new(item_id, &item_buffer)?);
+        let mut npcs = HashMap::new();
+        
+        for (npc_id, npc_buffer) in item_data {
+            npcs.insert(npc_id, NpcDefinition::new(npc_id, &npc_buffer)?);
         }
-
-        Ok(Self { items })
+        
+        Ok(Self { npcs })
     }
 
-    /// Retrieves the `ItemDefinition` for the given item `id`.
+    /// Retrieves the `NpcDefinition` for the given npc `id`.
     ///
     /// # Examples
     ///
     /// ```
     /// # use rscache::{ Cache, CacheError };
-    /// # use rscache::ItemLoader;
+    /// # use rscache::NpcLoader;
     /// # fn main() -> Result<(), CacheError> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
-    /// # let item_loader = ItemLoader::new(&cache)?;
-    /// // blue partyhat id = 1042
-    /// let blue_partyhat = item_loader.load(1042);
+    /// # let npc_loader = NpcLoader::new(&cache)?;
+    /// // wise old man id = 2108
+    /// let wise_old_man = npc_loader.load(2108);
     /// 
-    /// match blue_partyhat {
-    ///     Some(blue_partyhat) => {
-    ///         assert_eq!("Blue partyhat", blue_partyhat.name);
-    ///         assert!(!blue_partyhat.stackable);
-    ///         assert!(!blue_partyhat.members_only);
+    /// match wise_old_man {
+    ///     Some(wise_old_man) => {
+    ///         assert_eq!("Wise Old Man", wise_old_man.name);
+    ///         assert!(wise_old_man.interactable);
     ///     },
     ///     None => (),
     /// }
@@ -87,7 +86,7 @@ impl ItemLoader {
     /// # }
     /// ```
     #[inline]
-    pub fn load(&self, id: u16) -> Option<&ItemDefinition> {
-        self.items.get(&id)
+    pub fn load(&self, id: u16) -> Option<&NpcDefinition> {
+        self.npcs.get(&id)
     }
 }

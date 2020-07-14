@@ -1,6 +1,22 @@
-use crate::CacheError;
+use std::{
+    io,
+    collections::HashMap,
+};
 
-use std::io::Read;
+use nom::{
+    multi::{ many0, many_m_n },
+    combinator::cond,
+    bytes::complete::take,
+	number::complete::{
+        be_u8,
+        be_u16,
+		be_u32,
+        be_i32
+    },
+};
+use itertools::izip;
+
+use crate::CacheError;
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Archive {
@@ -10,92 +26,93 @@ pub struct Archive {
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ArchiveData {
-    id: u16,
-    identifier: i32,
-    crc: u32,
-    revision: u32,
-    entry_count: usize
+    pub id: u16,
+    pub identifier: i32,
+    pub crc: u32,
+    pub revision: u32,
+    pub entry_count: usize
 }
 
-impl Archive {
-    pub const fn new(sector: u32, length: usize) -> Self {
-		Self { sector, length }
-	}
+pub fn decode(buffer: &[u8], entry_count: usize) -> io::Result<HashMap<u16, Vec<u8>>> {
+    let chunks = buffer[buffer.len() - 1] as usize;
+    let mut data = HashMap::new();
+    let mut cached_chunks = Vec::new();
+    let mut read_ptr = buffer.len() - 1 - chunks * entry_count * 4;
+
+    for _ in 0..chunks {
+        let mut chunk_size = 0;
+
+        for entry_id in 0..entry_count {
+            let mut bytes = [0; 4];
+            bytes.copy_from_slice(&buffer[read_ptr..read_ptr + 4]);
+            let delta = i32::from_be_bytes(bytes);
+            
+            read_ptr += 4;
+            chunk_size += delta;
+
+            cached_chunks.push((entry_id as u16, chunk_size as usize));
+        }
+    }
+
+    read_ptr = 0;
+    for (entry_id, chunk_size) in cached_chunks {
+        let buf = buffer[read_ptr..read_ptr + chunk_size].to_vec();
+
+        data.insert(entry_id, buf);
+        read_ptr += chunk_size;
+    }
+
+    Ok(data)
 }
 
-impl ArchiveData {
-    pub fn decode<R: Read>(reader: &mut R) -> Result<Vec<Self>, CacheError> {
-        let mut buffer = [0; 1];
-        reader.read_exact(&mut buffer)?;
-        let protocol = buffer[0];
+pub fn parse(buffer: &[u8]) -> Result<Vec<ArchiveData>, CacheError> {
+    let (buffer, protocol) = be_u8(buffer)?;
+    let (buffer, _) = cond(protocol >= 6, be_u32)(buffer)?;
+    let (buffer, identified) = parse_identified(buffer)?;
+    let (buffer, archive_count) = parse_usize_from_u16(buffer)?;
+    let (buffer, ids) = many_m_n(0, archive_count, be_u16)(buffer)?;
+    let (buffer, identifiers) = parse_identifiers(buffer, identified, archive_count)?;
+    let (buffer, crcs) = many_m_n(0, archive_count, be_u32)(buffer)?;
+    let (buffer, revisions) = many_m_n(0, archive_count, be_u32)(buffer)?;
+    let (_, entry_counts) = many_m_n(0, archive_count, be_u16)(buffer)?;
 
-        if protocol >= 6 {
-            let mut buffer = [0; 4];
-			reader.read_exact(&mut buffer)?;
-        }
-        
-        let mut buffer = [0; 1];
-        reader.read_exact(&mut buffer)?;
-        let identified = (1 & buffer[0]) != 0;
-        
-        let mut buffer = [0; 2];
-        reader.read_exact(&mut buffer)?;
-        let archive_count = u16::from_be_bytes(buffer) as usize;
-        let mut archives = vec![Self::default(); archive_count];
-        
-        for archive_data in archives.iter_mut().take(archive_count) {
-            let mut buffer = [0; 2];
-            reader.read_exact(&mut buffer)?;
-            let archive_id = u16::from_be_bytes(buffer);
-
-            archive_data.id = archive_id;
-        }
-
-        if identified {
-            for archive_data in archives.iter_mut().take(archive_count) {
-                let mut buffer = [0; 4];
-                reader.read_exact(&mut buffer)?;
-
-                archive_data.identifier = i32::from_be_bytes(buffer);
-            }
-        }
-
-        for archive_data in archives.iter_mut().take(archive_count) {
-            let mut buffer = [0; 4];
-            reader.read_exact(&mut buffer)?;
-
-            archive_data.crc = u32::from_be_bytes(buffer);
-        }
-
-        for archive_data in archives.iter_mut().take(archive_count) {
-            let mut buffer = [0; 4];
-            reader.read_exact(&mut buffer)?;
-
-            archive_data.revision = u32::from_be_bytes(buffer);
-        }
-
-        for archive_data in archives.iter_mut().take(archive_count) {
-            let mut buffer = [0; 2];
-			reader.read_exact(&mut buffer)?;
-
-            archive_data.entry_count = u16::from_be_bytes(buffer) as usize;
-        }
-        
-        Ok(archives)
+    let mut archives = Vec::with_capacity(archive_count);
+    let archive_data = izip!(&ids, &identifiers, &crcs, &revisions, &entry_counts);
+    for (id, identifier, crc, revision, entry_count) in archive_data {
+        archives.push(ArchiveData { 
+            id: *id, 
+            identifier: *identifier, 
+            crc: *crc, 
+            revision: *revision, 
+            entry_count: *entry_count as usize 
+        });
     }
+    
+    Ok(archives)
+}
 
-    #[inline]
-    pub const fn id(&self) -> u16 {
-        self.id
-    }
+fn parse_identified(buffer: &[u8]) -> Result<(&[u8], bool), CacheError> {
+    let (buffer, identified) = be_u8(buffer)?;
 
-    #[inline]
-    pub const fn identifier(&self) -> i32 {
-        self.identifier
-    }
+    Ok((buffer, (1 & identified) != 0))
+}
 
-    #[inline]
-    pub const fn entry_count(&self) -> usize {
-        self.entry_count
+fn parse_identifiers(buffer: &[u8], identified: bool, archive_count: usize) -> Result<(&[u8], Vec<i32>), CacheError> {
+    let (buffer, taken) = cond(identified, take(archive_count * 4))(buffer)?;
+    let (_, mut identifiers) = many0(be_i32)(match taken {
+        Some(taken) => taken,
+        None => &[]
+    })?;
+    
+    if identifiers.len() != archive_count {
+        identifiers = vec![0; archive_count]; 
     }
+    
+    Ok((buffer, identifiers))
+}
+
+fn parse_usize_from_u16(buffer: &[u8]) -> Result<(&[u8], usize), CacheError> {
+    let (buffer, value) = be_u16(buffer)?;
+
+    Ok((buffer, value as usize))
 }

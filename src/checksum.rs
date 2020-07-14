@@ -13,15 +13,11 @@ pub struct Checksum {
 }
 
 impl Checksum {
-    #[doc(hidden)]
-    #[inline]
-    pub const fn new() -> Self {
+    pub(crate) const fn new() -> Self {
         Self { entries: Vec::new() }
     }
 
-    #[doc(hidden)]
-    #[inline]
-    pub fn push(&mut self, entry: Entry) {
+    pub(crate) fn push(&mut self, entry: Entry) {
         self.entries.push(entry);
     }
 

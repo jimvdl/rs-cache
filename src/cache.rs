@@ -4,7 +4,7 @@ pub mod archive;
 
 use main_data::MainData;
 use index::{ Index };
-use archive::{ Archive, ArchiveData };
+use archive::Archive;
 
 use crate::{
     errors::ReadError,
@@ -144,7 +144,7 @@ impl Cache {
 
                     checksum.push(Entry { 
                         crc: crc32::checksum_ieee(&buffer), 
-                        revision: index_version(&data)
+                        revision: index::version(&data),
                     });
                 }
             };
@@ -184,7 +184,6 @@ impl Cache {
 		Ok(codec::decode(&mut buffer)?)
     }
 
-    #[inline]
 	fn archive_by_name(&self, index_id: u8, name: &str) -> Result<Archive, CacheError> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,
@@ -193,22 +192,22 @@ impl Cache {
         let identifier = crate::djd2::hash(name);
 
         let mut buffer = &self.read(255, index_id as u16)?.to_vec()[..];
-        let mut data = &codec::decode(&mut buffer)?[..];
+        let data = &codec::decode(&mut buffer)?[..];
 
-        let archives = ArchiveData::decode(&mut data)?;
+        let archives = archive::parse(data)?;
 
         for archive_data in archives {
-            if archive_data.identifier() == identifier {
-                match index.archive(archive_data.id()) {
+            if archive_data.identifier == identifier {
+                match index.archive(archive_data.id) {
                     Some(archive) => return Ok(*archive),
                     None => return Err(
-                        ReadError::ArchiveNotFound(index_id, archive_data.id()).into()
+                        ReadError::ArchiveNotFound(index_id, archive_data.id).into()
                     ),
                 }
             }
         }
 
-        Err(ReadError::ArchiveNotFound(index_id, 0).into())
+        Err(ReadError::NameNotInArchive(identifier, name.to_owned(), index_id).into())
     }
 
     /// Simply returns the index count, by getting the `len()` of 
@@ -258,14 +257,4 @@ fn load_indices(path: &Path) -> Result<HashMap<u8, Index>, CacheError> {
 	}
 
 	Ok(indices)
-}
-
-fn index_version(buffer: &[u8]) -> u32 {
-    let format = buffer[0];
-
-    if format >= 6 {
-        u32::from_be_bytes([buffer[1], buffer[2], buffer[3], buffer[4]])
-    } else {
-        0
-    }
 }

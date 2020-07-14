@@ -1,5 +1,12 @@
+#![allow(dead_code)]
+
 use rscache::{ Cache, CacheError };
-use rscache::ItemLoader;
+
+use rscache::{
+    ItemLoader,
+    NpcLoader,
+};
+
 use sha1::Sha1;
 
 pub fn setup() -> Result<Cache, CacheError> {
@@ -8,6 +15,10 @@ pub fn setup() -> Result<Cache, CacheError> {
 
 pub fn load_items(cache: &Cache) -> Result<ItemLoader, CacheError> {
     ItemLoader::new(&cache)
+}
+
+pub fn load_npcs(cache: &Cache) -> Result<NpcLoader, CacheError> {
+    NpcLoader::new(&cache)
 }
 
 pub fn hash(buffer: &[u8]) -> String {

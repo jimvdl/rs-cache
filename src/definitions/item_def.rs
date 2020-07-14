@@ -7,12 +7,12 @@ use std::{
 use crate::ReadExt;
 
 /// Contains all the information about a certain item fetched from the cache through
-/// the `ItemLoader`.
+/// the [ItemLoader](struct.ItemLoader.html).
 /// 
 /// The [InventoryModelData](struct.InventoryModelData.html) and the
 /// [CharacterModelData](struct.CharacterModelData.html) were hidden in the documents
 /// because these are rarely accessed, they contain useless information in most use-cases. 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ItemDefinition {
 	pub id: u16,
 	pub inventory_model_data: InventoryModelData,
@@ -34,7 +34,7 @@ pub struct ItemDefinition {
 	pub params: HashMap<u32, String>,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[doc(hidden)]
 pub struct InventoryModelData {
 	pub inventory_model: u16,
@@ -55,7 +55,7 @@ pub struct InventoryModelData {
 	pub contrast: i8,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[doc(hidden)]
 pub struct CharacterModelData {
 	pub male_model10: u16 ,
