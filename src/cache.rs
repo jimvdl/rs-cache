@@ -23,6 +23,9 @@ use std::{
     collections::{ LinkedList, HashMap },
 };
 
+type IndexId = u8;
+type ArchiveId = u16;
+
 pub const MAIN_FILE_CACHE_DAT: &str = "main_file_cache.dat2";
 pub const MAIN_FILE_CACHE_IDX: &str = "main_file_cache.idx";
 
@@ -30,7 +33,7 @@ pub const MAIN_FILE_CACHE_IDX: &str = "main_file_cache.idx";
 #[derive(Clone, Debug, Default)]
 pub struct Cache {
     main_data: MainData,
-	indices: HashMap<u8, Index>
+	indices: HashMap<IndexId, Index>
 }
 
 impl Cache {
@@ -87,7 +90,7 @@ impl Cache {
     /// # }
     /// ```
     #[inline]
-    pub fn read(&self, index_id: u8, archive_id: u16) -> Result<LinkedList<&[u8]>, ReadError> {
+    pub fn read(&self, index_id: IndexId, archive_id: ArchiveId) -> Result<LinkedList<&[u8]>, ReadError> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,
             None => return Err(ReadError::IndexNotFound(index_id))
@@ -177,14 +180,14 @@ impl Cache {
     #[inline]
     pub fn huffman_table(&self) -> Result<Vec<u8>, CacheError> {
         let index_id = 10;
-        let archive = self.archive_by_name(index_id, "huffman")?;
 
+        let archive = self.archive_by_name(index_id, "huffman")?;
         let mut buffer = &self.main_data.read(archive.sector, archive.length).to_vec()[..];
 		
 		Ok(codec::decode(&mut buffer)?)
     }
 
-	fn archive_by_name(&self, index_id: u8, name: &str) -> Result<Archive, CacheError> {
+	fn archive_by_name(&self, index_id: IndexId, name: &str) -> Result<Archive, CacheError> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,
             None => return Err(ReadError::IndexNotFound(index_id).into())
@@ -241,7 +244,7 @@ fn load_main_data(path: &Path) -> io::Result<MainData> {
 	Ok(MainData::new(buffer))
 }
 
-fn load_indices(path: &Path) -> Result<HashMap<u8, Index>, CacheError> {
+fn load_indices(path: &Path) -> Result<HashMap<IndexId, Index>, CacheError> {
 	let mut indices = HashMap::new();
 
 	for index_id in 0..=255 {
