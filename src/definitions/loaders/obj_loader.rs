@@ -73,9 +73,9 @@ impl ObjectLoader {
     /// # let cache = Cache::new(path)?;
     /// # let obj_loader = ObjectLoader::new(&cache)?;
     /// // law rift id = 25034
-    /// let law_rift = obj_loader.load(25034);
+    /// let obj_def = obj_loader.load(25034);
     /// 
-    /// match law_rift {
+    /// match obj_def {
     ///     Some(obj_def) => { 
     ///         assert_eq!("Law rift", obj_def.name);
     ///         assert_eq!(2178, obj_def.animation_id);

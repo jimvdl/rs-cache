@@ -97,9 +97,9 @@
 //! let item_loader = ItemLoader::new(&cache)?;
 //! 
 //! // magic logs id = 1513
-//! let magic_logs = item_loader.load(1513);
+//! let item_def = item_loader.load(1513);
 //! 
-//! match magic_logs {
+//! match item_def {
 //!     Some(item_def) => {
 //!         assert_eq!("Magic logs", item_def.name);
 //!         assert!(!item_def.stackable);

@@ -73,9 +73,9 @@ impl ItemLoader {
     /// # let cache = Cache::new(path)?;
     /// # let item_loader = ItemLoader::new(&cache)?;
     /// // blue partyhat id = 1042
-    /// let blue_partyhat = item_loader.load(1042);
+    /// let item_def = item_loader.load(1042);
     /// 
-    /// match blue_partyhat {
+    /// match item_def {
     ///     Some(item_def) => {
     ///         assert_eq!("Blue partyhat", item_def.name);
     ///         assert!(!item_def.stackable);

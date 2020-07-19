@@ -73,9 +73,9 @@ impl NpcLoader {
     /// # let cache = Cache::new(path)?;
     /// # let npc_loader = NpcLoader::new(&cache)?;
     /// // wise old man id = 2108
-    /// let wise_old_man = npc_loader.load(2108);
+    /// let npc_def = npc_loader.load(2108);
     /// 
-    /// match wise_old_man {
+    /// match npc_def {
     ///     Some(npc_def) => {
     ///         assert_eq!("Wise Old Man", npc_def.name);
     ///         assert!(npc_def.interactable);
