@@ -8,7 +8,7 @@ use archive::Archive;
 
 use crate::{
     errors::ReadError,
-    Checksum, CacheError,
+    Checksum,
     checksum::Entry,
     LinkedListExt,
     codec
@@ -54,7 +54,7 @@ impl Cache {
     /// let cache = Cache::new("path/to/cache");
     /// ```
     #[inline]
-    pub fn new<P: AsRef<Path>>(path: P) -> Result<Self, CacheError> {
+    pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         let path = path.as_ref();
 
         let main_data = load_main_data(path)?;
@@ -77,8 +77,8 @@ impl Cache {
     /// 
     /// # Examples
     /// ```
-    /// # use rscache::{ Cache, CacheError };
-    /// # fn main() -> Result<(), CacheError> {
+    /// # use rscache::Cache;
+    /// # fn main() -> rscache::Result<()> {
     /// # let path = "./data/cache";
     /// let cache = Cache::new(path)?;
     /// 
@@ -120,8 +120,7 @@ impl Cache {
     /// 
     /// ```
     /// # use rscache::Cache;
-    /// # use rscache::CacheError;
-    /// # fn main() -> Result<(), CacheError> {
+    /// # fn main() -> rscache::Result<()> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
     /// let checksum = cache.create_checksum()?;
@@ -129,7 +128,7 @@ impl Cache {
     /// # }
     /// ```
     #[inline]
-    pub fn create_checksum(&self) -> Result<Checksum, CacheError> {
+    pub fn create_checksum(&self) -> crate::Result<Checksum> {
         let mut checksum = Checksum::new();
 
         for index_id in 0..self.index_count() as u16 {
@@ -165,12 +164,12 @@ impl Cache {
     /// 
     /// # Examples
     /// ```
-    /// # use rscache::{ Cache, CacheError };
+    /// # use rscache::Cache;
     /// # struct Huffman;
     /// # impl Huffman {
     /// #   pub fn new(buffer: Vec<u8>) -> Self { Self {} }
     /// # }
-    /// # fn main() -> Result<(), CacheError> {
+    /// # fn main() -> rscache::Result<()> {
     /// # let cache = Cache::new("./data/cache")?;
     /// let huffman_table = cache.huffman_table()?;
     /// let huffman = Huffman::new(huffman_table);
@@ -178,7 +177,7 @@ impl Cache {
     /// # }
     /// ```
     #[inline]
-    pub fn huffman_table(&self) -> Result<Vec<u8>, CacheError> {
+    pub fn huffman_table(&self) -> crate::Result<Vec<u8>> {
         let index_id = 10;
 
         let archive = self.archive_by_name(index_id, "huffman")?;
@@ -187,7 +186,7 @@ impl Cache {
 		Ok(codec::decode(&mut buffer)?)
     }
 
-	fn archive_by_name(&self, index_id: IndexId, name: &str) -> Result<Archive, CacheError> {
+	fn archive_by_name(&self, index_id: IndexId, name: &str) -> crate::Result<Archive> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,
             None => return Err(ReadError::IndexNotFound(index_id).into())
@@ -219,8 +218,8 @@ impl Cache {
     /// # Examples
     /// 
     /// ```
-    /// # use rscache::{ Cache, CacheError };
-    /// # fn main() -> Result<(), CacheError> {
+    /// # use rscache::Cache;
+    /// # fn main() -> rscache::Result<()> {
     /// # let cache = Cache::new("./data/cache")?;
     /// for index in 0..cache.index_count() {
     ///     // ...
@@ -244,7 +243,7 @@ fn load_main_data(path: &Path) -> io::Result<MainData> {
 	Ok(MainData::new(buffer))
 }
 
-fn load_indices(path: &Path) -> Result<HashMap<IndexId, Index>, CacheError> {
+fn load_indices(path: &Path) -> crate::Result<HashMap<IndexId, Index>> {
 	let mut indices = HashMap::new();
 
 	for index_id in 0..=255 {

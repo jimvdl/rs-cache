@@ -1,9 +1,7 @@
-use rscache::CacheError;
-
 mod common;
 
 #[test]
-fn load_blue_partyhat() -> Result<(), CacheError> {
+fn load_blue_partyhat() -> rscache::Result<()> {
     let cache = common::setup()?;
     let item_loader = common::load_items(&cache)?;
 
@@ -17,7 +15,7 @@ fn load_blue_partyhat() -> Result<(), CacheError> {
 }
 
 #[test]
-fn load_magic_logs() -> Result<(), CacheError> {
+fn load_magic_logs() -> rscache::Result<()> {
     let cache = common::setup()?;
     let item_loader = common::load_items(&cache)?;
 
@@ -31,7 +29,7 @@ fn load_magic_logs() -> Result<(), CacheError> {
 }
 
 #[test]
-fn load_logs_noted() -> Result<(), CacheError> {
+fn load_logs_noted() -> rscache::Result<()> {
     let cache = common::setup()?;
     let item_loader = common::load_items(&cache)?;
 
@@ -44,7 +42,7 @@ fn load_logs_noted() -> Result<(), CacheError> {
 }
 
 #[test]
-fn incorrect_item_id() -> Result<(), CacheError> {
+fn incorrect_item_id() -> rscache::Result<()> {
     let cache = common::setup()?;
     let item_loader = common::load_items(&cache)?;
 

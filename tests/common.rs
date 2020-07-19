@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use rscache::{ Cache, CacheError };
+use rscache::Cache;
 
 use rscache::{
     ItemLoader,
@@ -10,19 +10,19 @@ use rscache::{
 
 use sha1::Sha1;
 
-pub fn setup() -> Result<Cache, CacheError> {
+pub fn setup() -> rscache::Result<Cache> {
     Cache::new("./data/cache")
 }
 
-pub fn load_items(cache: &Cache) -> Result<ItemLoader, CacheError> {
+pub fn load_items(cache: &Cache) -> rscache::Result<ItemLoader> {
     ItemLoader::new(&cache)
 }
 
-pub fn load_npcs(cache: &Cache) -> Result<NpcLoader, CacheError> {
+pub fn load_npcs(cache: &Cache) -> rscache::Result<NpcLoader> {
     NpcLoader::new(&cache)
 }
 
-pub fn load_objects(cache: &Cache) -> Result<ObjectLoader, CacheError> {
+pub fn load_objects(cache: &Cache) -> rscache::Result<ObjectLoader> {
     ObjectLoader::new(&cache)
 }
 

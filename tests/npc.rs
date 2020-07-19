@@ -1,9 +1,7 @@
-use rscache::CacheError;
-
 mod common;
 
 #[test]
-fn load_woodsman_tutor() -> Result<(), CacheError> {
+fn load_woodsman_tutor() -> rscache::Result<()> {
     let cache = common::setup()?;
     let npc_loader = common::load_npcs(&cache)?;
 
@@ -16,7 +14,7 @@ fn load_woodsman_tutor() -> Result<(), CacheError> {
 }
 
 #[test]
-fn load_last_npc() -> Result<(), CacheError> {
+fn load_last_npc() -> rscache::Result<()> {
     let cache = common::setup()?;
     let npc_loader = common::load_npcs(&cache)?;
 
@@ -29,7 +27,7 @@ fn load_last_npc() -> Result<(), CacheError> {
 }
 
 #[test]
-fn incorrect_npc_id() -> Result<(), CacheError> {
+fn incorrect_npc_id() -> rscache::Result<()> {
     let cache = common::setup()?;
     let npc_loader = common::load_npcs(&cache)?;
 

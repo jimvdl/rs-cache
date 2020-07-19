@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::super::ObjectDefinition;
 use crate::{
-    Cache, CacheError,
+    Cache,
     LinkedListExt,
     codec,
     cache::archive,
@@ -27,9 +27,9 @@ impl ObjectLoader {
     /// # Examples
     ///
     /// ```
-    /// # use rscache::{ Cache, CacheError };
+    /// # use rscache::Cache;
     /// use rscache::ObjectLoader;
-    /// # fn main() -> Result<(), CacheError> {
+    /// # fn main() -> rscache::Result<()> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
     /// 
@@ -38,7 +38,7 @@ impl ObjectLoader {
     /// # }
     /// ```
     #[inline]
-    pub fn new(cache: &Cache) -> Result<Self, CacheError> {    
+    pub fn new(cache: &Cache) -> crate::Result<Self> {    
         let index_id = 2;
         let archive_id = 6;
         
@@ -66,9 +66,9 @@ impl ObjectLoader {
     /// # Examples
     ///
     /// ```
-    /// # use rscache::{ Cache, CacheError };
+    /// # use rscache::Cache;
     /// # use rscache::ObjectLoader;
-    /// # fn main() -> Result<(), CacheError> {
+    /// # fn main() -> rscache::Result<()> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
     /// # let obj_loader = ObjectLoader::new(&cache)?;

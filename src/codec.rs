@@ -19,7 +19,7 @@ use libflate::gzip::{
 	Encoder,
 };
 
-use crate::{ CacheError, CompressionError };
+use crate::CompressionError;
 
 /// Compression types that are supported by the encode and decode functions.
 /// 
@@ -87,11 +87,10 @@ impl TryFrom<u8> for Compression {
 /// 
 /// ```
 /// # use rscache::Cache;
-/// # use rscache::CacheError;
 /// # use rscache::LinkedListExt;
 /// use rscache::codec::Compression;
 /// 
-/// # fn main() -> Result<(), CacheError> {
+/// # fn main() -> rscache::Result<()> {
 /// # let buffer = vec![0; 20];
 /// let encoded_buffer = rscache::codec::encode(Compression::Bzip2, &buffer, None)?;
 /// 
@@ -100,7 +99,7 @@ impl TryFrom<u8> for Compression {
 /// # }
 /// ```
 #[inline]
-pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> Result<Vec<u8>, CacheError> {
+pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> crate::Result<Vec<u8>> {
 	let compressed_data = match compression {
 		Compression::None => data.to_owned(),
 		Compression::Bzip2 => compress_bzip2(data)?,
@@ -140,11 +139,10 @@ pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> R
 /// 
 /// ```
 /// # use rscache::Cache;
-/// # use rscache::CacheError;
 /// # use rscache::LinkedListExt;
 /// use rscache::codec::Compression;
 /// 
-/// # fn main() -> Result<(), CacheError> {
+/// # fn main() -> rscache::Result<()> {
 /// # let path = "./data/cache";
 /// # let cache = Cache::new(path)?;
 /// let buffer = cache.read(2, 10)?.to_vec();
@@ -153,7 +151,7 @@ pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> R
 /// # }
 /// ```
 #[inline]
-pub fn decode<R: Read>(reader: &mut R) -> Result<Vec<u8>, CacheError> {
+pub fn decode<R: Read>(reader: &mut R) -> crate::Result<Vec<u8>> {
 	let mut buf = [0; 1];
 	reader.read_exact(&mut buf)?;
 	let compression = Compression::try_from(buf[0])?;
@@ -171,12 +169,12 @@ pub fn decode<R: Read>(reader: &mut R) -> Result<Vec<u8>, CacheError> {
 	Ok(buffer)
 }
 
-fn compress_bzip2(data: &[u8]) -> Result<Vec<u8>, io::Error> {
+fn compress_bzip2(data: &[u8]) -> io::Result<Vec<u8>> {
 	let compressor = Encoder::new(data.to_owned())?;
 	compressor.finish().into_result()
 }
 
-fn compress_gzip(data: &[u8]) -> Result<Vec<u8>, io::Error> {
+fn compress_gzip(data: &[u8]) -> io::Result<Vec<u8>> {
 	let compressor = BzEncoder::new(data.to_owned(), bzip2::Compression::Default);
 	let mut compressed_data = compressor.finish()?;
 	compressed_data.drain(0..4);
@@ -184,14 +182,14 @@ fn compress_gzip(data: &[u8]) -> Result<Vec<u8>, io::Error> {
 	Ok(compressed_data)
 }
 
-fn decompress_none<R: Read>(reader: &mut R, len: usize) -> Result<(i16, Vec<u8>), CacheError> {
+fn decompress_none<R: Read>(reader: &mut R, len: usize) -> crate::Result<(i16, Vec<u8>)> {
 	let mut compressed_data = vec![0; len];
 	reader.read_exact(&mut compressed_data)?;
 
 	Ok((read_revision(reader)?, compressed_data))
 }
 
-fn decompress_bzip2<R: Read>(reader: &mut R, len: usize) -> Result<(i16, Vec<u8>), CacheError> {
+fn decompress_bzip2<R: Read>(reader: &mut R, len: usize) -> crate::Result<(i16, Vec<u8>)> {
 	let mut buf = [0; 4];
 	reader.read_exact(&mut buf)?;
 	let decompressed_len = u32::from_be_bytes(buf) as usize;
@@ -212,7 +210,7 @@ fn decompress_bzip2<R: Read>(reader: &mut R, len: usize) -> Result<(i16, Vec<u8>
 	Ok((revision, decompressed_data))
 }
 
-fn decompress_gzip<R: Read>(reader: &mut R, len: usize) -> Result<(i16, Vec<u8>), CacheError> {
+fn decompress_gzip<R: Read>(reader: &mut R, len: usize) -> crate::Result<(i16, Vec<u8>)> {
 	let mut buf = [0; 4];
 	reader.read_exact(&mut buf)?;
 	let decompressed_len = u32::from_be_bytes(buf) as usize;
@@ -229,7 +227,7 @@ fn decompress_gzip<R: Read>(reader: &mut R, len: usize) -> Result<(i16, Vec<u8>)
 	Ok((revision, decompressed_data))
 }
 
-fn read_revision<R: Read>(reader: &mut R) -> Result<i16, CacheError> {
+fn read_revision<R: Read>(reader: &mut R) -> crate::Result<i16> {
 	if let Some(remaining) = reader.bytes().size_hint().1 {
 		if remaining >= 2 {
 			let mut rev_buffer = [0; 2];

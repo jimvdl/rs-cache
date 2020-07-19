@@ -1,5 +1,7 @@
 use std::{ error::Error, fmt, io };
 
+pub type Result<T> = std::result::Result<T, CacheError>;
+
 #[derive(Debug)]
 pub enum CacheError {
 	Io(io::Error),

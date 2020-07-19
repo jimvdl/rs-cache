@@ -1,4 +1,4 @@
-use crate::{ CacheError, codec::Compression, codec };
+use crate::{ codec::Compression, codec };
 
 #[derive(Debug, Clone)]
 pub struct Entry {
@@ -26,8 +26,8 @@ impl Checksum {
     /// # Examples
     /// 
     /// ```
-    /// # use rscache::{ Cache, CacheError };
-    /// # fn main() -> Result<(), CacheError> {
+    /// # use rscache::Cache;
+    /// # fn main() -> rscache::Result<()> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
     /// # let checksum = cache.create_checksum()?;
@@ -63,10 +63,10 @@ impl Checksum {
     /// # Examples
     /// 
     /// ```
-    /// # use rscache::{ Cache, CacheError, Checksum };
+    /// # use rscache::{ Cache, Checksum };
     /// # use std::net::TcpStream;
     /// # use std::io::Write;
-    /// fn encode_checksum(checksum: Checksum, stream: &mut TcpStream) -> Result<(), CacheError> {
+    /// fn encode_checksum(checksum: Checksum, stream: &mut TcpStream) -> rscache::Result<()> {
     ///     let buffer = checksum.encode()?;
     /// 
     ///     stream.write_all(&buffer)?;
@@ -74,7 +74,7 @@ impl Checksum {
     /// }
     /// ```
     #[inline]
-    pub fn encode(self) -> Result<Vec<u8>, CacheError> {
+    pub fn encode(self) -> crate::Result<Vec<u8>> {
         let mut buffer = Vec::with_capacity(self.entries.len() * 2 * 4);
 
 		for entry in self.entries {

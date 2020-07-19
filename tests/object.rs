@@ -1,9 +1,7 @@
-use rscache::CacheError;
-
 mod common;
 
 #[test]
-fn load_law_rift() -> Result<(), CacheError> {
+fn load_law_rift() -> rscache::Result<()> {
     let cache = common::setup()?;
     let obj_loader = common::load_objects(&cache)?;
 
@@ -18,7 +16,7 @@ fn load_law_rift() -> Result<(), CacheError> {
 }
 
 #[test]
-fn load_furnace() -> Result<(), CacheError> {
+fn load_furnace() -> rscache::Result<()> {
     let cache = common::setup()?;
     let obj_loader = common::load_objects(&cache)?;
 
@@ -32,7 +30,7 @@ fn load_furnace() -> Result<(), CacheError> {
 }
 
 #[test]
-fn load_bank_table() -> Result<(), CacheError> {
+fn load_bank_table() -> rscache::Result<()> {
     let cache = common::setup()?;
     let obj_loader = common::load_objects(&cache)?;
 
@@ -47,7 +45,7 @@ fn load_bank_table() -> Result<(), CacheError> {
 }
 
 #[test]
-fn load_dungeon_door() -> Result<(), CacheError> {
+fn load_dungeon_door() -> rscache::Result<()> {
     let cache = common::setup()?;
     let obj_loader = common::load_objects(&cache)?;
 

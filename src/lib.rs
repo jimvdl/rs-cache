@@ -26,13 +26,13 @@
 //! ```
 //! # use std::net::TcpStream;
 //! # use std::io::Write;
-//! use rscache::{ Cache, CacheError, LinkedListExt };
+//! use rscache::{ Cache, LinkedListExt };
 //! # struct UpdatePacket { 
 //! #   pub index_id: u8,
 //! #   pub archive_id: u16
 //! # }
 //! 
-//! fn process_update(packet: UpdatePacket, stream: &mut TcpStream) -> Result<(), CacheError> {
+//! fn process_update(packet: UpdatePacket, stream: &mut TcpStream) -> rscache::Result<()> {
 //! #    let cache = Cache::new("path/to/cache")?;
 //!     // read the specified archive from the given index to an owned vector.
 //!     let buffer = cache.read(packet.index_id, packet.archive_id)?.to_vec();
@@ -53,12 +53,12 @@
 //! ```
 //! # use std::net::TcpStream;
 //! # use std::io::Write;
-//! # use rscache::{ Cache, CacheError, LinkedListExt };
+//! # use rscache::{ Cache LinkedListExt };
 //! # struct UpdatePacket { 
 //! #   pub index_id: u8,
 //! #   pub archive_id: u16
 //! # }
-//! # fn process_update(packet: UpdatePacket, stream: &mut TcpStream) -> Result<(), CacheError> {
+//! # fn process_update(packet: UpdatePacket, stream: &mut TcpStream) -> rscache::Result<()> {
 //! #    let cache = Cache::new("path/to/cache")?;
 //! #    // read the specified archive from the given index to an owned vector.
 //! let buffer = cache.read(packet.index_id, packet.archive_id)?;
@@ -88,10 +88,10 @@
 //! ### Example
 //! 
 //! ```
-//! # use rscache::{ Cache, CacheError };
+//! # use rscache::Cache;
 //! use rscache::ItemLoader;
 //! 
-//! # fn main() -> Result<(), CacheError> {
+//! # fn main() -> rscache::Result<()> {
 //! # let path = "./data/cache";
 //! # let cache = Cache::new(path)?;
 //! let item_loader = ItemLoader::new(&cache)?;

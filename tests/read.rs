@@ -1,9 +1,9 @@
-use rscache::{ LinkedListExt, CacheError };
+use rscache::LinkedListExt;
 
 mod common;
 
 #[test]
-fn read_from_ref_table() -> Result<(), CacheError> {
+fn read_from_ref_table() -> rscache::Result<()> {
     let cache = common::setup()?;
 
     let archive = cache.read(255, 10)?.to_vec();
@@ -16,7 +16,7 @@ fn read_from_ref_table() -> Result<(), CacheError> {
 }
 
 #[test]
-fn read_from_0_16() -> Result<(), CacheError> {
+fn read_from_0_16() -> rscache::Result<()> {
     let cache = common::setup()?;
 
     let archive = cache.read(0, 16)?.to_vec();
@@ -29,7 +29,7 @@ fn read_from_0_16() -> Result<(), CacheError> {
 }
 
 #[test]
-fn read_from_0_191() -> Result<(), CacheError> {
+fn read_from_0_191() -> rscache::Result<()> {
     let cache = common::setup()?;
 
     let archive = cache.read(0, 191)?.to_vec();
@@ -42,7 +42,7 @@ fn read_from_0_191() -> Result<(), CacheError> {
 }
 
 #[test]
-fn read_from_2_10() -> Result<(), CacheError> {
+fn read_from_2_10() -> rscache::Result<()> {
     let cache = common::setup()?;
 
     let archive = cache.read(2, 10)?.to_vec();
@@ -55,7 +55,7 @@ fn read_from_2_10() -> Result<(), CacheError> {
 }
 
 #[test]
-fn read_from_7_24918() -> Result<(), CacheError> {
+fn read_from_7_24918() -> rscache::Result<()> {
     let cache = common::setup()?;
 
     let archive = cache.read(7, 24918)?.to_vec();
@@ -68,7 +68,7 @@ fn read_from_7_24918() -> Result<(), CacheError> {
 }
 
 #[test]
-fn read_from_2_25000_fails() -> Result<(), CacheError> {
+fn read_from_2_25000_fails() -> rscache::Result<()> {
     let cache = common::setup()?;
 
     assert!(cache.read(2, 25_000).is_err());

@@ -1,9 +1,9 @@
-use rscache::{ Cache, CacheError };
+use rscache::Cache;
 
 mod common;
 
 #[test]
-fn initialize_cache() -> Result<(), CacheError> {
+fn initialize_cache() -> rscache::Result<()> {
     let cache = common::setup();
 
     assert!(cache.is_ok());
@@ -13,7 +13,7 @@ fn initialize_cache() -> Result<(), CacheError> {
 }
 
 #[test]
-fn initialize_cache_fails() -> Result<(), CacheError> {
+fn initialize_cache_fails() -> rscache::Result<()> {
     let cache = Cache::new("./wrong/path");
 
     assert!(cache.is_err());
@@ -22,7 +22,7 @@ fn initialize_cache_fails() -> Result<(), CacheError> {
 }
 
 #[test]
-fn create_checksum() -> Result<(), CacheError> {
+fn create_checksum() -> rscache::Result<()> {
     let cache = common::setup()?;
 
     assert!(cache.create_checksum().is_ok());
@@ -31,7 +31,7 @@ fn create_checksum() -> Result<(), CacheError> {
 }
 
 #[test]
-fn encode_checksum() -> Result<(), CacheError> {
+fn encode_checksum() -> rscache::Result<()> {
     let cache = common::setup()?;
 
     let checksum = cache.create_checksum()?;
@@ -45,7 +45,7 @@ fn encode_checksum() -> Result<(), CacheError> {
 }
 
 #[test]
-fn validate_checksum() -> Result<(), CacheError> {
+fn validate_checksum() -> rscache::Result<()> {
     let cache = common::setup()?;
     
     let checksum = cache.create_checksum()?;
@@ -61,7 +61,7 @@ fn validate_checksum() -> Result<(), CacheError> {
 }
 
 #[test]
-fn get_huffman_table() -> Result<(), CacheError> {
+fn get_huffman_table() -> rscache::Result<()> {
     let cache = common::setup()?;
 
     let huffman_table = cache.huffman_table()?.to_vec();
