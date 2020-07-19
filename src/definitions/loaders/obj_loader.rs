@@ -79,7 +79,7 @@ impl ObjectLoader {
     ///     Some(obj_def) => { 
     ///         assert_eq!("Law rift", obj_def.name);
     ///         assert_eq!(2178, obj_def.animation_id);
-    ///         assert!(!obj_def.hollow);
+    ///         assert!(obj_def.solid);
     ///         assert!(!obj_def.obstruct_ground);
     ///     },
     ///     None => (),

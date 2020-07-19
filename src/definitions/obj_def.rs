@@ -20,7 +20,7 @@ pub struct ObjectDefinition {
     pub map_area_id: Option<u16>,
     pub map_scene_id: u16,
     pub animation_id: u16,
-    pub hollow: bool,
+    pub solid: bool,
     pub shadow: bool,
     pub obstruct_ground: bool,
     pub supports_items: Option<u8>,
@@ -81,6 +81,7 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ObjectDef
     obj_def.model_data.model_size_z = 128;
     obj_def.model_data.model_size_y = 128;
     obj_def.blocks_projectile = true;
+    obj_def.solid = true;
 
 	loop {
 		let opcode = reader.read_u8()?;
@@ -140,7 +141,7 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ObjectDef
             71 => { obj_def.model_data.offset_z = reader.read_u16()?; },
             72 => { obj_def.model_data.offset_y = reader.read_u16()?; },
             73 => { obj_def.obstruct_ground = true; },
-            74 => { obj_def.hollow = true; },
+            74 => { obj_def.solid = false; },
             75 => { obj_def.supports_items = Some(reader.read_u8()?); },
             77 => {
                 let varp_id = reader.read_u16()?;

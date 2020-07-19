@@ -5,6 +5,7 @@ use rscache::{ Cache, CacheError };
 use rscache::{
     ItemLoader,
     NpcLoader,
+    ObjectLoader,
 };
 
 use sha1::Sha1;
@@ -19,6 +20,10 @@ pub fn load_items(cache: &Cache) -> Result<ItemLoader, CacheError> {
 
 pub fn load_npcs(cache: &Cache) -> Result<NpcLoader, CacheError> {
     NpcLoader::new(&cache)
+}
+
+pub fn load_objects(cache: &Cache) -> Result<ObjectLoader, CacheError> {
+    ObjectLoader::new(&cache)
 }
 
 pub fn hash(buffer: &[u8]) -> String {
