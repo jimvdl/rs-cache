@@ -76,9 +76,9 @@ impl NpcLoader {
     /// let wise_old_man = npc_loader.load(2108);
     /// 
     /// match wise_old_man {
-    ///     Some(wise_old_man) => {
-    ///         assert_eq!("Wise Old Man", wise_old_man.name);
-    ///         assert!(wise_old_man.interactable);
+    ///     Some(npc_def) => {
+    ///         assert_eq!("Wise Old Man", npc_def.name);
+    ///         assert!(npc_def.interactable);
     ///     },
     ///     None => (),
     /// }

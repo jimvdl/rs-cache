@@ -14,6 +14,7 @@
 //! - Loaders & Definitions
 //!   - [ItemLoader](struct.ItemLoader.html) - [ItemDefinition](struct.ItemDefinition.html)
 //!   - [NpcLoader](struct.NpcLoader.html) - [NpcDefinition](struct.NpcDefinition.html)
+//!   - [ObjectLoader](struct.ObjectLoader.html) - [ObjectDefinition](struct.ObjectDefinition.html)
 //! 
 //! # Quick Start
 //! 
@@ -78,8 +79,9 @@
 //! Supported definitions:
 //! - [ItemDefinition](struct.ItemDefinition.html)
 //! - [NpcDefinition](struct.NpcDefinition.html)
+//! - [ObjectDefinition](struct.ObjectDefinition.html)
 //! 
-//! These definitions contain fields that can be looked up for a certain item/npc.
+//! These definitions contain fields that can be looked up for a certain item/npc/object.
 //! i.e. you need to know if a certain item is stackable or members only the [ItemDefinition](struct.ItemDefinition.html) struct
 //! contains that information.
 //! 

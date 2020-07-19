@@ -76,10 +76,10 @@ impl ItemLoader {
     /// let blue_partyhat = item_loader.load(1042);
     /// 
     /// match blue_partyhat {
-    ///     Some(blue_partyhat) => {
-    ///         assert_eq!("Blue partyhat", blue_partyhat.name);
-    ///         assert!(!blue_partyhat.stackable);
-    ///         assert!(!blue_partyhat.members_only);
+    ///     Some(item_def) => {
+    ///         assert_eq!("Blue partyhat", item_def.name);
+    ///         assert!(!item_def.stackable);
+    ///         assert!(!item_def.members_only);
     ///     },
     ///     None => (),
     /// }
