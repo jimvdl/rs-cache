@@ -10,6 +10,7 @@ documentation = "https://docs.rs/rs-cache"
 readme = "README.md"
 keywords = ["runescape", "osrs"]
 exclude = [".gitignore", "data/cache"]
+categories = ["development-tools"]
 
 [lib]
 name = "rscache"

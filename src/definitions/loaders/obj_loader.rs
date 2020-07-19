@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::super::ItemDefinition;
+use super::super::ObjectDefinition;
 use crate::{
     Cache, CacheError,
     LinkedListExt,
@@ -8,16 +8,16 @@ use crate::{
     cache::archive,
 };
 
-/// Caches all the item definitions that were loaded.
+/// Caches all the object definitions that were loaded.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
-pub struct ItemLoader {
-    pub items: HashMap<u16, ItemDefinition>
+pub struct ObjectLoader {
+    pub objects: HashMap<u16, ObjectDefinition>
 }
 
-impl ItemLoader {
-    /// Constructs a new `ItemLoader`.
+impl ObjectLoader {
+    /// Constructs a new `ObjectLoader`.
     ///
-    /// It loads all the item definitions and caches them.
+    /// It loads all the object definitions and caches them.
     ///
     /// # Errors
     /// 
@@ -28,19 +28,19 @@ impl ItemLoader {
     ///
     /// ```
     /// # use rscache::{ Cache, CacheError };
-    /// use rscache::ItemLoader;
+    /// use rscache::ObjectLoader;
     /// # fn main() -> Result<(), CacheError> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
     /// 
-    /// let item_loader = ItemLoader::new(&cache)?;
+    /// let obj_loader = ObjectLoader::new(&cache)?;
     /// # Ok(())
     /// # }
     /// ```
     #[inline]
     pub fn new(cache: &Cache) -> Result<Self, CacheError> {    
         let index_id = 2;
-        let archive_id = 10;
+        let archive_id = 6;
         
         let mut buffer = &cache.read(255, index_id)?.to_vec()[..];
         let buffer = &codec::decode(&mut buffer)?[..];
@@ -50,36 +50,37 @@ impl ItemLoader {
         
         let mut buffer = &cache.read(index_id as u8, archive_id as u16)?.to_vec()[..];
         let buffer = codec::decode(&mut buffer)?;
-
-        let item_data = archive::decode(&buffer, entry_count)?;
-        let mut items = HashMap::new();
-
-        for (item_id, item_buffer) in item_data {
-            items.insert(item_id, ItemDefinition::new(item_id, &item_buffer)?);
+        
+        let obj_data = archive::decode(&buffer, entry_count)?;
+        let mut objects = HashMap::new();
+        
+        for (obj_id, obj_buffer) in obj_data {
+            objects.insert(obj_id, ObjectDefinition::new(obj_id, &obj_buffer)?);
         }
-
-        Ok(Self { items })
+        
+        Ok(Self { objects })
     }
 
-    /// Retrieves the `ItemDefinition` for the given item `id`.
+    /// Retrieves the `ObjectDefinition` for the given object `id`.
     ///
     /// # Examples
     ///
     /// ```
     /// # use rscache::{ Cache, CacheError };
-    /// # use rscache::ItemLoader;
+    /// # use rscache::ObjectLoader;
     /// # fn main() -> Result<(), CacheError> {
     /// # let path = "./data/cache";
     /// # let cache = Cache::new(path)?;
-    /// # let item_loader = ItemLoader::new(&cache)?;
-    /// // blue partyhat id = 1042
-    /// let blue_partyhat = item_loader.load(1042);
+    /// # let obj_loader = ObjectLoader::new(&cache)?;
+    /// // law rift id = 25034
+    /// let law_rift = obj_loader.load(25034);
     /// 
-    /// match blue_partyhat {
-    ///     Some(blue_partyhat) => {
-    ///         assert_eq!("Blue partyhat", blue_partyhat.name);
-    ///         assert!(!blue_partyhat.stackable);
-    ///         assert!(!blue_partyhat.members_only);
+    /// match law_rift {
+    ///     Some(obj_def) => { 
+    ///         assert_eq!("Law rift", obj_def.name);
+    ///         assert_eq!(2178, obj_def.animation_id);
+    ///         assert!(!obj_def.hollow);
+    ///         assert!(!obj_def.obstruct_ground);
     ///     },
     ///     None => (),
     /// }
@@ -87,7 +88,7 @@ impl ItemLoader {
     /// # }
     /// ```
     #[inline]
-    pub fn load(&self, id: u16) -> Option<&ItemDefinition> {
-        self.items.get(&id)
+    pub fn load(&self, id: u16) -> Option<&ObjectDefinition> {
+        self.objects.get(&id)
     }
 }

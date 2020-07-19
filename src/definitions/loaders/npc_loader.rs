@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::super::npc_def::NpcDefinition;
+use super::super::NpcDefinition;
 use crate::{
     Cache, CacheError,
     LinkedListExt,
@@ -51,10 +51,10 @@ impl NpcLoader {
         let mut buffer = &cache.read(index_id as u8, archive_id as u16)?.to_vec()[..];
         let buffer = codec::decode(&mut buffer)?;
         
-        let item_data = archive::decode(&buffer, entry_count)?;
+        let npc_data = archive::decode(&buffer, entry_count)?;
         let mut npcs = HashMap::new();
         
-        for (npc_id, npc_buffer) in item_data {
+        for (npc_id, npc_buffer) in npc_data {
             npcs.insert(npc_id, NpcDefinition::new(npc_id, &npc_buffer)?);
         }
         

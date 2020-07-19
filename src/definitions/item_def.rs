@@ -9,8 +9,7 @@ use crate::ReadExt;
 /// Contains all the information about a certain item fetched from the cache through
 /// the [ItemLoader](struct.ItemLoader.html).
 /// 
-/// The [InventoryModelData](struct.InventoryModelData.html) and the
-/// [CharacterModelData](struct.CharacterModelData.html) were hidden in the documents
+/// The `InventoryModelData` and the `CharacterModelData` were hidden in the documents
 /// because these are rarely accessed, they contain useless information in most use-cases. 
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ItemDefinition {
@@ -35,7 +34,6 @@ pub struct ItemDefinition {
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[doc(hidden)]
 pub struct InventoryModelData {
 	pub inventory_model: u16,
 	pub zoom2d: u16,
@@ -56,7 +54,6 @@ pub struct InventoryModelData {
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[doc(hidden)]
 pub struct CharacterModelData {
 	pub male_model10: u16 ,
 	pub male_model_offset: u8,
@@ -74,8 +71,7 @@ pub struct CharacterModelData {
 
 impl ItemDefinition {
 	#[inline]
-	#[doc(hidden)]
-	pub fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
+	pub(crate) fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
 		let mut reader = BufReader::new(&buffer[..]);
 		let item_def = decode_buffer(id, &mut reader)?;
 
@@ -157,25 +153,30 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefin
 			139 => { item_def.bought_link = reader.read_u16()?; },
 			140 => { item_def.bought_tempalte = reader.read_u16()?; },
 			148 | 149 => { reader.read_u16()?; },
-			249 => {
-				let len = reader.read_u8()?;
-
-				for _ in 0..len {
-					let is_string = reader.read_u8()? == 1;
-					let key = reader.read_u24()?;
-					
-					let value = if is_string {
-						reader.read_string()?
-					} else {
-						reader.read_i32()?.to_string()
-					};
-
-					item_def.params.insert(key, value);
-				}
-			}
+			249 => { item_def.params = read_parameters(reader)?; },
 			_ => unreachable!()
 		}
 	}
 
 	Ok(item_def)
+}
+
+fn read_parameters(reader: &mut BufReader<&[u8]>) -> io::Result<HashMap<u32, String>> {
+    let len = reader.read_u8()?;
+    let mut map = HashMap::new();
+
+    for _ in 0..len {
+        let is_string = reader.read_u8()? == 1;
+        let key = reader.read_u24()?;
+        
+        let value = if is_string {
+            reader.read_string()?
+        } else {
+            reader.read_i32()?.to_string()
+        };
+
+        map.insert(key, value);
+    }
+
+    Ok(map)
 }

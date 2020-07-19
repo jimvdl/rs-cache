@@ -9,8 +9,7 @@ use crate::ReadExt;
 /// Contains all the information about a certain npc fetched from the cache through
 /// the [NpcLoader](struct.NpcLoader.html).
 /// 
-/// The [NpcModelData](struct.NpcModelData.html) and the
-/// [NpcAnimationData](struct.NpcAnimationData.html) were hidden in the documents
+/// The `NpcModelData` and the `NpcAnimationData` were hidden in the documents
 /// because these are rarely accessed, they contain useless information in most use-cases. 
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct NpcDefinition {
@@ -31,7 +30,6 @@ pub struct NpcDefinition {
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[doc(hidden)]
 pub struct NpcModelData {
     pub models: Vec<u16>,
     pub chat_head_models: Vec<u16>,
@@ -50,7 +48,6 @@ pub struct NpcModelData {
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[doc(hidden)]
 pub struct NpcAnimationData {
     pub standing: u16,
     pub walking: u16,
@@ -63,8 +60,7 @@ pub struct NpcAnimationData {
 
 impl NpcDefinition {
 	#[inline]
-	#[doc(hidden)]
-	pub fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
+	pub(crate) fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
 		let mut reader = BufReader::new(&buffer[..]);
 		let npc_def = decode_buffer(id, &mut reader)?;
 
@@ -162,25 +158,30 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<NpcDefini
 					npc_def.configs.push(reader.read_u16()?);
 				}
             },
-			249 => {
-				let len = reader.read_u8()?;
-
-				for _ in 0..len {
-					let is_string = reader.read_u8()? == 1;
-					let key = reader.read_u24()?;
-					
-					let value = if is_string {
-						reader.read_string()?
-					} else {
-						reader.read_i32()?.to_string()
-					};
-
-					npc_def.params.insert(key, value);
-				}
-			}
+			249 => { npc_def.params = read_parameters(reader)?; },
 			_ => unreachable!(),
 		}
 	}
 
 	Ok(npc_def)
+}
+
+fn read_parameters(reader: &mut BufReader<&[u8]>) -> io::Result<HashMap<u32, String>> {
+    let len = reader.read_u8()?;
+    let mut map = HashMap::new();
+
+    for _ in 0..len {
+        let is_string = reader.read_u8()? == 1;
+        let key = reader.read_u24()?;
+        
+        let value = if is_string {
+            reader.read_string()?
+        } else {
+            reader.read_i32()?.to_string()
+        };
+
+        map.insert(key, value);
+    }
+
+    Ok(map)
 }
