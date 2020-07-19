@@ -53,7 +53,7 @@
 //! ```
 //! # use std::net::TcpStream;
 //! # use std::io::Write;
-//! # use rscache::{ Cache LinkedListExt };
+//! # use rscache::{ Cache, LinkedListExt };
 //! # struct UpdatePacket { 
 //! #   pub index_id: u8,
 //! #   pub archive_id: u16
@@ -119,16 +119,16 @@
 
 mod cache;
 mod checksum;
-mod errors;
-mod traits;
-mod definitions;
+mod error;
+mod ext;
+mod def;
 pub mod codec;
 
 pub use cache::Cache;
 pub use checksum::Checksum;
-pub use errors::*;
-pub use traits::*;
-pub use definitions::*;
+pub use error::*;
+pub use ext::*;
+pub use def::*;
 
 mod djd2 {
     pub fn hash(string: &str) -> i32 {

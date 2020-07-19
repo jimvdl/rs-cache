@@ -7,7 +7,7 @@ use index::{ Index };
 use archive::Archive;
 
 use crate::{
-    errors::ReadError,
+    error::ReadError,
     Checksum,
     checksum::Entry,
     LinkedListExt,
