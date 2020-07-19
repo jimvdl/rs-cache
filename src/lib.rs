@@ -115,7 +115,7 @@
 //! [Gzip]: https://crates.io/crates/libflate
 //! [Bzip2]: https://crates.io/crates/bzip2
 
-#![deny(clippy::all, clippy::nursery, clippy::cargo)]
+#![deny(clippy::all, clippy::nursery)]
 
 mod cache;
 mod checksum;
