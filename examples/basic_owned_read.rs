@@ -1,10 +1,9 @@
 use rscache::Cache;
-use rscache::CacheError;
 
 // LinkedList extensions (includes to_vec())
 use rscache::LinkedListExt;
 
-fn main() -> Result<(), CacheError> {
+fn main() -> rscache::Result<()> {
     let cache = Cache::new("./data/cache")?;
 
     let index_id = 2; // Config index.

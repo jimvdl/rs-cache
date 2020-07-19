@@ -1,8 +1,7 @@
 use rscache::Cache;
-use rscache::CacheError;
 use rscache::LinkedListExt;
 
-fn main() -> Result<(), CacheError> {
+fn main() -> rscache::Result<()> {
     let cache = Cache::new("./data/cache")?;
 
     let index_id = 2; // Config index.
