@@ -89,7 +89,7 @@
 //! 
 //! ```
 //! # use rscache::Cache;
-//! use rscache::ItemLoader;
+//! use rscache::{ Loader, ItemLoader };
 //! 
 //! # fn main() -> rscache::Result<()> {
 //! # let path = "./data/cache";

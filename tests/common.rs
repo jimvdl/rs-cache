@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use rscache::Cache;
+use rscache::{ Loader, Cache };
 
 use rscache::{
     ItemLoader,

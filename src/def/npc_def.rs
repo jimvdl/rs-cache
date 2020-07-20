@@ -5,6 +5,7 @@ use std::{
 };
 
 use crate::ReadExt;
+use super::Definition;
 
 /// Contains all the information about a certain npc fetched from the cache through
 /// the [NpcLoader](struct.NpcLoader.html).
@@ -58,14 +59,13 @@ pub struct NpcAnimationData {
     pub rotate_90_right: u16,
 }
 
-impl NpcDefinition {
-	#[inline]
-	pub(crate) fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
-		let mut reader = BufReader::new(&buffer[..]);
+impl Definition for NpcDefinition {
+    fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
+        let mut reader = BufReader::new(&buffer[..]);
 		let npc_def = decode_buffer(id, &mut reader)?;
 
 		Ok(npc_def)
-	}
+    }
 }
 
 fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<NpcDefinition> {

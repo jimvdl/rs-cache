@@ -1,5 +1,7 @@
 mod common;
 
+use rscache::Loader;
+
 #[test]
 fn load_law_rift() -> rscache::Result<()> {
     let cache = common::setup()?;

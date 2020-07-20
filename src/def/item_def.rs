@@ -5,6 +5,7 @@ use std::{
 };
 
 use crate::ReadExt;
+use super::Definition;
 
 /// Contains all the information about a certain item fetched from the cache through
 /// the [ItemLoader](struct.ItemLoader.html).
@@ -69,14 +70,13 @@ pub struct CharacterModelData {
 	pub female_head_model2: u16,
 }
 
-impl ItemDefinition {
-	#[inline]
-	pub(crate) fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
-		let mut reader = BufReader::new(&buffer[..]);
+impl Definition for ItemDefinition {
+    fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
+        let mut reader = BufReader::new(&buffer[..]);
 		let item_def = decode_buffer(id, &mut reader)?;
 
 		Ok(item_def)
-	}
+    }
 }
 
 fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefinition> {

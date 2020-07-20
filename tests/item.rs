@@ -1,5 +1,7 @@
 mod common;
 
+use rscache::Loader;
+
 #[test]
 fn load_blue_partyhat() -> rscache::Result<()> {
     let cache = common::setup()?;

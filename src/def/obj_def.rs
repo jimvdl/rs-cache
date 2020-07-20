@@ -5,6 +5,7 @@ use std::{
 };
 
 use crate::ReadExt;
+use super::Definition;
 
 /// Contains all the information about a certain object fetched from the cache through
 /// the [ObjectLoader](struct.ObjectLoader.html).
@@ -59,15 +60,14 @@ pub struct ObjectModelData {
     pub blocking_mask: u8,
 }
 
-impl ObjectDefinition {
-	#[inline]
-	pub(crate) fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
-		let mut reader = BufReader::new(&buffer[..]);
+impl Definition for ObjectDefinition {
+    fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
+        let mut reader = BufReader::new(&buffer[..]);
         let mut obj_def = decode_buffer(id, &mut reader)?;
         post(&mut obj_def);
 
 		Ok(obj_def)
-	}
+    }
 }
 
 fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ObjectDefinition> {
