@@ -73,8 +73,9 @@
 //! 
 //! # Loaders & Definitions
 //! 
-//! Every loader works exactly the same. It has a `new(cache: &Cache)` function to parse and cache 
-//! the definitions and it contains a `load(id: u16)` to fetch the definition that corresponds to the given id.
+//! Every loader works exactly the same, following the [Loader](struct.Loader.html) trait. It has a `new(cache: &Cache)` 
+//! function to parse and cache the definitions and it contains a `load(id: u16)` to fetch the definition that corresponds 
+//! to the given id.
 //! 
 //! Supported definitions:
 //! - [ItemDefinition](struct.ItemDefinition.html)
@@ -89,7 +90,8 @@
 //! 
 //! ```
 //! # use rscache::Cache;
-//! use rscache::{ Loader, ItemLoader };
+//! use rscache::Loader;
+//! use rscache::ItemLoader;
 //! 
 //! # fn main() -> rscache::Result<()> {
 //! # let path = "./data/cache";

@@ -21,7 +21,7 @@ pub struct NpcDefinition {
     pub size: usize,
     pub actions: [String; 5],
     pub visible_on_minimap: bool,
-    pub combat_level: u16,
+    pub combat_level: Option<u16>,
     pub configs: Vec<u16>,
     pub varbit_id: Option<u16>,
     pub varp_index: Option<u16>,
@@ -43,20 +43,20 @@ pub struct NpcModelData {
     pub render_priority: bool,
     pub ambient: u8,
     pub contrast: u8,
-    pub head_icon: u16,
+    pub head_icon: Option<u16>,
     pub rotate_speed: u16,
     pub rotate_flag: bool,
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct NpcAnimationData {
-    pub standing: u16,
-    pub walking: u16,
-    pub rotate_left: u16,
-    pub rotate_right: u16,
-    pub rotate_180: u16,
-    pub rotate_90_left: u16,
-    pub rotate_90_right: u16,
+    pub standing: Option<u16>,
+    pub walking: Option<u16>,
+    pub rotate_left: Option<u16>,
+    pub rotate_right: Option<u16>,
+    pub rotate_180: Option<u16>,
+    pub rotate_90_left: Option<u16>,
+    pub rotate_90_right: Option<u16>,
 }
 
 impl Definition for NpcDefinition {
@@ -72,6 +72,11 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<NpcDefini
 	let mut npc_def = NpcDefinition::default();
     npc_def.id = id;
     npc_def.interactable = true;
+    npc_def.visible_on_minimap = true;
+    npc_def.model_data.rotate_flag = true;
+    npc_def.model_data.width_scale = 128;
+    npc_def.model_data.height_scale = 128;
+    npc_def.model_data.rotate_speed = 32;
 
 	loop {
         let opcode = reader.read_u8()?;
@@ -86,15 +91,15 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<NpcDefini
 			},
 			2 => { npc_def.name = reader.read_string()?; },
             12 => { npc_def.size = reader.read_u8()? as usize; },
-            13 => { npc_def.animation_data.standing = reader.read_u16()?; },
-            14 => { npc_def.animation_data.walking = reader.read_u16()?; },
-            15 => { npc_def.animation_data.rotate_left = reader.read_u16()?; },
-            16 => { npc_def.animation_data.rotate_right = reader.read_u16()?; },
+            13 => { npc_def.animation_data.standing = Some(reader.read_u16()?); },
+            14 => { npc_def.animation_data.walking = Some(reader.read_u16()?); },
+            15 => { npc_def.animation_data.rotate_left = Some(reader.read_u16()?); },
+            16 => { npc_def.animation_data.rotate_right = Some(reader.read_u16()?); },
             17 => { 
-                npc_def.animation_data.walking = reader.read_u16()?;
-                npc_def.animation_data.rotate_180 = reader.read_u16()?;
-                npc_def.animation_data.rotate_90_right = reader.read_u16()?;
-                npc_def.animation_data.rotate_90_left = reader.read_u16()?;
+                npc_def.animation_data.walking = Some(reader.read_u16()?);
+                npc_def.animation_data.rotate_180 = Some(reader.read_u16()?);
+                npc_def.animation_data.rotate_90_right = Some(reader.read_u16()?);
+                npc_def.animation_data.rotate_90_left = Some(reader.read_u16()?);
              },
 			30..=34 => { npc_def.actions[opcode as usize - 30] = reader.read_string()?; },
 			40 => {
@@ -118,13 +123,13 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<NpcDefini
 				}
             },
 			93 => npc_def.visible_on_minimap = true,
-			95 => { npc_def.combat_level = reader.read_u16()?; },
+			95 => { npc_def.combat_level = Some(reader.read_u16()?); },
 			97 => { npc_def.model_data.width_scale = reader.read_u16()?; },
             98 => { npc_def.model_data.height_scale = reader.read_u16()?; },
             99 => npc_def.model_data.render_priority = true,
             100 => { npc_def.model_data.ambient = reader.read_u8()?; },
             101 => { npc_def.model_data.contrast = reader.read_u8()?; },
-            102 => { npc_def.model_data.head_icon = reader.read_u16()?; },
+            102 => { npc_def.model_data.head_icon = Some(reader.read_u16()?); },
             103 => { npc_def.model_data.rotate_speed = reader.read_u16()?; },
             106 => { 
                 let varbit_id = reader.read_u16()?;

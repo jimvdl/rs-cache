@@ -24,13 +24,14 @@ pub struct ItemDefinition {
 	pub options: [String; 5],
 	pub interface_options: [String; 5],
 	pub tradable: bool,
-	pub noted_id: u16,
-	pub noted_template: u16,
+	pub noted_id: Option<u16>,
+	pub noted_template: Option<u16>,
 	pub count_obj: Option<[i32; 10]>,
 	pub count_co: [u16; 10],
 	pub team: u8,
-	pub bought_link: u16,
-	pub bought_tempalte: u16,
+	pub bought_link: Option<u16>,
+	pub bought_tempalte: Option<u16>,
+	pub shift_click_drop_index: Option<u8>,
 	pub params: HashMap<u32, String>,
 }
 
@@ -56,18 +57,18 @@ pub struct InventoryModelData {
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct CharacterModelData {
-	pub male_model10: u16 ,
+	pub male_model10: Option<u16>,
 	pub male_model_offset: u8,
-	pub male_model1: u16,
-	pub female_model10: u16,
+	pub male_model1: Option<u16>,
+	pub female_model10: Option<u16>,
 	pub female_model_offset: u8,
-	pub female_model1: u16,
-	pub male_model12: u16,
-	pub female_model12: u16,
-	pub male_head_model1: u16,
-	pub female_head_model1: u16,
-	pub male_head_model2: u16,
-	pub female_head_model2: u16,
+	pub female_model1: Option<u16>,
+	pub male_model12: Option<u16>,
+	pub female_model12: Option<u16>,
+	pub male_head_model1: Option<u16>,
+	pub female_head_model1: Option<u16>,
+	pub male_head_model2: Option<u16>,
+	pub female_head_model2: Option<u16>,
 }
 
 impl Definition for ItemDefinition {
@@ -82,6 +83,13 @@ impl Definition for ItemDefinition {
 fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefinition> {
 	let mut item_def = ItemDefinition::default();
 	item_def.id = id;
+	item_def.inventory_model_data.resize_x = 128;
+	item_def.inventory_model_data.resize_y = 128;
+	item_def.inventory_model_data.resize_z = 128;
+	item_def.inventory_model_data.zoom2d = 2000;
+	item_def.options[2] = "Take".to_owned();
+	item_def.interface_options[4] = "Drop".to_owned();
+	
 
 	loop {
 		let opcode = reader.read_u8()?;
@@ -95,19 +103,19 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefin
 			6 => { item_def.inventory_model_data.y_an2d = reader.read_u16()?; },
 			7 => { item_def.inventory_model_data.x_offset2d = reader.read_u16()?; },
 			8 => { item_def.inventory_model_data.y_offset2d = reader.read_u16()?; },
-			11 => item_def.stackable = true,
+			11 => { item_def.stackable = true; },
 			12 => { item_def.cost = reader.read_i32()?; },
 			16 => item_def.members_only = true,
 			23 => {
-				item_def.character_model_data.male_model10 = reader.read_u16()?;
+				item_def.character_model_data.male_model10 = Some(reader.read_u16()?);
 				item_def.character_model_data.male_model_offset = reader.read_u8()?;
 			},
-			24 => { item_def.character_model_data.male_model1 = reader.read_u16()?; },
+			24 => { item_def.character_model_data.male_model1 = Some(reader.read_u16()?); },
 			25 => {
-				item_def.character_model_data.female_model10 = reader.read_u16()?;
+				item_def.character_model_data.female_model10 = Some(reader.read_u16()?);
 				item_def.character_model_data.female_model_offset = reader.read_u8()?;
 			},
-			26 => { item_def.character_model_data.female_model1 = reader.read_u16()?; },
+			26 => { item_def.character_model_data.female_model1 = Some(reader.read_u16()?); },
 			30..=34 => { item_def.options[opcode as usize - 30] = reader.read_string()?; },
 			35..=39 => { item_def.interface_options[opcode as usize - 35] = reader.read_string()?; },
 			40 => {
@@ -124,17 +132,17 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefin
 					item_def.inventory_model_data.texture_replace.push(reader.read_u16()?);
 				}
 			},
-			42 => { reader.read_u8()?; },
-			65 => item_def.tradable = true,
-			78 => { item_def.character_model_data.male_model12 = reader.read_u16()?; },
-			79 => { item_def.character_model_data.female_model12 = reader.read_u16()?; },
-			90 => { item_def.character_model_data.male_head_model1 = reader.read_u16()?; },
-			91 => { item_def.character_model_data.female_head_model1 = reader.read_u16()?; },
-			92 => { item_def.character_model_data.male_head_model2 = reader.read_u16()?; },
-			93 => { item_def.character_model_data.female_head_model2 = reader.read_u16()?; },
+			42 => { item_def.shift_click_drop_index = Some(reader.read_u8()?); },
+			65 => { item_def.tradable = true; },
+			78 => { item_def.character_model_data.male_model12 = Some(reader.read_u16()?); },
+			79 => { item_def.character_model_data.female_model12 = Some(reader.read_u16()?); },
+			90 => { item_def.character_model_data.male_head_model1 = Some(reader.read_u16()?); },
+			91 => { item_def.character_model_data.female_head_model1 = Some(reader.read_u16()?); },
+			92 => { item_def.character_model_data.male_head_model2 = Some(reader.read_u16()?); },
+			93 => { item_def.character_model_data.female_head_model2 = Some(reader.read_u16()?); },
 			95 => { item_def.inventory_model_data.z_an2d = reader.read_u16()?; },
-			97 => { item_def.noted_id = reader.read_u16()?; },
-			98 => { item_def.noted_template = reader.read_u16()?; item_def.stackable = true; },
+			97 => { item_def.noted_id = Some(reader.read_u16()?); },
+			98 => { item_def.noted_template = Some(reader.read_u16()?); item_def.stackable = true; },
 			100..=109 => {
 				if item_def.count_obj.is_none() {
 					item_def.count_obj = Some([0; 10]);
@@ -150,8 +158,8 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefin
 			113 => { item_def.inventory_model_data.ambient = reader.read_i8()?; },
 			114 => { item_def.inventory_model_data.contrast = reader.read_i8()?; },
 			115 => { item_def.team = reader.read_u8()?; },
-			139 => { item_def.bought_link = reader.read_u16()?; },
-			140 => { item_def.bought_tempalte = reader.read_u16()?; },
+			139 => { item_def.bought_link = Some(reader.read_u16()?); },
+			140 => { item_def.bought_tempalte = Some(reader.read_u16()?); },
 			148 | 149 => { reader.read_u16()?; },
 			249 => { item_def.params = read_parameters(reader)?; },
 			_ => unreachable!()

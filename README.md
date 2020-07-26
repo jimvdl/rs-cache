@@ -28,7 +28,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rs-cache = "0.2.7"
+rs-cache = "0.3.0"
 ```
 
 Examples can be found in the [examples](examples/) directory. These examples include basic use cases and more advanced use cases such as the update protocol.
