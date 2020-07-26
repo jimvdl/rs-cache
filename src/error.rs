@@ -1,5 +1,29 @@
 use std::{ error::Error, fmt, io };
 
+/// A specialized result type for cache operations.
+/// 
+/// This type is broadly used across rscache for any operation which may produce a 
+/// [CacheError](enum.CacheError.html).
+/// 
+/// # Examples
+///
+/// A convenience function that bubbles an `rscache::Result` to its caller:
+///
+/// ```
+/// use rscache::Cache;
+/// use rscache::LinkedListExt;
+/// use rscache::codec;
+/// 
+/// fn item_def_data(cache: &Cache) -> rscache::Result<Vec<u8>> {
+///     let index_id = 2;
+///     let archive_id = 10;
+/// 
+///     let buffer = cache.read(index_id, archive_id)?.to_vec();
+///     let buffer = codec::decode(&mut buffer.as_slice())?;
+/// 
+///     Ok(buffer)
+/// }
+/// ```
 pub type Result<T> = std::result::Result<T, CacheError>;
 
 #[derive(Debug)]
