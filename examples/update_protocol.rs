@@ -1,5 +1,4 @@
 use rscache::Cache;
-use rscache::LinkedListExt;
 
 fn main() -> rscache::Result<()> {
     let cache = Cache::new("./data/cache")?;

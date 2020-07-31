@@ -10,7 +10,6 @@ use crate::{
     error::ReadError,
     Checksum,
     checksum::Entry,
-    LinkedListExt,
     codec
 };
 
@@ -20,7 +19,7 @@ use std::{
     path::Path,
     io::{ self, Read },
     fs::File,
-    collections::{ LinkedList, HashMap },
+    collections::HashMap,
 };
 
 type IndexId = u8;
@@ -90,7 +89,7 @@ impl Cache {
     /// # }
     /// ```
     #[inline]
-    pub fn read(&self, index_id: IndexId, archive_id: ArchiveId) -> Result<LinkedList<&[u8]>, ReadError> {
+    pub fn read(&self, index_id: IndexId, archive_id: ArchiveId) -> Result<Vec<u8>, ReadError> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,
             None => return Err(ReadError::IndexNotFound(index_id))
@@ -181,9 +180,9 @@ impl Cache {
         let index_id = 10;
 
         let archive = self.archive_by_name(index_id, "huffman")?;
-        let mut buffer = &self.main_data.read(archive.sector, archive.length).to_vec()[..];
+        let buffer = &self.main_data.read(archive.sector, archive.length);
 		
-		Ok(codec::decode(&mut buffer)?)
+		Ok(codec::decode(&mut buffer.as_slice())?)
     }
 
 	fn archive_by_name(&self, index_id: IndexId, name: &str) -> crate::Result<Archive> {

@@ -1,5 +1,3 @@
-use rscache::LinkedListExt;
-
 mod common;
 
 #[test]
