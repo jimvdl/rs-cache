@@ -16,10 +16,9 @@ use nom::{
 };
 use itertools::izip;
 
-use crate::CacheError;
-
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Archive {
+    pub id: u32,
     pub sector: u32,
     pub length: usize
 }
@@ -65,7 +64,8 @@ pub fn decode(buffer: &[u8], entry_count: usize) -> io::Result<HashMap<u16, Vec<
     Ok(data)
 }
 
-pub fn parse(buffer: &[u8]) -> Result<Vec<ArchiveData>, CacheError> {
+// TODO: id could be u16 or u24 depending on protocol (rs3)
+pub fn parse(buffer: &[u8]) -> crate::Result<Vec<ArchiveData>> {
     let (buffer, protocol) = be_u8(buffer)?;
     let (buffer, _) = cond(protocol >= 6, be_u32)(buffer)?;
     let (buffer, identified) = parse_identified(buffer)?;
@@ -91,13 +91,13 @@ pub fn parse(buffer: &[u8]) -> Result<Vec<ArchiveData>, CacheError> {
     Ok(archives)
 }
 
-fn parse_identified(buffer: &[u8]) -> Result<(&[u8], bool), CacheError> {
+fn parse_identified(buffer: &[u8]) -> crate::Result<(&[u8], bool)> {
     let (buffer, identified) = be_u8(buffer)?;
 
     Ok((buffer, (1 & identified) != 0))
 }
 
-fn parse_identifiers(buffer: &[u8], identified: bool, archive_count: usize) -> Result<(&[u8], Vec<i32>), CacheError> {
+fn parse_identifiers(buffer: &[u8], identified: bool, archive_count: usize) -> crate::Result<(&[u8], Vec<i32>)> {
     let (buffer, taken) = cond(identified, take(archive_count * 4))(buffer)?;
     let (_, mut identifiers) = many0(be_i32)(match taken {
         Some(taken) => taken,
@@ -111,7 +111,7 @@ fn parse_identifiers(buffer: &[u8], identified: bool, archive_count: usize) -> R
     Ok((buffer, identifiers))
 }
 
-fn parse_usize_from_u16(buffer: &[u8]) -> Result<(&[u8], usize), CacheError> {
+fn parse_usize_from_u16(buffer: &[u8]) -> crate::Result<(&[u8], usize)> {
     let (buffer, value) = be_u16(buffer)?;
 
     Ok((buffer, value as usize))

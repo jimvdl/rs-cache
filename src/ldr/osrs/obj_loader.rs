@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use super::super::ObjectDefinition;
-use crate::{ Cache, Loader };
-use crate::def::loader;
+use crate::def::osrs::ObjectDefinition;
+use crate::{ Cache, Store, Loader, util };
 
 /// Caches all the object definitions that were loaded.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
@@ -10,9 +9,9 @@ pub struct ObjectLoader {
     pub objects: HashMap<u16, ObjectDefinition>
 }
 
-impl Loader<ObjectDefinition> for ObjectLoader {
-    fn new(cache: &Cache) -> crate::Result<Self> {
-        let objects = loader::parse_defs(cache, 6)?;
+impl<S: Store> Loader<ObjectDefinition, S> for ObjectLoader {
+    fn new(cache: &Cache<S>) -> crate::Result<Self> {
+        let objects = util::parse_defs(cache, 6)?;
 
         Ok(Self { objects })
     }

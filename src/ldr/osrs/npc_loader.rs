@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use super::super::NpcDefinition;
-use crate::{ Cache, Loader };
-use crate::def::loader;
+use crate::def::osrs::NpcDefinition;
+use crate::{ Cache, Store, Loader, util };
 
 /// Caches all the npc definitions that were loaded.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
@@ -10,9 +9,9 @@ pub struct NpcLoader {
     pub npcs: HashMap<u16, NpcDefinition>
 }
 
-impl Loader<NpcDefinition> for NpcLoader {
-    fn new(cache: &Cache) -> crate::Result<Self> {
-        let npcs = loader::parse_defs(cache, 9)?;
+impl<S: Store> Loader<NpcDefinition, S> for NpcLoader {
+    fn new(cache: &Cache<S>) -> crate::Result<Self> {
+        let npcs = util::parse_defs(cache, 9)?;
 
         Ok(Self { npcs })
     }

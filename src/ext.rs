@@ -1,4 +1,7 @@
-use std::io::{ self, Read, BufReader };
+use std::{
+    io,
+    io::{ Read, BufReader },
+};
 
 /// Adds easy byte reading onto a [`Read`] instance.
 /// 

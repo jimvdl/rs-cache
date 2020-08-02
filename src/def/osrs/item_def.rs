@@ -4,8 +4,7 @@ use std::{
 	collections::HashMap,
 };
 
-use crate::ReadExt;
-use super::Definition;
+use crate::{ Definition, ext::ReadExt };
 
 /// Contains all the information about a certain item fetched from the cache through
 /// the [ItemLoader](struct.ItemLoader.html).

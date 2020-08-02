@@ -1,29 +1,5 @@
 use std::{ error::Error, fmt, io };
 
-/// A specialized result type for cache operations.
-/// 
-/// This type is broadly used across rscache for any operation which may produce a 
-/// [CacheError](enum.CacheError.html).
-/// 
-/// # Examples
-///
-/// A convenience function that bubbles an `rscache::Result` to its caller:
-///
-/// ```
-/// use rscache::Cache;
-/// use rscache::LinkedListExt;
-/// use rscache::codec;
-/// 
-/// fn item_def_data(cache: &Cache) -> rscache::Result<Vec<u8>> {
-///     let index_id = 2;
-///     let archive_id = 10;
-/// 
-///     let buffer = cache.read(index_id, archive_id)?.to_vec();
-///     let buffer = codec::decode(&mut buffer.as_slice())?;
-/// 
-///     Ok(buffer)
-/// }
-/// ```
 pub type Result<T> = std::result::Result<T, CacheError>;
 
 #[derive(Debug)]
@@ -77,7 +53,7 @@ impl fmt::Display for CacheError {
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum ReadError {
 	IndexNotFound(u8),
-	ArchiveNotFound(u8, u16),
+	ArchiveNotFound(u8, u32),
 	NameNotInArchive(i32, String, u8),
 }
 
@@ -88,7 +64,7 @@ impl fmt::Display for ReadError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			Self::IndexNotFound(id) => write!(f, "Index {} not found.", id),
-			Self::ArchiveNotFound(index_id, archive_id) => write!(f, "Index {} does not contain archive {}.", index_id, archive_id),
+			Self::ArchiveNotFound(index_id, archive_id) => write!(f, "Index {} does not contain archive group {}.", index_id, archive_id),
 			Self::NameNotInArchive(hash, name, index_id) => write!(f, "Identifier hash {} for name {} not found in index {}.", hash, name, index_id),
 		}
 	}
