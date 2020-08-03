@@ -15,6 +15,33 @@ use crate::{
     arc,
 };
 
+#[macro_export]
+macro_rules! impl_loader {
+   ($ldr:ident, $def:ty, $defs_field:ident, $arc_id:expr) => {
+        impl $ldr {
+            pub fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
+                Loader::new(cache)
+            }
+
+            pub fn load(&self, id: u16) -> Option<&$def> {
+                Loader::load(self, id)
+            }
+        }
+
+        impl Loader<$def> for $ldr {
+            fn new<S: Store>(cache: &Cache<S>) -> crate::Result<$ldr> {
+                let $defs_field = util::parse_defs(cache, $arc_id)?;
+
+                Ok($ldr { $defs_field })
+            }
+
+            fn load(&self, id: u16) -> Option<&$def> {
+                self.$defs_field.get(&id)
+            }
+        }
+   };
+}
+
 pub mod djd2 {
     pub fn hash(string: &str) -> i32 {
         let mut hash = 0;

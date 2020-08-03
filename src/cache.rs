@@ -78,12 +78,12 @@ impl<S: Store> Cache<S> {
 		Ok(codec::decode(&mut buffer)?)
     }
 
-    fn archive_by_name(&self, index_id: u8, name: &str) -> crate::Result<Archive> {
+    pub fn archive_by_name(&self, index_id: u8, name: &str) -> crate::Result<Archive> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,
             None => return Err(ReadError::IndexNotFound(index_id).into())
         };
-        let identifier = util::djd2::hash(name);
+        let hash = util::djd2::hash(name);
 
         let mut buffer: &[u8] = &self.read(255, index_id as u32)?;
         let data = &codec::decode(&mut buffer)?[..];
@@ -91,7 +91,7 @@ impl<S: Store> Cache<S> {
         let archives = arc::parse(data)?;
 
         for archive_data in archives {
-            if archive_data.identifier == identifier {
+            if archive_data.hash == hash {
                 match index.archive(archive_data.id as u32) {
                     Some(archive) => return Ok(*archive),
                     None => return Err(
@@ -101,7 +101,7 @@ impl<S: Store> Cache<S> {
             }
         }
 
-        Err(ReadError::NameNotInArchive(identifier, name.to_owned(), index_id).into())
+        Err(ReadError::NameNotInArchive(hash, name.to_owned(), index_id).into())
     }
 
     pub fn index_count(&self) -> usize {

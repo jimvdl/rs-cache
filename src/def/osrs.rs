@@ -1,4 +1,3 @@
-// pub mod loader;
 mod item_def;
 mod npc_def;
 mod obj_def;

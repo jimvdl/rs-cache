@@ -26,7 +26,7 @@ pub struct Archive {
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ArchiveData {
     pub id: u16,
-    pub identifier: i32,
+    pub hash: i32,
     pub crc: u32,
     pub revision: u32,
     pub entry_count: usize
@@ -71,17 +71,17 @@ pub fn parse(buffer: &[u8]) -> crate::Result<Vec<ArchiveData>> {
     let (buffer, identified) = parse_identified(buffer)?;
     let (buffer, archive_count) = parse_usize_from_u16(buffer)?;
     let (buffer, ids) = many_m_n(0, archive_count, be_u16)(buffer)?;
-    let (buffer, identifiers) = parse_identifiers(buffer, identified, archive_count)?;
+    let (buffer, hashes) = parse_identifiers(buffer, identified, archive_count)?;
     let (buffer, crcs) = many_m_n(0, archive_count, be_u32)(buffer)?;
     let (buffer, revisions) = many_m_n(0, archive_count, be_u32)(buffer)?;
     let (_, entry_counts) = many_m_n(0, archive_count, be_u16)(buffer)?;
 
     let mut archives = Vec::with_capacity(archive_count);
-    let archive_data = izip!(&ids, &identifiers, &crcs, &revisions, &entry_counts);
-    for (id, identifier, crc, revision, entry_count) in archive_data {
+    let archive_data = izip!(&ids, &hashes, &crcs, &revisions, &entry_counts);
+    for (id, hash, crc, revision, entry_count) in archive_data {
         archives.push(ArchiveData { 
             id: *id, 
-            identifier: *identifier, 
+            hash: *hash, 
             crc: *crc, 
             revision: *revision, 
             entry_count: *entry_count as usize 

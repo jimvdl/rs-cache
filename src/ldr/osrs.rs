@@ -1,7 +1,28 @@
-mod item_loader;
-mod npc_loader;
-mod obj_loader;
+use std::collections::HashMap;
 
-pub use item_loader::ItemLoader;
-pub use npc_loader::NpcLoader;
-pub use obj_loader::ObjectLoader;
+use crate::{ Store, Loader, util, Cache };
+
+use crate::def::osrs::{
+    ItemDefinition,
+    NpcDefinition,
+    ObjectDefinition
+};
+
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
+pub struct ItemLoader {
+    pub items: HashMap<u16, ItemDefinition>
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
+pub struct NpcLoader {
+    pub npcs: HashMap<u16, NpcDefinition>
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
+pub struct ObjectLoader {
+    pub objs: HashMap<u16, ObjectDefinition>
+}
+
+impl_loader!(ItemLoader, ItemDefinition, items, 10);
+impl_loader!(NpcLoader, NpcDefinition, npcs, 9);
+impl_loader!(ObjectLoader, ObjectDefinition, objs, 6);

@@ -8,6 +8,7 @@ pub mod ext;
 pub mod error;
 pub mod store;
 pub mod codec;
+#[macro_use]
 pub mod util;
 pub mod def;
 pub mod ldr;
