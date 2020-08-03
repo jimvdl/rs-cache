@@ -9,8 +9,18 @@ pub struct NpcLoader {
     pub npcs: HashMap<u16, NpcDefinition>
 }
 
-impl<S: Store> Loader<NpcDefinition, S> for NpcLoader {
-    fn new(cache: &Cache<S>) -> crate::Result<Self> {
+impl NpcLoader {
+    pub fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
+        Loader::new(cache)
+    }
+
+    pub fn load(&self, id: u16) -> Option<&NpcDefinition> {
+        Loader::load(self, id)
+    }
+}
+
+impl Loader<NpcDefinition> for NpcLoader {
+    fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
         let npcs = util::parse_defs(cache, 9)?;
 
         Ok(Self { npcs })

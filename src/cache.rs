@@ -28,12 +28,12 @@ pub trait CacheRead {
     fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>>;
 }
 
-pub struct Cache<T: Store> {
-	store: T,
+pub struct Cache<S: Store> {
+	store: S,
 	indices: HashMap<u8, Index>
 }
 
-impl<T: Store> Cache<T> {
+impl<S: Store> Cache<S> {
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         CacheCore::new(path)
     }
@@ -109,7 +109,7 @@ impl<T: Store> Cache<T> {
     }
 }
 
-impl<T: Store> CacheCore for Cache<T> {
+impl<S: Store> CacheCore for Cache<S> {
     fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         let path = path.as_ref();
 
@@ -120,7 +120,7 @@ impl<T: Store> CacheCore for Cache<T> {
     }
 }
 
-impl<T: Store> CacheRead for Cache<T> {
+impl<S: Store> CacheRead for Cache<S> {
     fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,

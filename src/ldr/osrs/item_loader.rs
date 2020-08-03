@@ -9,8 +9,18 @@ pub struct ItemLoader {
     pub items: HashMap<u16, ItemDefinition>
 }
 
-impl<S: Store> Loader<ItemDefinition, S> for ItemLoader {
-    fn new(cache: &Cache<S>) -> crate::Result<Self> {
+impl ItemLoader {
+    pub fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
+        Loader::new(cache)
+    }
+
+    pub fn load(&self, id: u16) -> Option<&ItemDefinition> {
+        Loader::load(self, id)
+    }
+}
+
+impl Loader<ItemDefinition> for ItemLoader {
+    fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
         let items = util::parse_defs(cache, 10)?;
 
         Ok(Self { items })
