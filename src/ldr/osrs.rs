@@ -23,6 +23,6 @@ pub struct ObjectLoader {
     pub objs: HashMap<u16, ObjectDefinition>
 }
 
-impl_loader!(ItemLoader, ItemDefinition, items, 10);
-impl_loader!(NpcLoader, NpcDefinition, npcs, 9);
-impl_loader!(ObjectLoader, ObjectDefinition, objs, 6);
+impl_loader!(ItemLoader, ItemDefinition, items, archive_id: 10);
+impl_loader!(NpcLoader, NpcDefinition, npcs, archive_id: 9);
+impl_loader!(ObjectLoader, ObjectDefinition, objs, archive_id: 6);

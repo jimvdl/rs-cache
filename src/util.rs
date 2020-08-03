@@ -17,7 +17,7 @@ use crate::{
 
 #[macro_export]
 macro_rules! impl_loader {
-   ($ldr:ident, $def:ty, $defs_field:ident, $arc_id:expr) => {
+   ($ldr:ident, $def:ty, $defs_field:ident, archive_id: $arc_id:expr) => {
         impl $ldr {
             #[inline]
             pub fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
