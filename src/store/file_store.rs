@@ -13,10 +13,12 @@ pub struct FileStore {
 }
 
 impl Store for FileStore {
+	#[inline]
     fn new(main_file: File) -> crate::Result<Self> {
         Ok(Self { handle: RefCell::new(BufReader::new(main_file)) })
     }
 
+	#[inline]
     fn read(&self, archive: &Archive) -> Vec<u8> {
         let expanded_header = archive.id > std::u16::MAX.into();
 		let mut sector = archive.sector;

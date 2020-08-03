@@ -19,6 +19,7 @@ use crc::crc32;
 pub const MAIN_DATA: &str = "main_file_cache.dat2";
 pub const MAIN_MUSIC_DATA: &str = "main_file_cache.dat2m";
 pub const IDX_PREFIX: &str = "main_file_cache.idx";
+pub const REFERENCE_TABLE: u8 = 255;
 
 pub trait CacheCore: CacheRead + Sized {
     fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self>;
@@ -34,14 +35,17 @@ pub struct Cache<S: Store> {
 }
 
 impl<S: Store> Cache<S> {
+    #[inline]
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         CacheCore::new(path)
     }
 
+    #[inline]
     pub fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
         CacheRead::read(self, index_id, archive_id)
     }
 
+    #[inline]
     pub fn create_checksum(&self) -> crate::Result<Checksum> {
         let mut checksum = Checksum::new();
 
@@ -51,12 +55,9 @@ impl<S: Store> Cache<S> {
                 continue;
             }
 
-            if let Ok(buffer) = &self.read(255, index_id) {	
-                let buffer = buffer.to_vec();
-
+            if let Ok(buffer) = self.read(REFERENCE_TABLE, index_id) {	
                 if !buffer.is_empty() {
-                    let mut buf = buffer[..].as_ref();
-                    let data = codec::decode(&mut buf)?;
+                    let data = codec::decode(&buffer)?;
 
                     checksum.push(Entry { 
                         crc: crc32::checksum_ieee(&buffer), 
@@ -69,15 +70,17 @@ impl<S: Store> Cache<S> {
         Ok(checksum)
     }
 
+    #[inline]
     pub fn huffman_table(&self) -> crate::Result<Vec<u8>> {
         let index_id = 10;
 
         let archive = self.archive_by_name(index_id, "huffman")?;
-        let mut buffer: &[u8] = &self.store.read(&archive);
+        let buffer = self.store.read(&archive);
 		
-		Ok(codec::decode(&mut buffer)?)
+		Ok(codec::decode(&buffer)?)
     }
 
+    #[inline]
     pub fn archive_by_name(&self, index_id: u8, name: &str) -> crate::Result<Archive> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,
@@ -85,8 +88,8 @@ impl<S: Store> Cache<S> {
         };
         let hash = util::djd2::hash(name);
 
-        let mut buffer: &[u8] = &self.read(255, index_id as u32)?;
-        let data = &codec::decode(&mut buffer)?[..];
+        let buffer = self.read(REFERENCE_TABLE, index_id as u32)?;
+        let data = &codec::decode(&buffer)?[..];
 
         let archives = arc::parse(data)?;
 
@@ -104,12 +107,14 @@ impl<S: Store> Cache<S> {
         Err(ReadError::NameNotInArchive(hash, name.to_owned(), index_id).into())
     }
 
+    #[inline]
     pub fn index_count(&self) -> usize {
         self.indices.len()
     }
 }
 
 impl<S: Store> CacheCore for Cache<S> {
+    #[inline]
     fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         let path = path.as_ref();
 
@@ -121,6 +126,7 @@ impl<S: Store> CacheCore for Cache<S> {
 }
 
 impl<S: Store> CacheRead for Cache<S> {
+    #[inline]
     fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,

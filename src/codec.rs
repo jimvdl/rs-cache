@@ -44,6 +44,7 @@ impl TryFrom<u8> for Compression {
 	}
 }
 
+#[inline]
 pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> crate::Result<Vec<u8>> {
 	let compressed_data = match compression {
 		Compression::None => data.to_owned(),
@@ -51,7 +52,7 @@ pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> c
 		Compression::Gzip => compress_gzip(data)?,
 	};
 
-	let mut buffer = Vec::new();
+	let mut buffer = Vec::with_capacity(compressed_data.len() + 11);
 	buffer.push(compression as u8);
 	buffer.extend_from_slice(&u32::to_be_bytes(compressed_data.len() as u32));
 	
@@ -69,19 +70,20 @@ pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> c
 	Ok(buffer)
 }
 
-pub fn decode<R: Read>(reader: &mut R) -> crate::Result<Vec<u8>> {
+#[inline]
+pub fn decode(mut buffer: &[u8]) -> crate::Result<Vec<u8>> {
 	let mut buf = [0; 1];
-	reader.read_exact(&mut buf)?;
+	buffer.read_exact(&mut buf)?;
 	let compression = Compression::try_from(buf[0])?;
 
 	let mut buf = [0; 4];
-	reader.read_exact(&mut buf)?;
+	buffer.read_exact(&mut buf)?;
 	let len = u32::from_be_bytes(buf) as usize;
 
 	let (_revision, buffer) = match compression {
-		Compression::None => decompress_none(reader, len)?,
-		Compression::Bzip2 => decompress_bzip2(reader, len)?,
-		Compression::Gzip => decompress_gzip(reader, len)?,
+		Compression::None => decompress_none(buffer, len)?,
+		Compression::Bzip2 => decompress_bzip2(buffer, len)?,
+		Compression::Gzip => decompress_gzip(buffer, len)?,
 	};
 
 	Ok(buffer)
@@ -100,22 +102,22 @@ fn compress_gzip(data: &[u8]) -> io::Result<Vec<u8>> {
 	Ok(compressed_data)
 }
 
-fn decompress_none<R: Read>(reader: &mut R, len: usize) -> crate::Result<(i16, Vec<u8>)> {
+fn decompress_none(mut buffer: &[u8], len: usize) -> crate::Result<(i16, Vec<u8>)> {
 	let mut compressed_data = vec![0; len];
-	reader.read_exact(&mut compressed_data)?;
+	buffer.read_exact(&mut compressed_data)?;
 
-	Ok((read_revision(reader)?, compressed_data))
+	Ok((read_revision(buffer)?, compressed_data))
 }
 
-fn decompress_bzip2<R: Read>(reader: &mut R, len: usize) -> crate::Result<(i16, Vec<u8>)> {
+fn decompress_bzip2(mut buffer: &[u8], len: usize) -> crate::Result<(i16, Vec<u8>)> {
 	let mut buf = [0; 4];
-	reader.read_exact(&mut buf)?;
+	buffer.read_exact(&mut buf)?;
 	let decompressed_len = u32::from_be_bytes(buf) as usize;
 
 	let mut compressed_data = vec![0; len - 4];
-	reader.read_exact(&mut compressed_data)?;
+	buffer.read_exact(&mut compressed_data)?;
 
-	let revision = read_revision(reader)?;
+	let revision = read_revision(buffer)?;
 
 	compressed_data.insert(0, b'1');
 	compressed_data.insert(0, b'h');
@@ -128,15 +130,15 @@ fn decompress_bzip2<R: Read>(reader: &mut R, len: usize) -> crate::Result<(i16, 
 	Ok((revision, decompressed_data))
 }
 
-fn decompress_gzip<R: Read>(reader: &mut R, len: usize) -> crate::Result<(i16, Vec<u8>)> {
+fn decompress_gzip(mut buffer: &[u8], len: usize) -> crate::Result<(i16, Vec<u8>)> {
 	let mut buf = [0; 4];
-	reader.read_exact(&mut buf)?;
+	buffer.read_exact(&mut buf)?;
 	let decompressed_len = u32::from_be_bytes(buf) as usize;
 
 	let mut compressed_data = vec![0; len - 4];
-	reader.read_exact(&mut compressed_data)?;
+	buffer.read_exact(&mut compressed_data)?;
 
-	let revision = read_revision(reader)?;
+	let revision = read_revision(buffer)?;
 
 	let mut decoder = Decoder::new(&compressed_data[..])?;
 	let mut decompressed_data = vec![0; decompressed_len];
@@ -145,11 +147,11 @@ fn decompress_gzip<R: Read>(reader: &mut R, len: usize) -> crate::Result<(i16, V
 	Ok((revision, decompressed_data))
 }
 
-fn read_revision<R: Read>(reader: &mut R) -> crate::Result<i16> {
-	if let Some(remaining) = reader.bytes().size_hint().1 {
+fn read_revision(mut buffer: &[u8]) -> crate::Result<i16> {
+	if let Some(remaining) = buffer.bytes().size_hint().1 {
 		if remaining >= 2 {
 			let mut rev_buffer = [0; 2];
-			reader.read_exact(&mut rev_buffer)?;
+			buffer.read_exact(&mut rev_buffer)?;
 			return Ok(i16::from_be_bytes(rev_buffer))
 		}
 	}

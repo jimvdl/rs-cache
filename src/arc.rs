@@ -32,6 +32,7 @@ pub struct ArchiveData {
     pub entry_count: usize
 }
 
+#[inline]
 pub fn decode(buffer: &[u8], entry_count: usize) -> io::Result<HashMap<u16, Vec<u8>>> {
     let chunks = buffer[buffer.len() - 1] as usize;
     let mut data = HashMap::new();
@@ -65,6 +66,7 @@ pub fn decode(buffer: &[u8], entry_count: usize) -> io::Result<HashMap<u16, Vec<
 }
 
 // TODO: id could be u16 or u24 depending on protocol (rs3)
+#[inline]
 pub fn parse(buffer: &[u8]) -> crate::Result<Vec<ArchiveData>> {
     let (buffer, protocol) = be_u8(buffer)?;
     let (buffer, _) = cond(protocol >= 6, be_u32)(buffer)?;

@@ -9,6 +9,7 @@ pub struct MemoryStore {
 }
 
 impl Store for MemoryStore {
+	#[inline]
     fn new(mut main_file: File) -> crate::Result<Self> {
         let mut buffer = Vec::new();
         main_file.read_to_end(&mut buffer)?;
@@ -16,6 +17,7 @@ impl Store for MemoryStore {
         Ok(Self { data: buffer })
     }
 
+	#[inline]
     fn read(&self, archive: &Archive) -> Vec<u8> {
         let mut sector = archive.sector;
         let mut data = vec![0; archive.length];

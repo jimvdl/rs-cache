@@ -10,6 +10,7 @@ pub struct Index {
 }
 
 impl Index {
+	#[inline]
     pub fn new(buffer: &[u8]) -> Self {
 		let mut archives = HashMap::new();
 
@@ -23,6 +24,7 @@ impl Index {
         Self { archives }
 	}
 
+	#[inline]
 	pub fn archive(&self, archive_id: u32) -> Option<&Archive> {
 		self.archives.get(&archive_id)
 	}
@@ -35,6 +37,7 @@ fn parse_archive(id: u32, buffer: &[u8]) -> Archive {
 	Archive { id, sector, length }
 }
 
+#[inline]
 pub fn version(buffer: &[u8]) -> u32 {
     let format = buffer[0];
 
