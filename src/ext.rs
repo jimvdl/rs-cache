@@ -1,7 +1,4 @@
-use std::{
-    io,
-    io::{ Read, BufReader },
-};
+use std::io::{ self, Read };
 
 /// Adds easy byte reading onto a [`Read`] instance.
 /// 
@@ -15,7 +12,7 @@ pub trait ReadExt: Read {
     fn read_string(&mut self) -> io::Result<String>;
 }
 
-impl ReadExt for BufReader<&[u8]> {
+impl<T: Read> ReadExt for T {
     #[inline]
     fn read_u8(&mut self) -> io::Result<u8> {
         let mut buffer = [0; 1];
