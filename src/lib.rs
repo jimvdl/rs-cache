@@ -47,7 +47,6 @@ pub mod def;
 pub mod ldr;
 
 pub type OsrsCache = Cache<store::MemoryStore>;
-pub type Rs3Cache = Cache<store::FileStore>;
 
 #[doc(inline)]
 pub use error::Result;

@@ -34,11 +34,3 @@ pub mod osrs {
         ObjectLoader::new(&cache)
     }
 }
-
-pub mod rs3 {
-    use rscache::Rs3Cache;
-
-    pub fn setup() -> rscache::Result<Rs3Cache> {
-        Rs3Cache::new("./data/cache")
-    }
-}

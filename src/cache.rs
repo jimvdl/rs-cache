@@ -3,6 +3,13 @@ use std::{
     collections::HashMap,
 };
 
+use nom::{
+    combinator::cond,
+	number::complete::{
+		be_u32,
+    },
+};
+
 use crate::{ 
     store::Store, 
     cksm::{ Checksum, Entry },
@@ -11,7 +18,6 @@ use crate::{
     error::ReadError, 
     util,
     codec,
-    idx,
 };
 
 use crc::crc32;
@@ -59,9 +65,12 @@ impl<S: Store> Cache<S> {
                 if !buffer.is_empty() {
                     let data = codec::decode(&buffer)?;
 
+                    let (_, version) = cond(data[0] >= 6, be_u32)(&data[1..5])?;
+                    let version = if let Some(version) = version { version } else { 0 };
+
                     checksum.push(Entry { 
                         crc: crc32::checksum_ieee(&buffer), 
-                        revision: idx::version(&data),
+                        revision: version,
                     });
                 }
             };
