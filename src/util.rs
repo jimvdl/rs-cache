@@ -81,7 +81,7 @@ pub fn load_indices<P: AsRef<Path>>(path: P) -> crate::Result<HashMap<u8, Index>
 			let mut index_buffer = Vec::new();
 
 			index.read_to_end(&mut index_buffer)?;
-			indices.insert(index_id, Index::new(&index_buffer)?);
+			indices.insert(index_id, Index::new(index_id, &index_buffer)?);
 		}
 	}
 

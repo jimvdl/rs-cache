@@ -16,5 +16,5 @@ pub const SECTOR_SIZE: usize = SECTOR_HEADER_SIZE + SECTOR_DATA_SIZE;
 
 pub trait Store: Sized {
     fn new(main_file: File) -> crate::Result<Self>;
-    fn read(&self, archive: &Archive) -> Vec<u8>;
+    fn read(&self, archive: &Archive) -> crate::Result<Vec<u8>>;
 }

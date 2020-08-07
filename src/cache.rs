@@ -84,7 +84,7 @@ impl<S: Store> Cache<S> {
         let index_id = 10;
 
         let archive = self.archive_by_name(index_id, "huffman")?;
-        let buffer = self.store.read(&archive);
+        let buffer = self.store.read(&archive)?;
 		
 		Ok(codec::decode(&buffer)?)
     }
@@ -104,7 +104,7 @@ impl<S: Store> Cache<S> {
 
         for archive_data in archives {
             if archive_data.hash == hash {
-                match index.archive(archive_data.id as u32) {
+                match index.archives.get(&(archive_data.id as u32)) {
                     Some(archive) => return Ok(*archive),
                     None => return Err(
                         ReadError::ArchiveNotFound(index_id, archive_data.id as u32).into()
@@ -142,11 +142,11 @@ impl<S: Store> CacheRead for Cache<S> {
             None => return Err(ReadError::IndexNotFound(index_id).into())
         };
 
-        let archive = match index.archive(archive_id) {
+        let archive = match index.archives.get(&archive_id) {
             Some(archive) => archive,
             None => return Err(ReadError::ArchiveNotFound(index_id, archive_id).into())
         };
 
-        Ok(self.store.read(archive))
+        Ok(self.store.read(archive)?)
     }
 }

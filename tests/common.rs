@@ -10,7 +10,7 @@ pub fn hash(buffer: &[u8]) -> String {
 }
 
 pub mod osrs {
-    use rscache::OsrsCache;
+    use rscache::{ Cache, store::MemoryStore };
     
     use rscache::ldr::osrs::{
         ItemLoader,
@@ -18,19 +18,19 @@ pub mod osrs {
         ObjectLoader
     };
 
-    pub fn setup() -> rscache::Result<OsrsCache> {
-        OsrsCache::new("./data/cache")
+    pub fn setup() -> rscache::Result<Cache<MemoryStore>> {
+        Cache::new("./data/cache")
     }
 
-    pub fn load_items(cache: &OsrsCache) -> rscache::Result<ItemLoader> {
+    pub fn load_items(cache: &Cache<MemoryStore>) -> rscache::Result<ItemLoader> {
         ItemLoader::new(&cache)
     }
 
-    pub fn load_npcs(cache: &OsrsCache) -> rscache::Result<NpcLoader> {
+    pub fn load_npcs(cache: &Cache<MemoryStore>) -> rscache::Result<NpcLoader> {
         NpcLoader::new(&cache)
     }
     
-    pub fn load_objects(cache: &OsrsCache) -> rscache::Result<ObjectLoader> {
+    pub fn load_objects(cache: &Cache<MemoryStore>) -> rscache::Result<ObjectLoader> {
         ObjectLoader::new(&cache)
     }
 }

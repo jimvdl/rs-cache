@@ -20,6 +20,7 @@ impl Checksum {
         self.entries.push(entry);
     }
 
+    #[inline]
     pub fn validate(&self, crcs: &[u32]) -> bool {
         let internal: Vec<u32> = self.entries.iter()
             .map(|entry| entry.crc)
@@ -28,6 +29,7 @@ impl Checksum {
             internal == crcs
     }
 
+    #[inline]
     pub fn encode(self) -> crate::Result<Vec<u8>> {
         let mut buffer = Vec::with_capacity(self.entries.len() * 2 * 4);
 

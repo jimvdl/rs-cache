@@ -33,18 +33,19 @@
     clippy::used_underscore_binding
 )]
 
-mod cache;
-mod cksm;
+#[macro_use]
+pub mod util;
+pub mod cache;
+pub mod cksm;
 pub mod idx;
 pub mod arc;
 pub mod ext;
 pub mod error;
 pub mod store;
 pub mod codec;
-#[macro_use]
-pub mod util;
 pub mod def;
 pub mod ldr;
+pub mod sec;
 
 pub type OsrsCache = Cache<store::MemoryStore>;
 
@@ -52,6 +53,8 @@ pub type OsrsCache = Cache<store::MemoryStore>;
 pub use error::Result;
 #[doc(inline)]
 pub use cache::{ Cache, CacheCore, CacheRead };
+#[doc(inline)]
+pub use cksm::Checksum;
 #[doc(inline)]
 pub use store::Store;
 #[doc(inline)]

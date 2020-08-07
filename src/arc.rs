@@ -19,6 +19,7 @@ use itertools::izip;
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Archive {
     pub id: u32,
+    pub index_id: u8,
     pub sector: u32,
     pub length: usize
 }

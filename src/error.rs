@@ -48,7 +48,7 @@ impl fmt::Display for CacheError {
 			Self::Io(err) => err.fmt(f),
 			Self::Read(err) => err.fmt(f),
 			Self::Compression(err) => err.fmt(f),
-			Self::Nom(_) => write!(f, "Parser failed, invalid data passed."),
+			Self::Nom(_) => write!(f, "Parser failed, invalid input."),
 			Self::Parse(err) => err.fmt(f),
 		}
 	}
@@ -59,6 +59,10 @@ pub enum ReadError {
 	IndexNotFound(u8),
 	ArchiveNotFound(u8, u32),
 	NameNotInArchive(i32, String, u8),
+	SectorArchiveMismatch(u32, u32),
+	SectorChunkMismatch(u16, u16),
+	SectorNextMismatch(u32, u32),
+	SectorIndexMismatch(u8, u8),
 }
 
 impl Error for ReadError {}
@@ -70,6 +74,10 @@ impl fmt::Display for ReadError {
 			Self::IndexNotFound(id) => write!(f, "Index {} not found.", id),
 			Self::ArchiveNotFound(index_id, archive_id) => write!(f, "Index {} does not contain archive group {}.", index_id, archive_id),
 			Self::NameNotInArchive(hash, name, index_id) => write!(f, "Identifier hash {} for name {} not found in index {}.", hash, name, index_id),
+			Self::SectorArchiveMismatch(received, expected) => write!(f, "Sector archive id was {} but expected {}.", received, expected),
+			Self::SectorChunkMismatch(received, expected) => write!(f, "Sector chunk was {} but expected {}.", received, expected),
+			Self::SectorNextMismatch(received, expected) => write!(f, "Sector next was {} but expected {}.", received, expected),
+			Self::SectorIndexMismatch(received, expected) => write!(f, "Sector parent index id was {} but expected {}.", received, expected),
 		}
 	}
 }
@@ -93,6 +101,7 @@ impl fmt::Display for CompressionError {
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum ParseError {
 	Archive(u32),
+	Sector(u32),
 }
 
 impl Error for ParseError {}
@@ -101,7 +110,8 @@ impl fmt::Display for ParseError {
 	#[inline]
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
-			Self::Archive(id) => write!(f, "Unable to parse archive {}, not enough bytes in the passed buffer.", id),
+			Self::Archive(id) => write!(f, "Unable to parse archive {}, unexpected eof.", id),
+			Self::Sector(id) => write!(f, "Unable to parse child sector of parent {}, unexpected eof.", id),
 		}
 	}
 }
