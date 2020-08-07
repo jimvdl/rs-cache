@@ -7,7 +7,8 @@ pub enum CacheError {
 	Io(io::Error),
 	Read(ReadError),
 	Compression(CompressionError),
-	Parse(nom::Err<()>),
+	Nom(nom::Err<()>),
+	Parse(ParseError)
 }
 
 macro_rules! impl_from {
@@ -24,7 +25,8 @@ macro_rules! impl_from {
 impl_from!(io::Error, Io);
 impl_from!(ReadError, Read);
 impl_from!(CompressionError, Compression);
-impl_from!(nom::Err<()>, Parse);
+impl_from!(nom::Err<()>, Nom);
+impl_from!(ParseError, Parse);
 
 impl Error for CacheError {
 	#[inline]
@@ -33,6 +35,7 @@ impl Error for CacheError {
 			Self::Io(err) => Some(err),
 			Self::Read(err) => Some(err),
 			Self::Compression(err) => Some(err),
+			Self::Nom(err) => Some(err),
 			Self::Parse(err) => Some(err),
 		}
 	}
@@ -45,7 +48,8 @@ impl fmt::Display for CacheError {
 			Self::Io(err) => err.fmt(f),
 			Self::Read(err) => err.fmt(f),
 			Self::Compression(err) => err.fmt(f),
-			Self::Parse(_) => write!(f, "Parsing failed."),
+			Self::Nom(_) => write!(f, "Parser failed, invalid data passed."),
+			Self::Parse(err) => err.fmt(f),
 		}
 	}
 }
@@ -82,6 +86,22 @@ impl fmt::Display for CompressionError {
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
 			Self::Unsupported(compression) => write!(f, "Invalid compression: {} is unsupported.", compression),
+		}
+	}
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+pub enum ParseError {
+	Archive(u32),
+}
+
+impl Error for ParseError {}
+
+impl fmt::Display for ParseError {
+	#[inline]
+	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+		match self {
+			Self::Archive(id) => write!(f, "Unable to parse archive {}, not enough bytes in the passed buffer.", id),
 		}
 	}
 }

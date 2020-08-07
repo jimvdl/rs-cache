@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use crate::arc::Archive;
+use nom::number::complete::be_u24;
+
+use crate::{ arc::Archive, error::ParseError };
 
 pub const IDX_LENGTH: usize = 6;
 
@@ -11,17 +13,21 @@ pub struct Index {
 
 impl Index {
 	#[inline]
-    pub fn new(buffer: &[u8]) -> Self {
+    pub fn new(buffer: &[u8]) -> crate::Result<Self> {
 		let mut archives = HashMap::new();
 
 		for (id, archive_metadata) in buffer.chunks_exact(IDX_LENGTH).enumerate() {
 			let id = id as u32;
 
-			let archive = parse_archive(id, archive_metadata);
+			let archive = match parse_archive(id, archive_metadata) {
+				Ok(archive) => archive,
+				Err(_) => return Err(ParseError::Archive(id).into())
+			};
+			
 			archives.insert(id, archive);
 		}
 
-        Self { archives }
+        Ok(Self { archives })
 	}
 
 	#[inline]
@@ -30,9 +36,9 @@ impl Index {
 	}
 }
 
-fn parse_archive(id: u32, buffer: &[u8]) -> Archive {
-	let length = (buffer[0] as usize) << 16 | (buffer[1] as usize) << 8 | (buffer[2] as usize);
-	let sector = u32::from(buffer[3]) << 16 | u32::from(buffer[4]) << 8 | u32::from(buffer[5]);
+fn parse_archive(id: u32, buffer: &[u8]) -> crate::Result<Archive> {
+	let (buffer, len) = be_u24(buffer)?;
+	let (_, sec) = be_u24(buffer)?;
 
-	Archive { id, sector, length }
+	Ok(Archive { id, sector: sec as u32, length: len as usize })
 }
