@@ -98,9 +98,9 @@ impl<S: Store> Cache<S> {
         let hash = util::djd2::hash(name);
 
         let buffer = self.read(REFERENCE_TABLE, index_id as u32)?;
-        let data = &codec::decode(&buffer)?[..];
+        let data = codec::decode(&buffer)?;
 
-        let archives = arc::parse(data)?;
+        let archives = arc::parse(&data)?;
 
         for archive_data in archives {
             if archive_data.hash == hash {
