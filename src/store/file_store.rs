@@ -65,7 +65,7 @@ impl Store for FileStore {
 				};
 				sector.header.validate(archive.id, chunk, archive.index_id)?;
 
-				data[current..current + remaining].copy_from_slice(&data_block);
+				data[current..current + remaining].copy_from_slice(sector.data_block);
 				break;
 			}
 

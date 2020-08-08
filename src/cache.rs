@@ -27,10 +27,12 @@ pub const MAIN_MUSIC_DATA: &str = "main_file_cache.dat2m";
 pub const IDX_PREFIX: &str = "main_file_cache.idx";
 pub const REFERENCE_TABLE: u8 = 255;
 
+/// The core of a cache.
 pub trait CacheCore: CacheRead + Sized {
     fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self>;
 }
 
+/// The read functionality of a cache.
 pub trait CacheRead {
     fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>>;
 }

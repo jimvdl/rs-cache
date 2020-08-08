@@ -1,3 +1,102 @@
+//! # Quick Start
+//! 
+//! The quickest and easiest way to get started is by using 
+//! [OsrsCache](type.OsrsCache.html). 
+//! 
+//! ```
+//! use rscache::OsrsCache;
+//! 
+//! # fn main() -> rscache::Result<()> {
+//! let cache = OsrsCache::new("./data/cache")?;
+//! 
+//! let index_id = 2; // Config index.
+//! let archive_id = 10; // Archive containing item definitions.
+//! 
+//! let buffer: Vec<u8> = cache.read(index_id, archive_id)?;
+//! 
+//! # Ok(())
+//! # }
+//! ```
+//! 
+//! # Cache interchangeability
+//! 
+//! The internal storage and reading functionalities can be changed
+//! by using the generic [Cache](struct.Cache.html) struct and applying a 
+//! store which suits your needs better.
+//! 
+//! In the below example the [FileStore](struct.FileStore.html) holds a 
+//! handle to the main data file while the [MemoryStore](struct.MemoryStore.html) 
+//! parses the entire main data file into memory.
+//! 
+//! The type [OsrsCache](type.OsrsCache.html) is a type alias for `Cache<MemoryStore>`.
+//! 
+//! ```
+//! use rscache::{ Cache, store::FileStore };
+//! 
+//! # fn main() -> rscache::Result<()> {
+//! let cache = Cache::<FileStore>::new("./data/cache")?;
+//! 
+//! let index_id = 2; // Config index.
+//! let archive_id = 10; // Archive containing item definitions.
+//! 
+//! let buffer: Vec<u8> = cache.read(index_id, archive_id)?;
+//! 
+//! # Ok(())
+//! # }
+//! ```
+//! 
+//! # Building a custom cache
+//! 
+//! This crate supplies traits and helper functions to help implement 
+//! your own cache when the default cache doesn't do exactly what you need.
+//! 
+//! ```
+//! use std::{ 
+//!     collections::HashMap, 
+//!     path::Path,
+//!     fs::File,
+//! };
+//! use rscache::{ 
+//!     CacheCore, CacheRead, 
+//!     Store,
+//!     arc::Archive
+//! };
+//! 
+//! // Custom cache
+//! struct MyCache {
+//!     store: NetworkStore,
+//! }
+//! 
+//! // Custom store
+//! struct NetworkStore;
+//! 
+//! impl CacheCore for MyCache {
+//!     fn new<P: AsRef<Path>>(path: P) -> rscache::Result<Self> {
+//!         // snip
+//!         # unimplemented!()
+//!     }
+//! }
+//! 
+//! impl CacheRead for MyCache {
+//!     fn read(&self, index_id: u8, archive_id: u32) -> rscache::Result<Vec<u8>> {
+//!         // snip
+//!         # unimplemented!()
+//!     }
+//! }
+//! 
+//! impl Store for NetworkStore {
+//!     fn new(main_file: File) -> rscache::Result<Self> {
+//!         // snip
+//!         # unimplemented!()
+//!     }
+//!
+//!     fn read(&self, archive: &Archive) -> rscache::Result<Vec<u8>> {
+//!         // snip
+//!         # unimplemented!()
+//!     }
+//! }
+//! ```
+
 #![deny(clippy::all, clippy::nursery)]
 
 #![warn(
@@ -47,6 +146,7 @@ pub mod def;
 pub mod ldr;
 pub mod sec;
 
+/// Type alias for `Cache<MemoryStore>`
 pub type OsrsCache = Cache<store::MemoryStore>;
 
 #[doc(inline)]

@@ -66,7 +66,7 @@ mod osrs {
     fn get_huffman_table() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
 
-        let huffman_table = cache.huffman_table()?.to_vec();
+        let huffman_table = cache.huffman_table()?;
 
         let hash = common::hash(&huffman_table);
         assert_eq!("664e89cf25a0af7da138dd0f3904ca79cd1fe767", &hash);
