@@ -37,22 +37,89 @@ pub trait CacheRead {
     fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>>;
 }
 
+/// Main cache struct providing basic utilities.
 pub struct Cache<S: Store> {
 	store: S,
 	indices: HashMap<u8, Index>
 }
 
 impl<S: Store> Cache<S> {
+    /// Constructs a new `Cache<S>` with the given store.
+    ///
+    /// # Errors
+    /// 
+    /// If this function encounters any form of I/O or other error, a `CacheError`
+    /// is returned which wrapps the underlying error.
+    /// 
+    /// # Examples
+    ///
+    /// ```
+    /// use rscache::{ Cache, store::MemoryStore };
+    /// # fn main() -> rscache::Result<()> {
+    /// 
+    /// let cache: Cache<MemoryStore> = Cache::new("./data/cache")?;
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         CacheCore::new(path)
     }
 
+    /// Reads from the internal store.
+    /// 
+    /// A lookup is performed on the specified index to find the sector id and the total length
+    /// of the buffer that needs to be read from the `main_file_cache.dat2`.
+    /// 
+    /// If the lookup is successfull the data is gathered into a `Vec<u8>`.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
+    /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
+    /// 
+    /// # Examples
+    /// ```
+    /// # use rscache::{ Cache, store::MemoryStore };
+    /// # fn main() -> rscache::Result<()> {
+    /// # let path = "./data/cache";
+    /// let cache: Cache<MemoryStore> = Cache::new(path)?;
+    /// 
+    /// let index_id = 2; // Config index
+    /// let archive_id = 10; // Random archive.
+    /// 
+    /// let buffer = cache.read(index_id, archive_id)?;
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
     pub fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
         CacheRead::read(self, index_id, archive_id)
     }
 
+    /// Creates a `Checksum` which can be used to validate the cache data
+    /// that the client received during the update protocol.
+    /// 
+    /// NOTE: The RuneScape client doesn't have a valid crc for index 16.
+    /// This checksum sets the crc and revision for index 16 both to 0.
+    /// The crc for index 16 should be skipped.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an error when a buffer read from the reference
+    /// table could not be decoded / decompressed.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use rscache::{ Cache, store::MemoryStore };
+    /// # fn main() -> rscache::Result<()> {
+    /// # let path = "./data/cache";
+    /// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+    /// let checksum = cache.create_checksum()?;
+    /// #    Ok(())
+    /// # }
+    /// ```
     #[inline]
     pub fn create_checksum(&self) -> crate::Result<Checksum> {
         let mut checksum = Checksum::new();
@@ -81,6 +148,27 @@ impl<S: Store> Cache<S> {
         Ok(checksum)
     }
 
+    /// Constructs a buffer which contains the huffman table.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an error if the huffman archive could not be found or 
+    /// if the decode / decompression of the huffman table failed.
+    /// 
+    /// # Examples
+    /// ```
+    /// # use rscache::{ Cache, store::MemoryStore };
+    /// # struct Huffman;
+    /// # impl Huffman {
+    /// #   pub fn new(buffer: Vec<u8>) -> Self { Self {} }
+    /// # }
+    /// # fn main() -> rscache::Result<()> {
+    /// # let cache: Cache<MemoryStore> = Cache::new("./data/cache")?;
+    /// let huffman_table = cache.huffman_table()?;
+    /// let huffman = Huffman::new(huffman_table);
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
     pub fn huffman_table(&self) -> crate::Result<Vec<u8>> {
         let index_id = 10;
@@ -91,6 +179,28 @@ impl<S: Store> Cache<S> {
 		Ok(codec::decode(&buffer)?)
     }
 
+    /// Searches for the archive which contains the given name hash in the given
+    /// index_id.
+    /// 
+    /// # Errors
+    /// 
+    /// Panics if the string couldn't be hashed by the djd2 hasher.
+    /// 
+    /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
+    /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.\
+    /// Returns an `NameNotInArchive` error if the `name` hash is not present in this archive.
+    /// 
+    /// # Examples
+    /// ```
+    /// # use rscache::{ Cache, store::MemoryStore, codec };
+    /// # fn main() -> rscache::Result<()> {
+    /// # let path = "./data/cache";
+    /// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+    /// let index_id = 10;
+    /// let archive = cache.archive_by_name(index_id, "huffman")?;
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
     pub fn archive_by_name(&self, index_id: u8, name: &str) -> crate::Result<Archive> {
         let index = match self.indices.get(&index_id) {
@@ -118,6 +228,23 @@ impl<S: Store> Cache<S> {
         Err(ReadError::NameNotInArchive(hash, name.to_owned(), index_id).into())
     }
 
+    /// Simply returns the index count, by getting the `len()` of 
+    /// the underlying `indices` vector.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use rscache::{ Cache, store::MemoryStore };
+    /// # fn main() -> rscache::Result<()> {
+    /// # let cache: Cache<MemoryStore> = Cache::new("./data/cache")?;
+    /// for index in 0..cache.index_count() {
+    ///     // ...
+    /// }
+    /// 
+    /// assert_eq!(22, cache.index_count());
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
     pub fn index_count(&self) -> usize {
         self.indices.len()
