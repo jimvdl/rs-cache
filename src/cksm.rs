@@ -31,11 +31,11 @@ impl Checksum {
 
     #[inline]
     pub fn encode(self) -> crate::Result<Vec<u8>> {
-        let mut buffer = Vec::with_capacity(self.entries.len() * 2 * 4);
+        let mut buffer = Vec::with_capacity(self.entries.len() * 8);
 
 		for entry in self.entries {
-            buffer.extend_from_slice(&u32::to_be_bytes(entry.crc));
-            buffer.extend_from_slice(&u32::to_be_bytes(entry.revision));
+            buffer.extend(&u32::to_be_bytes(entry.crc));
+            buffer.extend(&u32::to_be_bytes(entry.revision));
         }
 
         Ok(codec::encode(Compression::None, &buffer, None)?)

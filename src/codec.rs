@@ -37,16 +37,16 @@ pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> c
 
 	let mut buffer = Vec::with_capacity(compressed_data.len() + 11);
 	buffer.push(compression as u8);
-	buffer.extend_from_slice(&u32::to_be_bytes(compressed_data.len() as u32));
+	buffer.extend(&u32::to_be_bytes(compressed_data.len() as u32));
 	
 	if compression != Compression::None {
-		buffer.extend_from_slice(&u32::to_be_bytes(data.len() as u32));
+		buffer.extend(&u32::to_be_bytes(data.len() as u32));
 	}
 
 	buffer.extend(compressed_data);
 
 	if let Some(revision) = revision {
-		buffer.extend_from_slice(&i16::to_be_bytes(revision));
+		buffer.extend(&i16::to_be_bytes(revision));
 	}
 
 	Ok(buffer)
@@ -91,15 +91,12 @@ fn decompress_none(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Vec
 
 fn decompress_bzip2(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Vec<u8>)> {
 	let (buffer, decompressed_len) = be_u32(buffer)?;
-	let mut compressed_data = vec![0; len - 4];
-	compressed_data.copy_from_slice(&buffer[..len - 4]);
+	let mut compressed_data = vec![0; len];
+	compressed_data[4..len].copy_from_slice(&buffer[..len - 4]);
+	compressed_data[0..4].copy_from_slice(b"BZh1");
 
 	let (_, revision) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
 
-	compressed_data.insert(0, b'1');
-	compressed_data.insert(0, b'h');
-	compressed_data.insert(0, b'Z');
-	compressed_data.insert(0, b'B');
 	let mut decompressor = BzDecoder::new(compressed_data.as_slice());
 	let mut decompressed_data = vec![0; decompressed_len as usize];
 	decompressor.read_exact(&mut decompressed_data)?;
@@ -109,7 +106,6 @@ fn decompress_bzip2(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Ve
 
 fn decompress_gzip(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Vec<u8>)> {
 	let (buffer, decompressed_len) = be_u32(buffer)?;
-
 	let mut compressed_data = vec![0; len - 4];
 	compressed_data.copy_from_slice(&buffer[..len - 4]);
 
