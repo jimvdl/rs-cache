@@ -7,6 +7,7 @@ use crate::{
 };
 use super::*;
 
+/// Cache inner reading from memory.
 pub struct MemoryStore {
     data: Vec<u8>
 }

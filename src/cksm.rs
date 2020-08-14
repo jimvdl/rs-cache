@@ -1,3 +1,5 @@
+//! Validator for the cache.
+
 use crate::{ codec::Compression, codec };
 
 #[derive(Debug, Clone)]

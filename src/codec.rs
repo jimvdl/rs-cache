@@ -1,3 +1,5 @@
+//! Compression and decompression of buffers.
+
 use std::io::{ self, Read };
 use std::convert::TryFrom;
 

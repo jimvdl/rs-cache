@@ -1,3 +1,5 @@
+//! Extension traits.
+
 use std::io::{ self, Read };
 
 /// Adds easy byte reading onto a [`Read`] instance.

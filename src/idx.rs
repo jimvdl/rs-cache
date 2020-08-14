@@ -1,3 +1,5 @@
+//! Index with parsing.
+
 use std::collections::HashMap;
 
 use nom::number::complete::be_u24;

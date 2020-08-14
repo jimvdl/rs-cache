@@ -1,3 +1,28 @@
+//! [RuneScape](https://oldschool.runescape.com/) cache api for basic
+//! and simple cache interactions.
+//! 
+//! # Features
+//! 
+//! Currently rs-cache only supports OSRS with the features listed below.
+//! This crate also contains tools to help you with implementing your own cache
+//! if the currently supplied cache is insufficient for a specific use-case.
+//! 
+//! The following features are currently provided:
+//! - Reading from the cache.
+//! - Huffman buffer access.
+//! - Checksum with simple-to-use validation.
+//! - Compression and decompression:
+//!   - [Gzip]
+//!   - [Bzip2]
+//! - Loaders & Definitions
+//!   - [ItemLoader](struct.ItemLoader.html) - [ItemDefinition](struct.ItemDefinition.html)
+//!   - [NpcLoader](struct.NpcLoader.html) - [NpcDefinition](struct.NpcDefinition.html)
+//!   - [ObjectLoader](struct.ObjectLoader.html) - [ObjectDefinition](struct.ObjectDefinition.html)
+//! 
+//! Features to be implemented in the future: 
+//! - Writing data to the cache.
+//! - RS3 protocol support. (including LZMA compression)
+//! 
 //! # Quick Start
 //! 
 //! The quickest and easiest way to get started is by using 
@@ -21,12 +46,13 @@
 //! # Cache interchangeability
 //! 
 //! The internal storage and reading functionalities can be changed
-//! by using the generic [Cache](struct.Cache.html) struct and applying a 
-//! store which suits your needs better.
+//! by using the generic [Cache](struct.Cache.html) struct and chosing
+//! a store implementation that fits a specific use-case.
 //! 
 //! In the below example the [FileStore](struct.FileStore.html) holds a 
 //! handle to the main data file while the [MemoryStore](struct.MemoryStore.html) 
-//! parses the entire main data file into memory.
+//! parses the entire main data file into memory. If the main file is too large 
+//! for the `MemoryStore` you can opt into a `FileStore` to do reading through disk I/O.
 //! 
 //! The type [OsrsCache](type.OsrsCache.html) is a type alias for `Cache<MemoryStore>`.
 //! 
@@ -146,7 +172,7 @@ pub mod def;
 pub mod ldr;
 pub mod sec;
 
-/// Type alias for `Cache<MemoryStore>`
+/// Type alias for `Cache<MemoryStore>`.
 pub type OsrsCache = Cache<store::MemoryStore>;
 
 #[doc(inline)]
@@ -156,7 +182,7 @@ pub use cache::{ Cache, CacheCore, CacheRead };
 #[doc(inline)]
 pub use cksm::Checksum;
 #[doc(inline)]
-pub use store::Store;
+pub use store::{ Store, FileStore, MemoryStore };
 #[doc(inline)]
 pub use ldr::Loader;
 #[doc(inline)]

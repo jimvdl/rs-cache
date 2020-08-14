@@ -1,3 +1,5 @@
+//! Represents linked sectors in main data file.
+
 use nom::{
     combinator::rest,
 	number::complete::{

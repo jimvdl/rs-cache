@@ -1,3 +1,5 @@
+//! Helpful utility functions and macros.
+
 use std::{ 
     path::Path, 
     collections::HashMap,
@@ -15,6 +17,36 @@ use crate::{
     arc,
 };
 
+/// Generates all required code to fully implement a [Loader](trait.Loader.html).
+/// 
+/// Macro inner implementation:
+/// ```ignore
+/// impl $ldr {
+///     #[inline]
+///     pub fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
+///         Loader::new(cache)
+///     }
+///     
+///     #[inline]
+///     pub fn load(&self, id: u16) -> Option<&$def> {
+///         Loader::load(self, id)
+///     }
+/// }
+///     
+/// impl Loader<$def> for $ldr {
+///     #[inline]
+///     fn new<S: Store>(cache: &Cache<S>) -> crate::Result<$ldr> {
+///         let $defs_field = util::parse_defs(cache, $arc_id)?;
+///     
+///         Ok($ldr { $defs_field })
+///     }
+///     
+///     #[inline]
+///     fn load(&self, id: u16) -> Option<&$def> {
+///         self.$defs_field.get(&id)
+///     }
+/// }
+/// ```
 #[macro_export]
 macro_rules! impl_loader {
    ($ldr:ident, $def:ty, $defs_field:ident, archive_id: $arc_id:expr) => {
@@ -93,13 +125,13 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
     let buffer = cache.read(REFERENCE_TABLE, 2)?;
     let buffer = codec::decode(&buffer)?;
     
-    let archives = arc::parse(&buffer)?;
+    let archives = arc::parse_archive_data(&buffer)?;
     let entry_count = archives[archive_id as usize - 1].entry_count;
     
     let buffer = cache.read(2, archive_id)?;
     let buffer = codec::decode(&buffer)?;
 
-    let archive_data = arc::decode(&buffer, entry_count)?;
+    let archive_data = arc::parse_content(&buffer, entry_count)?;
 
     let mut definitions = HashMap::new();
     for (id, buffer) in archive_data {

@@ -1,3 +1,5 @@
+//! Main cache implementation and traits.
+
 use std::{ 
     path::Path,
     collections::HashMap,
@@ -212,7 +214,7 @@ impl<S: Store> Cache<S> {
         let buffer = self.read(REFERENCE_TABLE, index_id as u32)?;
         let data = codec::decode(&buffer)?;
 
-        let archives = arc::parse(&data)?;
+        let archives = arc::parse_archive_data(&data)?;
 
         for archive_data in archives {
             if archive_data.hash == hash {

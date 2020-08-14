@@ -1,3 +1,5 @@
+//! Store trait for cache interchangeability.
+
 mod memory_store;
 mod file_store;
 
