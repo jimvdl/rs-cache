@@ -1,17 +1,17 @@
-use rscache::Cache;
-use rscache::CacheError;
-use rscache::LinkedListExt;
+use rscache::{ Cache, store::MemoryStore };
 
-fn main() -> Result<(), CacheError> {
-    let cache = Cache::new("./data/cache")?;
+// This example illustrates the osrs update protocol.
+// You can use this to handle client requests for cache data.
+fn main() -> rscache::Result<()> {
+    let cache: Cache<MemoryStore> = Cache::new("./data/cache")?;
 
-    let index_id = 2; // Config index.
-    let archive_id = 10; // random archive.
+    let index_id = 255; // Config index.
+    let archive_id = 10; // Archive containing all item definitions.
 
     let mut buffer = if index_id == 255 && archive_id == 255 {
 		cache.create_checksum()?.encode()?
 	} else {
-		let mut buf = cache.read(index_id, archive_id)?.to_vec();
+		let mut buf = cache.read(index_id, archive_id)?;
 		if index_id != 255 {
 			buf.truncate(buf.len() - 2);
 			buf
@@ -27,7 +27,7 @@ fn main() -> Result<(), CacheError> {
 
 	let mut data = vec![0; buffer.len() + 8];
 	data[0] = index_id;
-	data[1..3].copy_from_slice(&archive_id.to_be_bytes());
+	data[1..3].copy_from_slice(&(archive_id as u16).to_be_bytes());
 	data[3] = compression;
 	data[4..8].copy_from_slice(&length.to_be_bytes());
 	data[8..].copy_from_slice(&buffer);
@@ -43,6 +43,8 @@ fn main() -> Result<(), CacheError> {
 
     // write data to the client
     // stream.write_all(&data)?;
+
+    println!("{:?}", data);
     
 	Ok(())
 }
