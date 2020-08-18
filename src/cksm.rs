@@ -59,7 +59,7 @@ impl Checksum {
             .map(|entry| entry.crc)
             .collect();
         
-            internal == crcs
+        internal == crcs
     }
 
     /// Consumes the `Checksum` and encodes it into a byte buffer.
