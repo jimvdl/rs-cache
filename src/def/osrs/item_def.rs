@@ -4,8 +4,7 @@ use std::{
 	collections::HashMap,
 };
 
-use crate::ReadExt;
-use super::Definition;
+use crate::{ Definition, ext::ReadExt, util };
 
 /// Contains all the information about a certain item fetched from the cache through
 /// the [ItemLoader](struct.ItemLoader.html).
@@ -72,6 +71,7 @@ pub struct CharacterModelData {
 }
 
 impl Definition for ItemDefinition {
+	#[inline]
     fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
         let mut reader = BufReader::new(&buffer[..]);
 		let item_def = decode_buffer(id, &mut reader)?;
@@ -161,30 +161,10 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefin
 			139 => { item_def.bought_link = Some(reader.read_u16()?); },
 			140 => { item_def.bought_tempalte = Some(reader.read_u16()?); },
 			148 | 149 => { reader.read_u16()?; },
-			249 => { item_def.params = read_parameters(reader)?; },
+			249 => { item_def.params = util::read_parameters(reader)?; },
 			_ => unreachable!()
 		}
 	}
 
 	Ok(item_def)
-}
-
-fn read_parameters(reader: &mut BufReader<&[u8]>) -> io::Result<HashMap<u32, String>> {
-    let len = reader.read_u8()?;
-    let mut map = HashMap::new();
-
-    for _ in 0..len {
-        let is_string = reader.read_u8()? == 1;
-        let key = reader.read_u24()?;
-        
-        let value = if is_string {
-            reader.read_string()?
-        } else {
-            reader.read_i32()?.to_string()
-        };
-
-        map.insert(key, value);
-    }
-
-    Ok(map)
 }

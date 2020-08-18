@@ -1,146 +1,145 @@
-//! Utilities for [RuneScape] cache interaction.
-//! 
-//! _Currently only supports the OSRS cache but RS3 support is in the works._
+//! [RuneScape](https://oldschool.runescape.com/) cache api for basic
+//! and simple cache interactions.
 //! 
 //! # Features
+//! 
+//! Currently rs-cache only supports OSRS with the features listed below.
+//! This crate also contains tools to help you with implementing your own cache
+//! if the currently supplied cache is insufficient for a specific use-case.
 //! 
 //! The following features are currently provided:
 //! - Reading from the cache.
 //! - Huffman buffer access.
 //! - Checksum with simple-to-use validation.
 //! - Compression and decompression:
-//!   - [Gzip]
-//!   - [Bzip2]
-//! - Loaders & Definitions
-//!   - [ItemLoader](struct.ItemLoader.html) - [ItemDefinition](struct.ItemDefinition.html)
-//!   - [NpcLoader](struct.NpcLoader.html) - [NpcDefinition](struct.NpcDefinition.html)
-//!   - [ObjectLoader](struct.ObjectLoader.html) - [ObjectDefinition](struct.ObjectDefinition.html)
+//!   - [Gzip](https://crates.io/crates/libflate)
+//!   - [Bzip2](https://crates.io/crates/bzip2)
+//! - Loaders
+//!   - [`ItemLoader`](ldr/osrs/struct.ItemLoader.html)
+//!   - [`NpcLoader`](ldr/osrs/struct.NpcLoader.html)
+//!   - [`ObjectLoader`](ldr/osrs/struct.ObjectLoader.html)
+//! 
+//! Features to be implemented in the future: 
+//! - Writing data to the cache.
+//! - RS3 protocol support. (including LZMA compression)
 //! 
 //! # Quick Start
 //! 
-//! A possible use case of this utility is to read data from the RuneScape cache and send them to the 
-//! client during the update protocol.
-//! The example listed below quickly shows how you can pass the `index_id` and the `archive_id` to the cache
-//! and get the correct data to send to the client.
+//! The quickest and easiest way to get started is by using 
+//! [`OsrsCache`](type.OsrsCache.html). 
 //! 
 //! ```
-//! # use std::net::TcpStream;
-//! # use std::io::Write;
-//! use rscache::{ Cache, LinkedListExt };
-//! # struct UpdatePacket { 
-//! #   pub index_id: u8,
-//! #   pub archive_id: u16
-//! # }
-//! 
-//! fn process_update(packet: UpdatePacket, stream: &mut TcpStream) -> rscache::Result<()> {
-//! #    let cache = Cache::new("path/to/cache")?;
-//!     // read the specified archive from the given index to an owned vector.
-//!     let buffer = cache.read(packet.index_id, packet.archive_id)?.to_vec();
-//!     
-//!     // ... format buffer.
-//! #    let formatted_buffer = buffer;
-//! 
-//!     // send formatted_buffer to client.
-//!     stream.write_all(&formatted_buffer)?;
-//! 
-//!     Ok(())
-//! }
-//! ```
-//! 
-//! In the above example the data that was read from the cache is transformed into a vector of bytes.
-//! You can also use the `LinkedList<&[u8]>` to `iter()` over the `data_block`s instead of making the bytes owned.
-//! 
-//! ```
-//! # use std::net::TcpStream;
-//! # use std::io::Write;
-//! # use rscache::{ Cache, LinkedListExt };
-//! # struct UpdatePacket { 
-//! #   pub index_id: u8,
-//! #   pub archive_id: u16
-//! # }
-//! # fn process_update(packet: UpdatePacket, stream: &mut TcpStream) -> rscache::Result<()> {
-//! #    let cache = Cache::new("path/to/cache")?;
-//! #    // read the specified archive from the given index to an owned vector.
-//! let buffer = cache.read(packet.index_id, packet.archive_id)?;
-//! 
-//! for data_block in buffer.iter() {
-//!     // data_block contains 512 byte slices that directly link into the MainData buffer.
-//!     // this can be useful when creating a new formatted buffer.
-//! }
-//! #    Ok(())
-//! # }
-//! ```
-//! 
-//! # Loaders & Definitions
-//! 
-//! Every loader works exactly the same, following the [Loader](struct.Loader.html) trait. It has a `new(cache: &Cache)` 
-//! function to parse and cache the definitions and it contains a `load(id: u16)` to fetch the definition that corresponds 
-//! to the given id.
-//! 
-//! Supported definitions:
-//! - [ItemDefinition](struct.ItemDefinition.html)
-//! - [NpcDefinition](struct.NpcDefinition.html)
-//! - [ObjectDefinition](struct.ObjectDefinition.html)
-//! 
-//! These definitions contain fields that can be looked up for a certain item/npc/object.
-//! i.e. you need to know if a certain item is stackable or members only the [ItemDefinition](struct.ItemDefinition.html) struct
-//! contains that information.
-//! 
-//! ### Example
-//! 
-//! ```
-//! # use rscache::Cache;
-//! use rscache::Loader;
-//! use rscache::ItemLoader;
+//! use rscache::OsrsCache;
 //! 
 //! # fn main() -> rscache::Result<()> {
-//! # let path = "./data/cache";
-//! # let cache = Cache::new(path)?;
-//! let item_loader = ItemLoader::new(&cache)?;
+//! let cache = OsrsCache::new("./data/cache")?;
 //! 
-//! // magic logs id = 1513
-//! let item_def = item_loader.load(1513);
+//! let index_id = 2; // Config index.
+//! let archive_id = 10; // Archive containing item definitions.
 //! 
-//! match item_def {
-//!     Some(item_def) => {
-//!         assert_eq!("Magic logs", item_def.name);
-//!         assert!(!item_def.stackable);
-//!         assert!(item_def.members_only);
-//!     },
-//!     None => (),
-//! }
+//! let buffer: Vec<u8> = cache.read(index_id, archive_id)?;
+//! 
 //! # Ok(())
 //! # }
 //! ```
 //! 
-//! [RuneScape]: https://oldschool.runescape.com/
-//! [Gzip]: https://crates.io/crates/libflate
-//! [Bzip2]: https://crates.io/crates/bzip2
+//! # Cache interchangeability
+//! 
+//! The internal storage and reading functionalities can be changed
+//! by using the generic [`Cache`](struct.Cache.html) struct and chosing
+//! a store implementation that fits a specific use-case.
+//! 
+//! In the below example the [`FileStore`](struct.FileStore.html) holds a 
+//! handle to the main data file while the [`MemoryStore`](struct.MemoryStore.html) 
+//! parses the entire main data file into memory. If the main file is too large 
+//! for the `MemoryStore` you can opt into a `FileStore` to do reading through disk I/O.
+//! 
+//! The type [`OsrsCache`](type.OsrsCache.html) is a type alias for `Cache<MemoryStore>`.
+//! 
+//! ```
+//! use rscache::{ Cache, store::FileStore };
+//! 
+//! # fn main() -> rscache::Result<()> {
+//! let cache = Cache::<FileStore>::new("./data/cache")?;
+//! 
+//! let index_id = 2; // Config index.
+//! let archive_id = 10; // Archive containing item definitions.
+//! 
+//! let buffer: Vec<u8> = cache.read(index_id, archive_id)?;
+//! 
+//! # Ok(())
+//! # }
+//! ```
+//! 
+//! # Building a custom cache
+//! 
+//! This crate supplies traits and helper functions to help implement 
+//! your own cache when the default cache doesn't do exactly what you need.
+//! 
+//! See the [custom_cache](https://github.com/jimvdl/rs-cache/tree/master/examples) 
+//! example to help you get started.
 
 #![deny(clippy::all, clippy::nursery)]
 
-mod cache;
-mod checksum;
-mod error;
-mod ext;
-mod def;
+#![warn(
+    clippy::clone_on_ref_ptr, 
+    clippy::redundant_clone, 
+    clippy::default_trait_access, 
+    clippy::expl_impl_clone_on_copy,
+    clippy::explicit_into_iter_loop, 
+    clippy::explicit_iter_loop, 
+    clippy::filter_map, 
+    clippy::filter_map_next, 
+    clippy::find_map, 
+    clippy::get_unwrap,
+    clippy::items_after_statements, 
+    clippy::large_digit_groups, 
+    clippy::map_flatten, 
+    clippy::match_same_arms, 
+    clippy::maybe_infinite_iter, 
+    clippy::mem_forget,
+    clippy::missing_inline_in_public_items, 
+    clippy::multiple_inherent_impl, 
+    clippy::mut_mut, 
+    clippy::needless_continue,
+    clippy::needless_pass_by_value, 
+    clippy::map_unwrap_or, 
+    clippy::pub_enum_variant_names, 
+    clippy::unused_self, 
+    clippy::similar_names, 
+    clippy::single_match_else, 
+    clippy::too_many_lines, 
+    clippy::type_repetition_in_bounds,
+    clippy::unseparated_literal_suffix, 
+    clippy::used_underscore_binding
+)]
+
+#[macro_use]
+pub mod util;
+pub mod cache;
+pub mod cksm;
+pub mod idx;
+pub mod arc;
+pub mod ext;
+pub mod error;
+pub mod store;
 pub mod codec;
+pub mod def;
+pub mod ldr;
+pub mod sec;
 
-pub use cache::Cache;
-pub use checksum::Checksum;
-pub use error::*;
-pub use ext::*;
-pub use def::*;
+/// Type alias for `Cache<MemoryStore>`.
+pub type OsrsCache = Cache<store::MemoryStore>;
 
-mod djd2 {
-    pub fn hash(string: &str) -> i32 {
-        let mut hash = 0;
-
-        for index in 0..string.len() {
-            hash = string.chars()
-                .nth(index).unwrap_or_else(|| panic!("index {} not valid in str len {}", index, string.len())) as i32 + ((hash << 5) - hash);
-        }
-        
-        hash
-    }
-}
+#[doc(inline)]
+pub use error::Result;
+#[doc(inline)]
+pub use cache::{ Cache, CacheCore, CacheRead };
+#[doc(inline)]
+pub use cksm::Checksum;
+#[doc(inline)]
+pub use store::{ Store, FileStore, MemoryStore };
+#[doc(inline)]
+pub use ldr::Loader;
+#[doc(inline)]
+pub use def::Definition;

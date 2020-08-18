@@ -1,45 +1,52 @@
-mod main_data;
-mod index;
-pub mod archive;
+//! Main cache implementation and traits.
 
-use main_data::MainData;
-use index::{ Index };
-use archive::Archive;
+use std::{ 
+    path::Path,
+    collections::HashMap,
+};
 
-use crate::{
-    error::ReadError,
-    Checksum,
-    checksum::Entry,
-    LinkedListExt,
-    codec
+use nom::{
+    combinator::cond,
+	number::complete::{
+		be_u32,
+    },
+};
+
+use crate::{ 
+    store::Store, 
+    cksm::{ Checksum, Entry },
+    idx::Index,
+    arc::{ self, Archive },
+    error::ReadError, 
+    util,
+    codec,
 };
 
 use crc::crc32;
 
-use std::{
-    path::Path,
-    io::{ self, Read },
-    fs::File,
-    collections::{ LinkedList, HashMap },
-};
+pub const MAIN_DATA: &str = "main_file_cache.dat2";
+pub const MAIN_MUSIC_DATA: &str = "main_file_cache.dat2m";
+pub const IDX_PREFIX: &str = "main_file_cache.idx";
+pub const REFERENCE_TABLE: u8 = 255;
 
-type IndexId = u8;
-type ArchiveId = u16;
-
-pub const MAIN_FILE_CACHE_DAT: &str = "main_file_cache.dat2";
-pub const MAIN_FILE_CACHE_IDX: &str = "main_file_cache.idx";
-
-/// Main struct which provides basic cache utilities and interactions.
-#[derive(Clone, Debug, Default)]
-pub struct Cache {
-    main_data: MainData,
-	indices: HashMap<IndexId, Index>
+/// The core of a cache.
+pub trait CacheCore: CacheRead + Sized {
+    fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self>;
 }
 
-impl Cache {
-    /// Constructs a new `Cache`.
-    ///
-    /// The cache loads every file into memory.
+/// The read functionality of a cache.
+pub trait CacheRead {
+    fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>>;
+}
+
+/// Main cache struct providing basic utilities.
+pub struct Cache<S: Store> {
+	store: S,
+	indices: HashMap<u8, Index>
+}
+
+impl<S: Store> Cache<S> {
+    /// Constructs a new `Cache<S>` with the given store.
     ///
     /// # Errors
     /// 
@@ -49,26 +56,24 @@ impl Cache {
     /// # Examples
     ///
     /// ```
-    /// use rscache::Cache;
+    /// use rscache::{ Cache, store::MemoryStore };
+    /// # fn main() -> rscache::Result<()> {
     /// 
-    /// let cache = Cache::new("path/to/cache");
+    /// let cache: Cache<MemoryStore> = Cache::new("./data/cache")?;
+    /// # Ok(())
+    /// # }
     /// ```
     #[inline]
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
-        let path = path.as_ref();
-
-        let main_data = load_main_data(path)?;
-        let indices = load_indices(path)?;
-
-        Ok(Self { main_data, indices })
+        CacheCore::new(path)
     }
 
-    /// Reads from the internal `main_file_cache.dat2` buffer.
+    /// Reads from the internal store.
     /// 
     /// A lookup is performed on the specified index to find the sector id and the total length
-    /// of the buffer that needs to be read from the `main_file_cache.dat2` buffer.
+    /// of the buffer that needs to be read from the `main_file_cache.dat2`.
     /// 
-    /// If the lookup is successfull the data is gathered into a `LinkedList<&[u8]>`.
+    /// If the lookup is successfull the data is gathered into a `Vec<u8>`.
     /// 
     /// # Errors
     /// 
@@ -77,10 +82,10 @@ impl Cache {
     /// 
     /// # Examples
     /// ```
-    /// # use rscache::Cache;
+    /// # use rscache::{ Cache, store::MemoryStore };
     /// # fn main() -> rscache::Result<()> {
     /// # let path = "./data/cache";
-    /// let cache = Cache::new(path)?;
+    /// let cache: Cache<MemoryStore> = Cache::new(path)?;
     /// 
     /// let index_id = 2; // Config index
     /// let archive_id = 10; // Random archive.
@@ -90,18 +95,8 @@ impl Cache {
     /// # }
     /// ```
     #[inline]
-    pub fn read(&self, index_id: IndexId, archive_id: ArchiveId) -> Result<LinkedList<&[u8]>, ReadError> {
-        let index = match self.indices.get(&index_id) {
-            Some(index) => index,
-            None => return Err(ReadError::IndexNotFound(index_id))
-        };
-
-        let archive = match index.archive(archive_id) {
-            Some(archive) => archive,
-            None => return Err(ReadError::ArchiveNotFound(index_id, archive_id))
-        };
-
-        Ok(self.main_data.read(archive.sector, archive.length))
+    pub fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
+        CacheRead::read(self, index_id, archive_id)
     }
 
     /// Creates a `Checksum` which can be used to validate the cache data
@@ -119,10 +114,10 @@ impl Cache {
     /// # Examples
     /// 
     /// ```
-    /// # use rscache::Cache;
+    /// # use rscache::{ Cache, store::MemoryStore };
     /// # fn main() -> rscache::Result<()> {
     /// # let path = "./data/cache";
-    /// # let cache = Cache::new(path)?;
+    /// # let cache: Cache<MemoryStore> = Cache::new(path)?;
     /// let checksum = cache.create_checksum()?;
     /// #    Ok(())
     /// # }
@@ -131,22 +126,22 @@ impl Cache {
     pub fn create_checksum(&self) -> crate::Result<Checksum> {
         let mut checksum = Checksum::new();
 
-        for index_id in 0..self.index_count() as u16 {
+        for index_id in 0..self.index_count() as u32 {
             if index_id == 16 {
                 checksum.push(Entry { crc: 0, revision: 0 });
                 continue;
             }
 
-            if let Ok(buffer) = &self.read(255, index_id) {	
-                let buffer = buffer.to_vec();
-
+            if let Ok(buffer) = self.read(REFERENCE_TABLE, index_id) {	
                 if !buffer.is_empty() {
-                    let mut buf = buffer[..].as_ref();
-                    let data = codec::decode(&mut buf)?;
+                    let data = codec::decode(&buffer)?;
+
+                    let (_, version) = cond(data[0] >= 6, be_u32)(&data[1..5])?;
+                    let version = if let Some(version) = version { version } else { 0 };
 
                     checksum.push(Entry { 
                         crc: crc32::checksum_ieee(&buffer), 
-                        revision: index::version(&data),
+                        revision: version,
                     });
                 }
             };
@@ -164,13 +159,13 @@ impl Cache {
     /// 
     /// # Examples
     /// ```
-    /// # use rscache::Cache;
+    /// # use rscache::{ Cache, store::MemoryStore };
     /// # struct Huffman;
     /// # impl Huffman {
     /// #   pub fn new(buffer: Vec<u8>) -> Self { Self {} }
     /// # }
     /// # fn main() -> rscache::Result<()> {
-    /// # let cache = Cache::new("./data/cache")?;
+    /// # let cache: Cache<MemoryStore> = Cache::new("./data/cache")?;
     /// let huffman_table = cache.huffman_table()?;
     /// let huffman = Huffman::new(huffman_table);
     /// # Ok(())
@@ -181,35 +176,58 @@ impl Cache {
         let index_id = 10;
 
         let archive = self.archive_by_name(index_id, "huffman")?;
-        let mut buffer = &self.main_data.read(archive.sector, archive.length).to_vec()[..];
+        let buffer = self.store.read(&archive)?;
 		
-		Ok(codec::decode(&mut buffer)?)
+		Ok(codec::decode(&buffer)?)
     }
 
-	fn archive_by_name(&self, index_id: IndexId, name: &str) -> crate::Result<Archive> {
+    /// Searches for the archive which contains the given name hash in the given
+    /// index_id.
+    /// 
+    /// # Errors
+    /// 
+    /// Panics if the string couldn't be hashed by the djd2 hasher.
+    /// 
+    /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
+    /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.\
+    /// Returns an `NameNotInArchive` error if the `name` hash is not present in this archive.
+    /// 
+    /// # Examples
+    /// ```
+    /// # use rscache::{ Cache, store::MemoryStore, codec };
+    /// # fn main() -> rscache::Result<()> {
+    /// # let path = "./data/cache";
+    /// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+    /// let index_id = 10;
+    /// let archive = cache.archive_by_name(index_id, "huffman")?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[inline]
+    pub fn archive_by_name(&self, index_id: u8, name: &str) -> crate::Result<Archive> {
         let index = match self.indices.get(&index_id) {
             Some(index) => index,
             None => return Err(ReadError::IndexNotFound(index_id).into())
         };
-        let identifier = crate::djd2::hash(name);
+        let hash = util::djd2::hash(name);
 
-        let mut buffer = &self.read(255, index_id as u16)?.to_vec()[..];
-        let data = &codec::decode(&mut buffer)?[..];
+        let buffer = self.read(REFERENCE_TABLE, index_id as u32)?;
+        let data = codec::decode(&buffer)?;
 
-        let archives = archive::parse(data)?;
+        let archives = arc::parse_archive_data(&data)?;
 
         for archive_data in archives {
-            if archive_data.identifier == identifier {
-                match index.archive(archive_data.id) {
+            if archive_data.hash == hash {
+                match index.archives.get(&(archive_data.id as u32)) {
                     Some(archive) => return Ok(*archive),
                     None => return Err(
-                        ReadError::ArchiveNotFound(index_id, archive_data.id).into()
+                        ReadError::ArchiveNotFound(index_id, archive_data.id as u32).into()
                     ),
                 }
             }
         }
 
-        Err(ReadError::NameNotInArchive(identifier, name.to_owned(), index_id).into())
+        Err(ReadError::NameNotInArchive(hash, name.to_owned(), index_id).into())
     }
 
     /// Simply returns the index count, by getting the `len()` of 
@@ -218,9 +236,9 @@ impl Cache {
     /// # Examples
     /// 
     /// ```
-    /// # use rscache::Cache;
+    /// # use rscache::{ Cache, store::MemoryStore };
     /// # fn main() -> rscache::Result<()> {
-    /// # let cache = Cache::new("./data/cache")?;
+    /// # let cache: Cache<MemoryStore> = Cache::new("./data/cache")?;
     /// for index in 0..cache.index_count() {
     ///     // ...
     /// }
@@ -235,28 +253,31 @@ impl Cache {
     }
 }
 
-fn load_main_data(path: &Path) -> io::Result<MainData> {
-	let mut main_file = File::open(path.join(MAIN_FILE_CACHE_DAT))?;
-	let mut buffer = Vec::new();
-	main_file.read_to_end(&mut buffer)?;
+impl<S: Store> CacheCore for Cache<S> {
+    #[inline]
+    fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
+        let path = path.as_ref();
 
-	Ok(MainData::new(buffer))
+        let store = util::load_store(path)?;
+        let indices = util::load_indices(path)?;
+
+        Ok(Self { store, indices })
+    }
 }
 
-fn load_indices(path: &Path) -> crate::Result<HashMap<IndexId, Index>> {
-	let mut indices = HashMap::new();
+impl<S: Store> CacheRead for Cache<S> {
+    #[inline]
+    fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
+        let index = match self.indices.get(&index_id) {
+            Some(index) => index,
+            None => return Err(ReadError::IndexNotFound(index_id).into())
+        };
 
-	for index_id in 0..=255 {
-		let path = path.join(format!("{}{}", MAIN_FILE_CACHE_IDX, index_id));
+        let archive = match index.archives.get(&archive_id) {
+            Some(archive) => archive,
+            None => return Err(ReadError::ArchiveNotFound(index_id, archive_id).into())
+        };
 
-		if path.exists() {
-			let mut index = File::open(path)?;
-			let mut index_buffer = Vec::new();
-
-			index.read_to_end(&mut index_buffer)?;
-			indices.insert(index_id, Index::new(&index_buffer));
-		}
-	}
-
-	Ok(indices)
+        Ok(self.store.read(archive)?)
+    }
 }

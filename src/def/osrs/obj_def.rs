@@ -4,8 +4,7 @@ use std::{
 	collections::HashMap,
 };
 
-use crate::ReadExt;
-use super::Definition;
+use crate::{ Definition, ext::ReadExt, util };
 
 /// Contains all the information about a certain object fetched from the cache through
 /// the [ObjectLoader](struct.ObjectLoader.html).
@@ -61,6 +60,7 @@ pub struct ObjectModelData {
 }
 
 impl Definition for ObjectDefinition {
+    #[inline]
     fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
         let mut reader = BufReader::new(&buffer[..]);
         let mut obj_def = decode_buffer(id, &mut reader)?;
@@ -188,9 +188,9 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ObjectDef
                     obj_def.config_change_dest.push(reader.read_u16()?);
 				}
             },
-            249 => { obj_def.params = read_parameters(reader)?; },
+            249 => { obj_def.params = util::read_parameters(reader)?; },
             23 => { /* skip */ },
-			_ => { println!("{}", opcode); unreachable!(); }
+			_ => unreachable!()
 		}
 	}
 
@@ -214,24 +214,4 @@ fn post(obj_def: &mut ObjectDefinition) {
     if obj_def.supports_items.is_none() {
         obj_def.supports_items = Some(if obj_def.interact_type != 0 { 1 } else { 0 });
     }
-}
-
-fn read_parameters(reader: &mut BufReader<&[u8]>) -> io::Result<HashMap<u32, String>> {
-    let len = reader.read_u8()?;
-    let mut map = HashMap::new();
-
-    for _ in 0..len {
-        let is_string = reader.read_u8()? == 1;
-        let key = reader.read_u24()?;
-        
-        let value = if is_string {
-            reader.read_string()?
-        } else {
-            reader.read_i32()?.to_string()
-        };
-
-        map.insert(key, value);
-    }
-
-    Ok(map)
 }

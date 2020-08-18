@@ -1,3 +1,5 @@
+//! Validator for the cache.
+
 use crate::{ codec::Compression, codec };
 
 #[derive(Debug, Clone)]
@@ -6,7 +8,15 @@ pub struct Entry {
     pub revision: u32,
 }
 
-/// Used to check the validity of the cache.
+/// Validator for the `Cache`.
+/// 
+/// The `Checksum` is used to validate if every file used by the cache
+/// is still valid. It contains a list of entries, one entry for each index file.
+/// Every entry contains a crc and a revision.
+/// 
+/// In order to create the `Checksum` the 
+/// [create_checksum()](struct.Cache.html#method.create_checksum) function has to be 
+/// called on `Cache`. 
 #[derive(Clone, Debug, Default)]
 pub struct Checksum {
     entries: Vec<Entry>
@@ -26,10 +36,10 @@ impl Checksum {
     /// # Examples
     /// 
     /// ```
-    /// # use rscache::Cache;
+    /// # use rscache::OsrsCache;
     /// # fn main() -> rscache::Result<()> {
     /// # let path = "./data/cache";
-    /// # let cache = Cache::new(path)?;
+    /// # let cache = OsrsCache::new(path)?;
     /// # let checksum = cache.create_checksum()?;
     /// // client crcs:
     /// let crcs = vec![1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 
@@ -37,19 +47,19 @@ impl Checksum {
     ///                 3411535427, 3178880569, 153718440, 3849392898, 0, 2813112885, 1461700456, 
     ///                 2751169400, 2927815226];
     /// 
-    /// let valid = checksum.validate_crcs(&crcs);
+    /// let valid = checksum.validate(&crcs);
     /// 
-    /// assert_eq!(valid, true);
+    /// assert!(valid);
     /// # Ok(())
     /// # }
     /// ```
     #[inline]
-    pub fn validate_crcs(&self, crcs: &[u32]) -> bool {
-        let owned_crcs: Vec<u32> = self.entries.iter()
+    pub fn validate(&self, crcs: &[u32]) -> bool {
+        let internal: Vec<u32> = self.entries.iter()
             .map(|entry| entry.crc)
             .collect();
         
-        owned_crcs == crcs
+        internal == crcs
     }
 
     /// Consumes the `Checksum` and encodes it into a byte buffer.
@@ -63,7 +73,7 @@ impl Checksum {
     /// # Examples
     /// 
     /// ```
-    /// # use rscache::{ Cache, Checksum };
+    /// # use rscache::Checksum;
     /// # use std::net::TcpStream;
     /// # use std::io::Write;
     /// fn encode_checksum(checksum: Checksum, stream: &mut TcpStream) -> rscache::Result<()> {
@@ -75,11 +85,11 @@ impl Checksum {
     /// ```
     #[inline]
     pub fn encode(self) -> crate::Result<Vec<u8>> {
-        let mut buffer = Vec::with_capacity(self.entries.len() * 2 * 4);
+        let mut buffer = Vec::with_capacity(self.entries.len() * 8);
 
 		for entry in self.entries {
-            buffer.extend_from_slice(&u32::to_be_bytes(entry.crc));
-            buffer.extend_from_slice(&u32::to_be_bytes(entry.revision));
+            buffer.extend(&u32::to_be_bytes(entry.crc));
+            buffer.extend(&u32::to_be_bytes(entry.revision));
         }
 
         Ok(codec::encode(Compression::None, &buffer, None)?)
