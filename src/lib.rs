@@ -76,52 +76,8 @@
 //! This crate supplies traits and helper functions to help implement 
 //! your own cache when the default cache doesn't do exactly what you need.
 //! 
-//! ```
-//! use std::{ 
-//!     collections::HashMap, 
-//!     path::Path,
-//!     fs::File,
-//! };
-//! use rscache::{ 
-//!     CacheCore, CacheRead, 
-//!     Store,
-//!     arc::Archive
-//! };
-//! 
-//! // Custom cache
-//! struct MyCache {
-//!     store: NetworkStore,
-//! }
-//! 
-//! // Custom store
-//! struct NetworkStore;
-//! 
-//! impl CacheCore for MyCache {
-//!     fn new<P: AsRef<Path>>(path: P) -> rscache::Result<Self> {
-//!         // snip
-//!         # unimplemented!()
-//!     }
-//! }
-//! 
-//! impl CacheRead for MyCache {
-//!     fn read(&self, index_id: u8, archive_id: u32) -> rscache::Result<Vec<u8>> {
-//!         // snip
-//!         # unimplemented!()
-//!     }
-//! }
-//! 
-//! impl Store for NetworkStore {
-//!     fn new(main_file: File) -> rscache::Result<Self> {
-//!         // snip
-//!         # unimplemented!()
-//!     }
-//!
-//!     fn read(&self, archive: &Archive) -> rscache::Result<Vec<u8>> {
-//!         // snip
-//!         # unimplemented!()
-//!     }
-//! }
-//! ```
+//! See the [custom_cache](https://github.com/jimvdl/rs-cache/tree/master/examples) 
+//! example to help you get started.
 
 #![deny(clippy::all, clippy::nursery)]
 
