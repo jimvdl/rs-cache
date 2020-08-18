@@ -37,6 +37,23 @@ impl Index {
 fn parse_archive(id: u32, index_id: u8, buffer: &[u8]) -> crate::Result<Archive> {
 	let (buffer, len) = be_u24(buffer)?;
 	let (_, sec) = be_u24(buffer)?;
-
+	
 	Ok(Archive { id, index_id, sector: sec as u32, length: len as usize })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_archive() -> crate::Result<()> {
+		let buffer = &[0, 0, 77, 0, 1, 196];
+
+		let expected = Archive { id: 10, index_id: 255, sector: 452, length: 77 };
+		let actual = parse_archive(10, 255, buffer)?;
+
+		assert_eq!(actual, expected);
+
+		Ok(())
+	}
 }

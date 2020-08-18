@@ -73,7 +73,7 @@ impl fmt::Display for CacheError {
 			Self::Io(err) => err.fmt(f),
 			Self::Read(err) => err.fmt(f),
 			Self::Compression(err) => err.fmt(f),
-			Self::Nom(_) => write!(f, "Parser failed, invalid input."),
+			Self::Nom(_) => write!(f, "Parser failed, invalid input or unexpected eof."),
 			Self::Parse(err) => err.fmt(f),
 		}
 	}
