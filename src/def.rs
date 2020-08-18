@@ -1,5 +1,6 @@
 //! Definitions for certain games.
 
+// All OSRS definitions
 pub mod osrs;
 
 use std::io;

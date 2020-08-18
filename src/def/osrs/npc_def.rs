@@ -4,7 +4,7 @@ use std::{
 	collections::HashMap,
 };
 
-use crate::{ Definition, ext::ReadExt };
+use crate::{ Definition, ext::ReadExt, util };
 
 /// Contains all the information about a certain npc fetched from the cache through
 /// the [NpcLoader](struct.NpcLoader.html).
@@ -163,30 +163,10 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<NpcDefini
 					npc_def.configs.push(reader.read_u16()?);
 				}
             },
-			249 => { npc_def.params = read_parameters(reader)?; },
+			249 => { npc_def.params = util::read_parameters(reader)?; },
 			_ => unreachable!(),
 		}
 	}
 
 	Ok(npc_def)
-}
-
-fn read_parameters(reader: &mut BufReader<&[u8]>) -> io::Result<HashMap<u32, String>> {
-    let len = reader.read_u8()?;
-    let mut map = HashMap::new();
-
-    for _ in 0..len {
-        let is_string = reader.read_u8()? == 1;
-        let key = reader.read_u24()?;
-        
-        let value = if is_string {
-            reader.read_string()?
-        } else {
-            reader.read_i32()?.to_string()
-        };
-
-        map.insert(key, value);
-    }
-
-    Ok(map)
 }

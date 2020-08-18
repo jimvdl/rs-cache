@@ -4,7 +4,7 @@ use std::{
     path::Path, 
     collections::HashMap,
     fs::File,
-    io::Read
+    io::{ BufReader, self, Read }
 };
 
 use crate::{
@@ -15,6 +15,7 @@ use crate::{
     Cache,
     codec,
     arc,
+    ext::ReadExt,
 };
 
 /// Generates all required code to fully implement a [Loader](trait.Loader.html).
@@ -139,4 +140,24 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
     }
 
     Ok(definitions)
+}
+
+pub fn read_parameters(reader: &mut BufReader<&[u8]>) -> io::Result<HashMap<u32, String>> {
+    let len = reader.read_u8()?;
+    let mut map = HashMap::new();
+
+    for _ in 0..len {
+        let is_string = reader.read_u8()? == 1;
+        let key = reader.read_u24()?;
+        
+        let value = if is_string {
+            reader.read_string()?
+        } else {
+            reader.read_i32()?.to_string()
+        };
+
+        map.insert(key, value);
+    }
+
+    Ok(map)
 }
