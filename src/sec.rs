@@ -12,12 +12,15 @@ use nom::{
 
 use crate::error::ReadError;
 
+/// Sector data for reading.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Sector<'a> {
 	pub header: SectorHeader,
 	pub data_block: &'a [u8]
 }
 
+/// Contains the sector header for reading the next sector
+/// and validating the current sector.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct SectorHeader {
 	pub archive_id: u32,
@@ -27,6 +30,7 @@ pub struct SectorHeader {
 }
 
 impl<'a> Sector<'a> {
+	/// Decodes the buffer from the reference table into a `Sector`.
 	#[inline]
 	pub fn new(buffer: &'a [u8], expanded_header: bool) -> crate::Result<Self> {
 		let (buffer, header) = SectorHeader::new(buffer, expanded_header)?;
@@ -37,6 +41,9 @@ impl<'a> Sector<'a> {
 }
 
 impl SectorHeader {
+	/// Decodes only the header data from the buffer leaving the data block untouched.
+	/// 
+	/// The expanded header should be 10 bytes instead of the usual 8 bytes.
 	#[inline]
 	pub fn new(buffer: &[u8], expanded_header: bool) -> crate::Result<(&[u8], Self)> {
 		let (buffer, archive_id) = if expanded_header {
@@ -53,6 +60,8 @@ impl SectorHeader {
 		Ok((buffer, Self { archive_id, chunk, next, index_id }))
 	}
 
+	/// Validates the current `archive_id`, `chunk` and `index_id` against the expected
+	/// values from this header struct.
 	#[inline]
 	pub fn validate(&self, archive_id: u32, chunk: u16, index_id: u8) -> Result<(), ReadError> {
 		if self.archive_id != archive_id {

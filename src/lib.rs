@@ -12,12 +12,12 @@
 //! - Huffman buffer access.
 //! - Checksum with simple-to-use validation.
 //! - Compression and decompression:
-//!   - [Gzip]
-//!   - [Bzip2]
-//! - Loaders & Definitions
-//!   - [ItemLoader](struct.ItemLoader.html) - [ItemDefinition](struct.ItemDefinition.html)
-//!   - [NpcLoader](struct.NpcLoader.html) - [NpcDefinition](struct.NpcDefinition.html)
-//!   - [ObjectLoader](struct.ObjectLoader.html) - [ObjectDefinition](struct.ObjectDefinition.html)
+//!   - [Gzip](https://crates.io/crates/libflate)
+//!   - [Bzip2](https://crates.io/crates/bzip2)
+//! - Loaders
+//!   - [`ItemLoader`](ldr/osrs/struct.ItemLoader.html)
+//!   - [`NpcLoader`](ldr/osrs/struct.NpcLoader.html)
+//!   - [`ObjectLoader`](ldr/osrs/struct.ObjectLoader.html)
 //! 
 //! Features to be implemented in the future: 
 //! - Writing data to the cache.
@@ -26,7 +26,7 @@
 //! # Quick Start
 //! 
 //! The quickest and easiest way to get started is by using 
-//! [OsrsCache](type.OsrsCache.html). 
+//! [`OsrsCache`](type.OsrsCache.html). 
 //! 
 //! ```
 //! use rscache::OsrsCache;
@@ -46,15 +46,15 @@
 //! # Cache interchangeability
 //! 
 //! The internal storage and reading functionalities can be changed
-//! by using the generic [Cache](struct.Cache.html) struct and chosing
+//! by using the generic [`Cache`](struct.Cache.html) struct and chosing
 //! a store implementation that fits a specific use-case.
 //! 
-//! In the below example the [FileStore](struct.FileStore.html) holds a 
-//! handle to the main data file while the [MemoryStore](struct.MemoryStore.html) 
+//! In the below example the [`FileStore`](struct.FileStore.html) holds a 
+//! handle to the main data file while the [`MemoryStore`](struct.MemoryStore.html) 
 //! parses the entire main data file into memory. If the main file is too large 
 //! for the `MemoryStore` you can opt into a `FileStore` to do reading through disk I/O.
 //! 
-//! The type [OsrsCache](type.OsrsCache.html) is a type alias for `Cache<MemoryStore>`.
+//! The type [`OsrsCache`](type.OsrsCache.html) is a type alias for `Cache<MemoryStore>`.
 //! 
 //! ```
 //! use rscache::{ Cache, store::FileStore };

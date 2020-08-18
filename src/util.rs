@@ -18,37 +18,7 @@ use crate::{
     ext::ReadExt,
 };
 
-/// Generates all required code to fully implement a default [Loader](trait.Loader.html).
-/// 
-/// Macro inner implementation:
-/// ```ignore
-/// impl $ldr {
-///     #[inline]
-///     pub fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
-///         Loader::new(cache)
-///     }
-///     
-///     #[inline]
-///     pub fn load(&self, id: u16) -> Option<&$def> {
-///         Loader::load(self, id)
-///     }
-/// }
-///     
-/// impl Loader<$def> for $ldr {
-///     #[inline]
-///     fn new<S: Store>(cache: &Cache<S>) -> crate::Result<$ldr> {
-///         let $defs_field = util::parse_defs(cache, $arc_id)?;
-///     
-///         Ok($ldr { $defs_field })
-///     }
-///     
-///     #[inline]
-///     fn load(&self, id: u16) -> Option<&$def> {
-///         self.$defs_field.get(&id)
-///     }
-/// }
-/// ```
-#[macro_export]
+#[macro_use]
 macro_rules! impl_loader {
    ($ldr:ident, $def:ty, $defs_field:ident, archive_id: $arc_id:expr) => {
         impl $ldr {

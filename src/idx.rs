@@ -8,6 +8,7 @@ use crate::{ arc::Archive, error::ParseError };
 
 pub const IDX_LENGTH: usize = 6;
 
+/// Represents an .idx file.
 #[derive(Clone, Debug, Default)]
 pub struct Index {
 	pub id: u8,
