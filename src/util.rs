@@ -142,6 +142,7 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
     Ok(definitions)
 }
 
+#[inline]
 pub fn read_parameters(reader: &mut BufReader<&[u8]>) -> io::Result<HashMap<u32, String>> {
     let len = reader.read_u8()?;
     let mut map = HashMap::new();
