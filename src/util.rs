@@ -18,7 +18,7 @@ use crate::{
     ext::ReadExt,
 };
 
-/// Generates all required code to fully implement a [Loader](trait.Loader.html).
+/// Generates all required code to fully implement a default [Loader](trait.Loader.html).
 /// 
 /// Macro inner implementation:
 /// ```ignore
@@ -79,7 +79,21 @@ macro_rules! impl_loader {
    };
 }
 
+/// djd2 module for hashing strings
 pub mod djd2 {
+
+    /// Hashes the string
+    /// 
+    /// # Errors
+    /// 
+    /// Can panic if `nth(n)` returns `None` if n >= strings iter length.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// let hash = rscache::util::djd2::hash("huffman");
+    /// assert_eq!(hash, 1258058669);
+    /// ``` 
     #[inline]
     pub fn hash(string: &str) -> i32 {
         let mut hash = 0;
@@ -93,14 +107,57 @@ pub mod djd2 {
     }
 }
 
+/// Loads the given store.
+/// 
+/// This will load the main cache file and open the chosen store
+/// with it.
+/// 
+/// # Errors
+/// 
+/// Returns an `std::io::Error` if the path is incorrect.
+/// 
+/// # Examples 
+/// 
+/// ```
+/// # use std::{ fs::File, path::Path, collections::HashMap };
+/// # use rscache::arc::Archive;
+/// use rscache::{ Store, util };
+/// 
+/// # fn main() -> rscache::Result<()> {
+/// let store: CustomStore = util::load_store("./data/cache")?;
+/// # Ok(())
+/// # }
+/// 
+/// 
+/// struct CustomStore;
+/// 
+/// impl Store for CustomStore {
+///     fn new(mut main_file: File) -> rscache::Result<Self> {
+///         // snip
+/// 
+///         Ok(Self {  })
+///     }
+/// # fn read(&self, archive: &Archive) -> rscache::Result<Vec<u8>> {
+/// # unimplemented!()
+/// # }
+/// }
+/// ```
 #[inline]
-pub fn load_store<T: Store, P: AsRef<Path>>(path: P) -> crate::Result<T> {
+pub fn load_store<S: Store, P: AsRef<Path>>(path: P) -> crate::Result<S> {
     let path = path.as_ref();
     let main_file = File::open(path.join(MAIN_DATA))?;
     
-    T::new(main_file)
+    S::new(main_file)
 }
 
+/// Loads all indices present in the cache folder.
+/// 
+/// The `u8` in `HashMap<u8, Index>` represents the id of the index.
+/// 
+/// # Errors
+/// 
+/// Can return multiple errors: if the index couldnt be parsed or the index 
+/// couldn't be opened.
 #[inline]
 pub fn load_indices<P: AsRef<Path>>(path: P) -> crate::Result<HashMap<u8, Index>> {
     let path = path.as_ref();
@@ -121,6 +178,24 @@ pub fn load_indices<P: AsRef<Path>>(path: P) -> crate::Result<HashMap<u8, Index>
 	Ok(indices)
 }
 
+/// Parses all definitions read from the passed `Cache<S>` from `archive_id`.
+/// 
+/// # Errors
+/// 
+/// Can return multiple errors: if reading, decoding or parsing definition buffers fail.
+/// 
+/// # Examples
+/// 
+/// ```
+/// # use std::collections::HashMap;
+/// # use rscache::{ OsrsCache, util, def::osrs::ItemDefinition };
+/// # fn main() -> rscache::Result<()> {
+/// # let cache = OsrsCache::new("./data/cache")?;
+/// let archive_id = 10; // Archive containing item definitions.
+/// let item_defs: HashMap<u16, ItemDefinition> = util::parse_defs(&cache, archive_id)?;
+/// # Ok(())
+/// # }
+/// ```
 #[inline]
 pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) -> crate::Result<HashMap<u16, T>> {
     let buffer = cache.read(REFERENCE_TABLE, 2)?;
@@ -142,6 +217,11 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
     Ok(definitions)
 }
 
+/// Useful for decoding parameters when reading from definition buffers.
+/// 
+/// # Errors
+/// 
+/// Can return `std::io::Error` if reading from the `BufReader<&[u8]>` fails.
 #[inline]
 pub fn read_parameters(reader: &mut BufReader<&[u8]>) -> io::Result<HashMap<u32, String>> {
     let len = reader.read_u8()?;

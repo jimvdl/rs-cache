@@ -15,6 +15,7 @@ use std::{ error::Error, fmt, io };
 /// use rscache::OsrsCache;
 /// use rscache::codec;
 /// 
+/// // Same result as Result<Vec<u8>, CacheError>
 /// fn item_def_data(cache: &OsrsCache) -> rscache::Result<Vec<u8>> {
 ///     let index_id = 2;
 ///     let archive_id = 10;
@@ -27,12 +28,16 @@ use std::{ error::Error, fmt, io };
 /// ```
 pub type Result<T> = std::result::Result<T, CacheError>;
 
+/// Super error type for all sub cache errors
 #[derive(Debug)]
 pub enum CacheError {
+	/// Wrapper for std::io::Error type.
 	Io(io::Error),
 	Read(ReadError),
 	Compression(CompressionError),
+	/// Nom errors are omitted, they are almost always unexpected eof errors.
 	Nom(nom::Err<()>),
+	/// Clarification error for failed nom parsers.
 	Parse(ParseError)
 }
 
