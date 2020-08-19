@@ -1,4 +1,3 @@
-
 use std::{ 
     collections::HashMap, 
     path::Path,
@@ -23,7 +22,7 @@ fn main() -> rscache::Result<()> {
     Ok(())
 }
 
-// CustomCache is essentially Cache but its just to give you an
+// CustomCache is essentially a Cache but its just to give you an
 // idea of how to implement your own cache.
 struct CustomCache {
     store: CustomStore,
