@@ -31,13 +31,11 @@ pub type Result<T> = std::result::Result<T, CacheError>;
 /// Super error type for all sub cache errors
 #[derive(Debug)]
 pub enum CacheError {
-	/// Wrapper for std::io::Error type.
+	/// Wrapper for the std::io::Error type.
 	Io(io::Error),
 	Read(ReadError),
 	Compression(CompressionError),
-	/// Nom errors are omitted, they are almost always unexpected eof errors.
-	Nom(nom::Err<()>),
-	/// Clarification error for failed nom parsers.
+	/// Clarification error for failed parsers.
 	Parse(ParseError)
 }
 
@@ -55,8 +53,16 @@ macro_rules! impl_from {
 impl_from!(io::Error, Io);
 impl_from!(ReadError, Read);
 impl_from!(CompressionError, Compression);
-impl_from!(nom::Err<()>, Nom);
 impl_from!(ParseError, Parse);
+
+impl From<nom::Err<()>> for CacheError {
+	#[inline]
+	fn from(err: nom::Err<()>) -> Self {
+		dbg!(err);
+
+		Self::Parse(ParseError::Unknown)
+	}
+}
 
 impl Error for CacheError {
 	#[inline]
@@ -65,7 +71,6 @@ impl Error for CacheError {
 			Self::Io(err) => Some(err),
 			Self::Read(err) => Some(err),
 			Self::Compression(err) => Some(err),
-			Self::Nom(err) => Some(err),
 			Self::Parse(err) => Some(err),
 		}
 	}
@@ -78,7 +83,6 @@ impl fmt::Display for CacheError {
 			Self::Io(err) => err.fmt(f),
 			Self::Read(err) => err.fmt(f),
 			Self::Compression(err) => err.fmt(f),
-			Self::Nom(_) => write!(f, "Parser failed, invalid input or unexpected eof."),
 			Self::Parse(err) => err.fmt(f),
 		}
 	}
@@ -130,6 +134,7 @@ impl fmt::Display for CompressionError {
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum ParseError {
+	Unknown,
 	Archive(u32),
 	Sector(u32),
 }
@@ -140,6 +145,7 @@ impl fmt::Display for ParseError {
 	#[inline]
 	fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 		match self {
+			Self::Unknown => write!(f, "Unknown parser error."),
 			Self::Archive(id) => write!(f, "Unable to parse archive {}, unexpected eof.", id),
 			Self::Sector(id) => write!(f, "Unable to parse child sector of parent {}, unexpected eof.", id),
 		}
