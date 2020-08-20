@@ -19,7 +19,6 @@ pub struct CustomStore {
 }
 
 impl Store for CustomStore {
-    #[inline]
     fn new(mut main_file: File) -> rscache::Result<Self> {
         let mut buffer = Vec::new();
         main_file.read_to_end(&mut buffer)?;
@@ -27,7 +26,6 @@ impl Store for CustomStore {
         Ok(Self { data: buffer })
     }
 
-	#[inline]
     fn read(&self, archive: &Archive) -> rscache::Result<Vec<u8>> {
         // Implement your own read here.
 
