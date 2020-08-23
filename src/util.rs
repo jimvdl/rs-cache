@@ -1,4 +1,7 @@
-//! Helpful utility functions and macros.
+//! Helpful utility functions, macros and structs.
+
+/// All OSRS specific utilities.
+pub mod osrs;
 
 use std::{ 
     path::Path, 
