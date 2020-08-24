@@ -3,20 +3,60 @@ const LOG_SIZE: u32 = 8;
 const SIZE: usize = 1 << LOG_SIZE;
 const MASK: u32 = (SIZE as u32 - 1) << 2;
 
-pub struct IsaacRandom {
+/// Default Isaac random implementation
+/// 
+/// Can be used to encode and decode packet ids.
+/// 
+/// **NOTE: The client will only send one set of keys, the decoder keys.
+/// To get the encoder keys, simply add 50 to every decoder key.**
+/// ```
+/// # let xtea_keys: Vec<u32> = Vec::new();
+/// let mut isaac_decoder_keys = Vec::with_capacity(4);
+/// let mut isaac_encoder_keys = Vec::with_capacity(4);
+/// for key in xtea_keys.clone() {
+///     isaac_decoder_keys.push(key);
+///     isaac_encoder_keys.push(key + 50);
+/// }
+/// ```
+/// 
+/// # Examples
+/// 
+/// ```
+/// # use rscache::util::osrs::IsaacRand;
+/// # struct ExamplePacket { pub id: u32 }
+/// # fn main() -> std::io::Result<()> {
+/// # let encoder_keys = Vec::new();
+/// # let decoder_keys = Vec::new();
+/// # let packet_buffer = &[0];
+/// # let packet = ExamplePacket { id: 0 };
+/// let mut packet_id_encoder = IsaacRand::new(&encoder_keys);
+/// let mut packet_id_decoder = IsaacRand::new(&decoder_keys);
+/// 
+/// // decoding packet id that was sent in the client packet buffer.
+/// let packet_id = 
+///     (packet_buffer[0] as u32).overflowing_sub(packet_id_decoder.next().unwrap());
+/// 
+/// // encoding packet id that will be sent in a packet to the client.
+/// let packet_id = packet.id + packet_id_encoder.next().unwrap();
+/// # Ok(())
+/// # }
+/// ```
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+pub struct IsaacRand {
 	a: u32,
 	b: u32,
 	c: u32,
-	count: u32,
-	pub mem: [u32; SIZE],
-	rsl: [u32; SIZE],
+	count: usize,
+	mem: Vec<u32>,
+	rsl: Vec<u32>,
 }
 
-impl IsaacRandom {
+impl IsaacRand {
+	/// Initializes the randomizer with the given seed.
 	#[inline]
 	pub fn new(seed: &[u32]) -> Self {
-		let mem = [0; SIZE];
-		let mut rsl = [0; SIZE];
+		let mem = vec![0; SIZE];
+		let mut rsl = vec![0; SIZE];
 		
 		rsl[..seed.len()].clone_from_slice(&seed[..]);
 
@@ -157,7 +197,7 @@ impl IsaacRandom {
 		}
 
 		self.isaac();
-		self.count = SIZE as u32;
+		self.count = SIZE;
 	}
 
 	fn isaac(&mut self) {
@@ -255,17 +295,17 @@ impl IsaacRandom {
 	}
 }
 
-impl Iterator for IsaacRandom {
+impl Iterator for IsaacRand {
 	type Item = u32;
 
 	#[inline]
 	fn next(&mut self) -> Option<Self::Item> {
-		if 0 == self.count {
+		if self.count == 0 {
 			self.isaac();
-			self.count = SIZE as u32;
+			self.count = SIZE;
 		}
 		self.count -= 1;
 
-		Some(self.rsl[self.count as usize])
+		Some(self.rsl[self.count])
 	}
 }

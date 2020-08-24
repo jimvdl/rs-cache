@@ -5,4 +5,4 @@ mod isaac_rand;
 pub mod xtea;
 
 pub use huffman::Huffman;
-pub use isaac_rand::IsaacRandom;
+pub use isaac_rand::IsaacRand;
