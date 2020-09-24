@@ -18,6 +18,10 @@
 //!   - [`ItemLoader`](ldr/osrs/struct.ItemLoader.html)
 //!   - [`NpcLoader`](ldr/osrs/struct.NpcLoader.html)
 //!   - [`ObjectLoader`](ldr/osrs/struct.ObjectLoader.html)
+//! - Utilities
+//!   - Huffman decompressor.
+//!   - Isaac randomizer.
+//!   - Xtea decipher.
 //! 
 //! Features to be implemented in the future: 
 //! - Writing data to the cache.

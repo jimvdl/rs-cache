@@ -63,7 +63,7 @@ impl SectorHeader {
 	/// Validates the current `archive_id`, `chunk` and `index_id` against the expected
 	/// values from this header struct.
 	#[inline]
-	pub fn validate(&self, archive_id: u32, chunk: u16, index_id: u8) -> Result<(), ReadError> {
+	pub const fn validate(&self, archive_id: u32, chunk: u16, index_id: u8) -> Result<(), ReadError> {
 		if self.archive_id != archive_id {
 			return Err(ReadError::SectorArchiveMismatch(self.archive_id, archive_id))
 		}
