@@ -87,6 +87,7 @@ pub fn parse_archive_data(buffer: &[u8]) -> crate::Result<Vec<ArchiveData>> {
     let mut archives = Vec::with_capacity(archive_count);
     let mut last_archive_id = 0;
     let archive_data = izip!(&ids, &hashes, &crcs, &revisions, &entry_counts);
+    let mut last_archive_id = 0;
     for (id, hash, crc, revision, entry_count) in archive_data {
         last_archive_id += id;
 
