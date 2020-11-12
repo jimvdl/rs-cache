@@ -37,6 +37,10 @@ pub trait CacheCore: CacheRead + Sized {
 /// The read functionality of a cache.
 pub trait CacheRead {
     fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>>;
+    #[inline]
+    fn read_archive(&self, archive: &Archive) -> crate::Result<Vec<u8>> {
+        self.read(archive.index_id, archive.id)
+    }
 }
 
 /// Main cache struct providing basic utilities.
@@ -97,6 +101,11 @@ impl<S: Store> Cache<S> {
     #[inline]
     pub fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
         CacheRead::read(self, index_id, archive_id)
+    }
+
+    #[inline]
+    pub fn read_archive(&self, archive: &Archive) -> crate::Result<Vec<u8>> {
+        CacheRead::read_archive(self, archive)
     }
 
     /// Creates a `Checksum` which can be used to validate the cache data

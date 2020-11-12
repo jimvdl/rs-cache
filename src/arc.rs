@@ -12,7 +12,8 @@ use nom::{
 	number::complete::{
         be_u8,
         be_u16,
-		be_u32,
+        be_u32,
+        be_i16,
         be_i32
     },
 };
@@ -77,17 +78,20 @@ pub fn parse_archive_data(buffer: &[u8]) -> crate::Result<Vec<ArchiveData>> {
     let (buffer, _) = cond(protocol >= 6, be_u32)(buffer)?;
     let (buffer, identified) = parse_identified(buffer)?;
     let (buffer, archive_count) = parse_usize_from_u16(buffer)?;
-    let (buffer, ids) = many_m_n(0, archive_count, be_u16)(buffer)?;
+    let (buffer, ids) = many_m_n(0, archive_count, be_i16)(buffer)?;
     let (buffer, hashes) = parse_identifiers(buffer, identified, archive_count)?;
     let (buffer, crcs) = many_m_n(0, archive_count, be_u32)(buffer)?;
     let (buffer, revisions) = many_m_n(0, archive_count, be_u32)(buffer)?;
     let (_, entry_counts) = many_m_n(0, archive_count, be_u16)(buffer)?;
 
     let mut archives = Vec::with_capacity(archive_count);
+    let mut last_archive_id = 0;
     let archive_data = izip!(&ids, &hashes, &crcs, &revisions, &entry_counts);
     for (id, hash, crc, revision, entry_count) in archive_data {
+        last_archive_id += id;
+
         archives.push(ArchiveData { 
-            id: *id, 
+            id: last_archive_id as u16, 
             hash: *hash, 
             crc: *crc, 
             revision: *revision, 

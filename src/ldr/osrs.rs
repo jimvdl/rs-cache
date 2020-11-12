@@ -28,7 +28,8 @@ use crate::{ Store, Loader, util, Cache };
 use crate::def::osrs::{
     ItemDefinition,
     NpcDefinition,
-    ObjectDefinition
+    ObjectDefinition,
+    MapDefinition
 };
 
 /// Loads all item definitions from the current cache.
