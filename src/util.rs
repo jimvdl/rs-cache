@@ -19,6 +19,7 @@ use crate::{
     codec,
     arc,
     ext::ReadExt,
+    def,
 };
 
 #[macro_use]
@@ -188,6 +189,22 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
     }
 
     Ok(definitions)
+}
+
+#[inline]
+pub fn load_map_def<S: Store>(cache: &Cache<S>, region_id: u16) -> crate::Result<Option<def::osrs::MapDefinition>> {
+    let region_id = region_id as u32;
+    let x = region_id >> 8;
+    let y = region_id & 0xFF;
+
+    if let Ok(map_archive) = cache.archive_by_name(5, &format!("m{}_{}", x, y)) {
+        let buffer = cache.read_archive(&map_archive)?;
+        let buffer = crate::codec::decode(&buffer)?;
+        
+        return Ok(Some(def::osrs::MapDefinition::new(x, y, &buffer)?))
+    }
+
+    Ok(None)
 }
 
 /// Useful for decoding parameters when reading from definition buffers.

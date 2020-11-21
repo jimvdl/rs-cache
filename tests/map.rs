@@ -33,7 +33,7 @@ mod osrs {
             }
         }
 
-        panic!();
+        assert!(false);
         
         Ok(())
     }

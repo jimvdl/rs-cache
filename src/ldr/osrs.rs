@@ -29,7 +29,6 @@ use crate::def::osrs::{
     ItemDefinition,
     NpcDefinition,
     ObjectDefinition,
-    MapDefinition
 };
 
 /// Loads all item definitions from the current cache.

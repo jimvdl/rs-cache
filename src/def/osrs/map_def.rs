@@ -57,22 +57,36 @@ fn decode_buffer(x: u32, y: u32, reader: &mut BufReader<&[u8]>) -> io::Result<Ma
                 loop {
                     let attribute = reader.read_u8()?;
 
-                    match attribute {
-                        0 => break,
-                        1 => {
-                            map_data.height = reader.read_u8()?; break
-                        },
-                        2..=49 => {
-                            map_data.attr_opcode = attribute;
-                            map_data.overlay_id = reader.read_i8()?;
-                            map_data.overlay_path = (attribute - 2) / 4;
-                            map_data.overlay_rotation = (attribute - 2) & 3;
-                        },
-                        50..=81 => {
-                            map_data.settings = attribute - 49;
-                        },
-                        _ => map_data.underlay_id = attribute - 81,
+                    if attribute == 0 {
+                        break;
+                    } else if attribute == 1 {
+                        map_data.height = reader.read_u8()?; break
+                    } else if attribute <= 49 {
+                        map_data.attr_opcode = attribute;
+                        map_data.overlay_id = reader.read_i8()?;
+                        map_data.overlay_path = (attribute - 2) / 4;
+                        map_data.overlay_rotation = (attribute - 2) & 3;
+                    } else if attribute <= 81 {
+                        map_data.settings = attribute - 49;
+                    } else {
+                        map_data.underlay_id = attribute - 81;
                     }
+                    // match attribute {
+                    //     0 => break,
+                    //     1 => {
+                    //         map_data.height = reader.read_u8()?; break
+                    //     },
+                    //     2..=49 => {
+                    //         map_data.attr_opcode = attribute;
+                    //         map_data.overlay_id = reader.read_i8()?;
+                    //         map_data.overlay_path = (attribute - 2) / 4;
+                    //         map_data.overlay_rotation = (attribute - 2) & 3;
+                    //     },
+                    //     50..=81 => {
+                    //         map_data.settings = attribute - 49;
+                    //     },
+                    //     _ => map_data.underlay_id = attribute - 81,
+                    // }
                 }
             }
         }
