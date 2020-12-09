@@ -2,24 +2,20 @@ mod common;
 
 mod osrs {
     use super::common;
-    use rscache::def::osrs::MapDefinition;
     
     #[test]
     fn load_lumbridge_map_data() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
 
-        let lumbridge_region_id = 12850u32;
+        let lumbridge_region_id = 12850;
+        let region_base_x = ((lumbridge_region_id as u32 >> 8) & 0xFF) << 6;
+        let region_base_y = (lumbridge_region_id as u32 & 0xFF) << 6;
 
-        let x = lumbridge_region_id >> 8;
-        let y = lumbridge_region_id & 0xFF;
-        let region_base_x = ((lumbridge_region_id >> 8) & 0xFF) << 6;
-        let region_base_y = (lumbridge_region_id & 0xFF) << 6;
+        let map_def = rscache::util::load_map_def(&cache, lumbridge_region_id)
+            .expect(&format!("Failed to load map definition for region: {}", lumbridge_region_id))
+            .expect(&format!("Map data for region {} not found.", lumbridge_region_id));
 
-        let map_archive = cache.archive_by_name(5, &format!("m{}_{}", x, y))?;
-        let buffer = cache.read_archive(&map_archive)?;
-        let buffer = rscache::codec::decode(&buffer)?;
-
-        let map_def = MapDefinition::new(x, y, &buffer)?;
+        let mut blocked_tiles = Vec::new();
         
         for z in 0..4 {
             for x in 0..64 {
@@ -27,13 +23,13 @@ mod osrs {
                     let setting = map_def.map_data(x, y, z).settings;
 
                     if setting & 1 == 1 {
-                        println!("blocked tile: {} {} {}", region_base_x as usize + x, region_base_y as usize + y, z);
+                        blocked_tiles.push((region_base_x as usize + x, region_base_y as usize + y, z));
                     }
                 }
             }
         }
 
-        assert!(false);
+        assert_eq!(533, blocked_tiles.len());
         
         Ok(())
     }

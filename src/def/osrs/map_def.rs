@@ -1,10 +1,9 @@
 use std::{
 	io,
 	io::BufReader,
-	collections::HashMap,
 };
 
-use crate::{ Definition, ext::ReadExt, util };
+use crate::{ Definition, ext::ReadExt };
 
 const X: usize = 64;
 const Y: usize = 64;
@@ -28,15 +27,20 @@ pub struct MapData {
     pub underlay_id: u8,
 }
 
-impl MapDefinition {
+impl Definition for MapDefinition {
     #[inline]
-    pub fn new(x: u32, y: u32, buffer: &[u8]) -> io::Result<Self> {
+    fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
+        let x = id as u32 >> 8;
+        let y = id as u32 & 0xFF;
+
         let mut reader = BufReader::new(&buffer[..]);
 		let map_def = decode_buffer(x, y, &mut reader)?;
 
 		Ok(map_def)
     }
+}
 
+impl MapDefinition {
     #[inline]
     pub fn map_data(&self, x: usize, y: usize, z: usize) -> &MapData {
         &self.data[z][x][y]
@@ -57,36 +61,22 @@ fn decode_buffer(x: u32, y: u32, reader: &mut BufReader<&[u8]>) -> io::Result<Ma
                 loop {
                     let attribute = reader.read_u8()?;
 
-                    if attribute == 0 {
-                        break;
-                    } else if attribute == 1 {
-                        map_data.height = reader.read_u8()?; break
-                    } else if attribute <= 49 {
-                        map_data.attr_opcode = attribute;
-                        map_data.overlay_id = reader.read_i8()?;
-                        map_data.overlay_path = (attribute - 2) / 4;
-                        map_data.overlay_rotation = (attribute - 2) & 3;
-                    } else if attribute <= 81 {
-                        map_data.settings = attribute - 49;
-                    } else {
-                        map_data.underlay_id = attribute - 81;
+                    match attribute {
+                        0 => break,
+                        1 => {
+                            map_data.height = reader.read_u8()?; break
+                        },
+                        2..=49 => {
+                            map_data.attr_opcode = attribute;
+                            map_data.overlay_id = reader.read_i8()?;
+                            map_data.overlay_path = (attribute - 2) / 4;
+                            map_data.overlay_rotation = (attribute - 2) & 3;
+                        },
+                        50..=81 => {
+                            map_data.settings = attribute - 49;
+                        },
+                        _ => map_data.underlay_id = attribute - 81,
                     }
-                    // match attribute {
-                    //     0 => break,
-                    //     1 => {
-                    //         map_data.height = reader.read_u8()?; break
-                    //     },
-                    //     2..=49 => {
-                    //         map_data.attr_opcode = attribute;
-                    //         map_data.overlay_id = reader.read_i8()?;
-                    //         map_data.overlay_path = (attribute - 2) / 4;
-                    //         map_data.overlay_rotation = (attribute - 2) & 3;
-                    //     },
-                    //     50..=81 => {
-                    //         map_data.settings = attribute - 49;
-                    //     },
-                    //     _ => map_data.underlay_id = attribute - 81,
-                    // }
                 }
             }
         }

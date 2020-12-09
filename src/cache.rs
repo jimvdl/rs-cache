@@ -213,12 +213,14 @@ impl<S: Store> Cache<S> {
     /// # }
     /// ```
     #[inline]
-    pub fn archive_by_name(&self, index_id: u8, name: &str) -> crate::Result<Archive> {
+    pub fn archive_by_name<T: Into<String>>(&self, index_id: u8, name: T) -> crate::Result<Archive> {
+        let name = name.into();
+
         let index = match self.indices.get(&index_id) {
             Some(index) => index,
             None => return Err(ReadError::IndexNotFound(index_id).into())
         };
-        let hash = util::djd2::hash(name);
+        let hash = util::djd2::hash(&name);
 
         let buffer = self.read(REFERENCE_TABLE, index_id as u32)?;
         let data = codec::decode(&buffer)?;
@@ -236,7 +238,7 @@ impl<S: Store> Cache<S> {
             }
         }
 
-        Err(ReadError::NameNotInArchive(hash, name.to_owned(), index_id).into())
+        Err(ReadError::NameNotInArchive(hash, name, index_id).into())
     }
 
     /// Simply returns the index count, by getting the `len()` of 

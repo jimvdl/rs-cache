@@ -7,7 +7,7 @@ use std::{
     path::Path, 
     collections::HashMap,
     fs::File,
-    io::{ BufReader, self, Read }
+    io::{ BufReader, self, Read },
 };
 
 use crate::{
@@ -69,7 +69,8 @@ pub mod djd2 {
     /// assert_eq!(hash, 1258058669);
     /// ``` 
     #[inline]
-    pub fn hash(string: &str) -> i32 {
+    pub fn hash<T: Into<String>>(string: T) -> i32 {
+        let string = string.into();
         let mut hash = 0;
 
         for index in 0..string.len() {
@@ -193,15 +194,14 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
 
 #[inline]
 pub fn load_map_def<S: Store>(cache: &Cache<S>, region_id: u16) -> crate::Result<Option<def::osrs::MapDefinition>> {
-    let region_id = region_id as u32;
-    let x = region_id >> 8;
-    let y = region_id & 0xFF;
+    let x = region_id as u32 >> 8;
+    let y = region_id as u32 & 0xFF;
 
-    if let Ok(map_archive) = cache.archive_by_name(5, &format!("m{}_{}", x, y)) {
+    if let Ok(map_archive) = cache.archive_by_name(5, format!("m{}_{}", x, y)) {
         let buffer = cache.read_archive(&map_archive)?;
-        let buffer = crate::codec::decode(&buffer)?;
+        let buffer = codec::decode(&buffer)?;
         
-        return Ok(Some(def::osrs::MapDefinition::new(x, y, &buffer)?))
+        return Ok(Some(def::osrs::MapDefinition::new(region_id, &buffer)?))
     }
 
     Ok(None)
