@@ -8,14 +8,14 @@
 
 A simple-to-use basic RuneScape cache utility. RS-Cache provides utilities to interact with the RuneScape cache. 
 
-_Currently only supports the OSRS cache but RS3 support is in progress._
-
 Follow this [Quick Start](https://docs.rs/rs-cache/#quick-start) guide to begin using rs-cache.
 
 Useful links:\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/5/5d/Fire_rune_detail.png/800px-Fire_rune_detail.png?07ed5" width="10"> &nbsp;[Crates.io](https://crates.io/crates/rs-cache)\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/7/74/Water_rune_detail.png/800px-Water_rune_detail.png?4e790" width="10"> &nbsp;[Documentation](https://docs.rs/rs-cache)\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/e/ef/Nature_rune_detail.png/800px-Nature_rune_detail.png?a062f" width="10"> &nbsp;[Examples](examples/)
+
+Currently only supports the OSRS cache but RS3 support is in progress.
 
 Integration tests are running on RuneScape revision 180, which you can run at any time because the cache is included in the `./data/cache` directory.
 
