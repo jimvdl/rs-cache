@@ -141,7 +141,7 @@ fn compress_bzip2(data: &[u8]) -> io::Result<Vec<u8>> {
 fn compress_gzip(data: &[u8]) -> io::Result<Vec<u8>> {
 	let compressor = BzEncoder::new(data.to_owned(), bzip2::Compression::Default);
 	let mut compressed_data = compressor.finish()?;
-	compressed_data.drain(0..4);
+	compressed_data.drain(..4);
 
 	Ok(compressed_data)
 }
@@ -159,7 +159,7 @@ fn decompress_bzip2(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Ve
 	let (buffer, decompressed_len) = be_u32(buffer)?;
 	let mut compressed_data = vec![0; len];
 	compressed_data[4..len].copy_from_slice(&buffer[..len - 4]);
-	compressed_data[0..4].copy_from_slice(b"BZh1");
+	compressed_data[..4].copy_from_slice(b"BZh1");
 
 	let (_, revision) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
 

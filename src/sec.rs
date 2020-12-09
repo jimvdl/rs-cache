@@ -12,6 +12,12 @@ use nom::{
 
 use crate::error::ReadError;
 
+pub const SECTOR_HEADER_SIZE: usize = 8;
+pub const SECTOR_EXPANDED_HEADER_SIZE: usize = 10;
+pub const SECTOR_DATA_SIZE: usize = 512;
+pub const SECTOR_EXPANDED_DATA_SIZE: usize = 510;
+pub const SECTOR_SIZE: usize = SECTOR_HEADER_SIZE + SECTOR_DATA_SIZE;
+
 /// Sector data for reading.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Sector<'a> {

@@ -8,8 +8,16 @@ use crate::{
 	arc::Archive,
 	sec::Sector,
 	error::ParseError,
+	sec::{
+		SECTOR_SIZE,
+		SECTOR_EXPANDED_DATA_SIZE,
+		SECTOR_EXPANDED_HEADER_SIZE,
+		SECTOR_HEADER_SIZE,
+		SECTOR_DATA_SIZE
+	},
 };
-use super::*;
+
+use super::Store;
 
 /// Cache inner reading using a file handle.
 pub struct FileStore {
