@@ -4,8 +4,14 @@ use crate::{
 	arc::Archive,
 	sec::Sector,
 	error::ParseError,
+	sec::{
+		SECTOR_SIZE,
+		SECTOR_DATA_SIZE,
+		SECTOR_HEADER_SIZE
+	},
 };
-use super::*;
+
+use super::Store;
 
 /// Cache inner reading from memory.
 pub struct MemoryStore {
