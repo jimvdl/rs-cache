@@ -30,8 +30,8 @@ pub struct Sector<'a> {
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct SectorHeader {
 	pub archive_id: u32,
-	pub chunk: u16,
-	pub next: u32,
+	pub chunk: usize,
+	pub next: usize,
 	pub index_id: u8
 }
 
@@ -63,13 +63,18 @@ impl SectorHeader {
 		let (buffer, next) = be_u24(buffer)?;
 		let (buffer, index_id) = be_u8(buffer)?;
 
-		Ok((buffer, Self { archive_id, chunk, next, index_id }))
+		Ok((buffer, Self { 
+			archive_id, 
+			chunk: chunk as usize, 
+			next: next as usize, 
+			index_id 
+		}))
 	}
 
 	/// Validates the current `archive_id`, `chunk` and `index_id` against the expected
 	/// values from this header struct.
 	#[inline]
-	pub const fn validate(&self, archive_id: u32, chunk: u16, index_id: u8) -> Result<(), ReadError> {
+	pub const fn validate(&self, archive_id: u32, chunk: usize, index_id: u8) -> Result<(), ReadError> {
 		if self.archive_id != archive_id {
 			return Err(ReadError::SectorArchiveMismatch(self.archive_id, archive_id))
 		}

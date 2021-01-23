@@ -94,7 +94,7 @@ pub enum ReadError {
 	ArchiveNotFound(u8, u32),
 	NameNotInArchive(i32, String, u8),
 	SectorArchiveMismatch(u32, u32),
-	SectorChunkMismatch(u16, u16),
+	SectorChunkMismatch(usize, usize),
 	SectorNextMismatch(u32, u32),
 	SectorIndexMismatch(u8, u8),
 }
@@ -136,7 +136,7 @@ impl fmt::Display for CompressionError {
 pub enum ParseError {
 	Unknown,
 	Archive(u32),
-	Sector(u32),
+	Sector(usize),
 }
 
 impl Error for ParseError {}

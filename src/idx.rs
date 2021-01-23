@@ -39,7 +39,7 @@ fn parse_archive(id: u32, index_id: u8, buffer: &[u8]) -> crate::Result<Archive>
 	let (buffer, len) = be_u24(buffer)?;
 	let (_, sec) = be_u24(buffer)?;
 	
-	Ok(Archive { id, index_id, sector: sec as u32, length: len as usize })
+	Ok(Archive { id, index_id, sector: sec as usize, length: len as usize })
 }
 
 #[cfg(test)]

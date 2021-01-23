@@ -24,7 +24,7 @@ use itertools::izip;
 pub struct Archive {
     pub id: u32,
     pub index_id: u8,
-    pub sector: u32,
+    pub sector: usize,
     pub length: usize
 }
 
