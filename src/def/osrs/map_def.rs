@@ -48,10 +48,11 @@ impl MapDefinition {
 }
 
 fn decode_buffer(x: u32, y: u32, reader: &mut BufReader<&[u8]>) -> io::Result<MapDefinition> {
-    let mut map_def = MapDefinition::default();
-    map_def.region_x = x;
-    map_def.region_y = y;
-    map_def.data = vec![vec![vec![MapData::default(); X]; Y]; Z];
+    let mut map_def = MapDefinition {
+        region_x: x,
+        region_y: y,
+        data: vec![vec![vec![MapData::default(); X]; Y]; Z]
+    };
 
     for z in 0..Z {
         for x in 0..X {

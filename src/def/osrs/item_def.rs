@@ -81,15 +81,31 @@ impl Definition for ItemDefinition {
 }
 
 fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefinition> {
-	let mut item_def = ItemDefinition::default();
-	item_def.id = id;
-	item_def.inventory_model_data.resize_x = 128;
-	item_def.inventory_model_data.resize_y = 128;
-	item_def.inventory_model_data.resize_z = 128;
-	item_def.inventory_model_data.zoom2d = 2000;
-	item_def.options[2] = "Take".to_owned();
-	item_def.interface_options[4] = "Drop".to_owned();
-	
+	let mut item_def = ItemDefinition {
+		id,
+		inventory_model_data: InventoryModelData {
+			resize_x: 128,
+			resize_y: 128,
+			resize_z: 128,
+			zoom2d: 2000,
+			.. InventoryModelData::default()
+		},
+		options: [
+			"".to_string(), 
+			"".to_string(), 
+			"Take".to_string(), 
+			"".to_string(), 
+			"".to_string()
+		],
+		interface_options: [
+			"".to_string(), 
+			"".to_string(), 
+			"".to_string(), 
+			"".to_string(), 
+			"Drop".to_string()
+		],
+		.. ItemDefinition::default()
+	};
 
 	loop {
 		let opcode = reader.read_u8()?;

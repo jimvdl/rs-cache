@@ -1,6 +1,7 @@
 //! Loading definitions for certain games.
 
 /// OSRS specific loaders.
+#[cfg(feature = "osrs")]
 pub mod osrs;
 
 use crate::{ Cache, Store, Definition };

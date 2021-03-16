@@ -1,6 +1,7 @@
 //! Definitions for certain games.
 
-// All OSRS definitions
+/// All OSRS definitions
+#[cfg(feature = "osrs")]
 pub mod osrs;
 
 use std::io;

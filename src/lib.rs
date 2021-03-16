@@ -36,7 +36,7 @@
 //! use rscache::OsrsCache;
 //! 
 //! # fn main() -> rscache::Result<()> {
-//! let cache = OsrsCache::new("./data/cache")?;
+//! let cache = OsrsCache::new("./data/osrs_cache")?;
 //! 
 //! let index_id = 2; // Config index.
 //! let archive_id = 10; // Archive containing item definitions.
@@ -64,7 +64,7 @@
 //! use rscache::{ Cache, store::FileStore };
 //! 
 //! # fn main() -> rscache::Result<()> {
-//! let cache = Cache::<FileStore>::new("./data/cache")?;
+//! let cache = Cache::<FileStore>::new("./data/osrs_cache")?;
 //! 
 //! let index_id = 2; // Config index.
 //! let archive_id = 10; // Archive containing item definitions.
@@ -133,7 +133,11 @@ pub mod ldr;
 pub mod sec;
 
 /// Type alias for `Cache<MemoryStore>`.
+#[cfg(feature = "osrs")]
 pub type OsrsCache = Cache<store::MemoryStore>;
+/// Type alias for `Cache<FileStore>`.
+// #[cfg(feature = "rs3")]
+pub type Rs3Cache = Cache<store::FileStore>;
 
 #[doc(inline)]
 pub use error::Result;

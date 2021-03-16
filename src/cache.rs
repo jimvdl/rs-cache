@@ -8,7 +8,7 @@ use std::{
 use nom::{
     combinator::cond,
 	number::complete::{
-		be_u32,
+        be_u32,
     },
 };
 
@@ -23,6 +23,7 @@ use crate::{
 };
 
 use crc::crc32;
+use whirlpool::{ Whirlpool, Digest };
 
 pub const MAIN_DATA: &str = "main_file_cache.dat2";
 pub const MAIN_MUSIC_DATA: &str = "main_file_cache.dat2m";
@@ -45,7 +46,7 @@ pub trait CacheRead {
 
 /// Main cache struct providing basic utilities.
 pub struct Cache<S: Store> {
-	store: S,
+    store: S,
 	indices: HashMap<u8, Index>
 }
 
@@ -63,7 +64,7 @@ impl<S: Store> Cache<S> {
     /// use rscache::{ Cache, store::MemoryStore };
     /// # fn main() -> rscache::Result<()> {
     /// 
-    /// let cache: Cache<MemoryStore> = Cache::new("./data/cache")?;
+    /// let cache: Cache<MemoryStore> = Cache::new("./data/osrs_cache")?;
     /// # Ok(())
     /// # }
     /// ```
@@ -88,7 +89,7 @@ impl<S: Store> Cache<S> {
     /// ```
     /// # use rscache::{ Cache, store::MemoryStore };
     /// # fn main() -> rscache::Result<()> {
-    /// # let path = "./data/cache";
+    /// # let path = "./data/osrs_cache";
     /// let cache: Cache<MemoryStore> = Cache::new(path)?;
     /// 
     /// let index_id = 2; // Config index
@@ -125,7 +126,7 @@ impl<S: Store> Cache<S> {
     /// ```
     /// # use rscache::{ Cache, store::MemoryStore };
     /// # fn main() -> rscache::Result<()> {
-    /// # let path = "./data/cache";
+    /// # let path = "./data/osrs_cache";
     /// # let cache: Cache<MemoryStore> = Cache::new(path)?;
     /// let checksum = cache.create_checksum()?;
     /// #    Ok(())
@@ -133,25 +134,29 @@ impl<S: Store> Cache<S> {
     /// ```
     #[inline]
     pub fn create_checksum(&self) -> crate::Result<Checksum> {
-        let mut checksum = Checksum::new();
+        let mut checksum = Checksum::new(self.index_count());
 
         for index_id in 0..self.index_count() as u32 {
-            if index_id == 16 {
-                checksum.push(Entry { crc: 0, revision: 0 });
-                continue;
-            }
-
             if let Ok(buffer) = self.read(REFERENCE_TABLE, index_id) {	
-                if !buffer.is_empty() {
+                if !buffer.is_empty() && index_id != 47 {
                     let data = codec::decode(&buffer)?;
-
+                    
                     let (_, version) = cond(data[0] >= 6, be_u32)(&data[1..5])?;
                     let version = if let Some(version) = version { version } else { 0 };
 
-                    checksum.push(Entry { 
-                        crc: crc32::checksum_ieee(&buffer), 
-                        revision: version,
-                    });
+                    let mut hasher = Whirlpool::new();
+                    hasher.update(&buffer);
+                    let hash = hasher.finalize().as_slice().to_vec();
+
+                    checksum.push(
+                        Entry { 
+                            crc: crc32::checksum_ieee(&buffer), 
+                            revision: version,
+                            hash
+                        }
+                    );
+                } else {
+                    checksum.push(Entry::default());
                 }
             };
         }
@@ -174,7 +179,7 @@ impl<S: Store> Cache<S> {
     /// #   pub fn new(buffer: Vec<u8>) -> Self { Self {} }
     /// # }
     /// # fn main() -> rscache::Result<()> {
-    /// # let cache: Cache<MemoryStore> = Cache::new("./data/cache")?;
+    /// # let cache: Cache<MemoryStore> = Cache::new("./data/osrs_cache")?;
     /// let huffman_table = cache.huffman_table()?;
     /// let huffman = Huffman::new(huffman_table);
     /// # Ok(())
@@ -205,7 +210,7 @@ impl<S: Store> Cache<S> {
     /// ```
     /// # use rscache::{ Cache, store::MemoryStore, codec };
     /// # fn main() -> rscache::Result<()> {
-    /// # let path = "./data/cache";
+    /// # let path = "./data/osrs_cache";
     /// # let cache: Cache<MemoryStore> = Cache::new(path)?;
     /// let index_id = 10;
     /// let archive = cache.archive_by_name(index_id, "huffman")?;
@@ -249,7 +254,7 @@ impl<S: Store> Cache<S> {
     /// ```
     /// # use rscache::{ Cache, store::MemoryStore };
     /// # fn main() -> rscache::Result<()> {
-    /// # let cache: Cache<MemoryStore> = Cache::new("./data/cache")?;
+    /// # let cache: Cache<MemoryStore> = Cache::new("./data/osrs_cache")?;
     /// for index in 0..cache.index_count() {
     ///     // ...
     /// }

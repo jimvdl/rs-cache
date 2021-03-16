@@ -3,13 +3,13 @@ use rscache::{ Cache, store::MemoryStore };
 // This example illustrates the osrs update protocol.
 // You can use this to handle client requests for cache data.
 fn main() -> rscache::Result<()> {
-    let cache: Cache<MemoryStore> = Cache::new("./data/cache")?;
+    let cache: Cache<MemoryStore> = Cache::new("./data/osrs_cache")?;
 
-    let index_id = 255; // Config index.
-    let archive_id = 10; // Archive containing all item definitions.
+    let index_id = 255;
+    let archive_id = 10;
 
     let mut buffer = if index_id == 255 && archive_id == 255 {
-		cache.create_checksum()?.encode()?
+		cache.create_checksum()?.encode_osrs()?
 	} else {
 		let mut buf = cache.read(index_id, archive_id)?;
 		if index_id != 255 {

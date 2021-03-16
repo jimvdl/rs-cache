@@ -26,7 +26,7 @@ use crate::error::CompressionError;
 pub enum Compression {
 	None,
 	Bzip2,
-	Gzip
+	Gzip,
 }
 
 /// Encodes a buffer, with the selected `Compression` format. Revision is an optional argument
@@ -111,7 +111,7 @@ pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> c
 /// use rscache::codec::Compression;
 /// 
 /// # fn main() -> rscache::Result<()> {
-/// # let path = "./data/cache";
+/// # let path = "./data/osrs_cache";
 /// # let cache: Cache<MemoryStore> = Cache::new(path)?;
 /// let buffer = cache.read(2, 10)?;
 /// let decoded_buffer = rscache::codec::decode(&buffer)?;

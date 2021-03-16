@@ -71,17 +71,22 @@ impl Definition for ObjectDefinition {
 }
 
 fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ObjectDefinition> {
-	let mut obj_def = ObjectDefinition::default();
-    obj_def.id = id;
-    obj_def.model_data.decord_displacement = 16;
-    obj_def.interact_type = 2;
-    obj_def.model_data.size_x = 1;
-    obj_def.model_data.size_y = 1;
-    obj_def.model_data.model_size_x = 128;
-    obj_def.model_data.model_size_z = 128;
-    obj_def.model_data.model_size_y = 128;
-    obj_def.blocks_projectile = true;
-    obj_def.solid = true;
+    let mut obj_def = ObjectDefinition {
+        id,
+        interact_type: 2,
+        blocks_projectile: true,
+        solid: true,
+        model_data: ObjectModelData {
+            decord_displacement: 16,
+            size_x: 1,
+            size_y: 1,
+            model_size_x: 128,
+            model_size_y: 128,
+            model_size_z: 128,
+            .. ObjectModelData::default()
+        },
+        .. ObjectDefinition::default()
+    };
 
 	loop {
 		let opcode = reader.read_u8()?;

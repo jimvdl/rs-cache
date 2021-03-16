@@ -46,36 +46,40 @@ impl Store for FileStore {
 			let offset = current_sector as usize * SECTOR_SIZE;
 			
 			if remaining >= data_len {
-                self.handle.borrow_mut().seek(SeekFrom::Start(offset as u64))?;
-                self.handle.borrow_mut().read_exact(&mut data_block)?;
-					
-				let sector = match Sector::new(&data_block, expanded_header) {
-					Ok(sector) => sector,
+				let mut handle = self.handle.borrow_mut();
+                handle.seek(SeekFrom::Start(offset as u64))?;
+                handle.read_exact(&mut data_block)?;
+				
+				match Sector::new(&data_block, false) {
+					Ok(sector) => {
+						sector.header.validate(archive.id, chunk, archive.index_id)?;
+
+						current_sector = sector.header.next;
+						data[current..current + data_len].copy_from_slice(sector.data_block);
+					},
 					Err(_) => return Err(ParseError::Sector(archive.sector).into())
 				};
-				sector.header.validate(archive.id, chunk, archive.index_id)?;
-
-				current_sector = sector.header.next;
 
 				remaining -= data_len;
-				data[current..current + data_len].copy_from_slice(sector.data_block);
 				current += data_len;
 			} else {
 				if remaining == 0 { break; }
 
 				let mut data_block = vec![0; remaining + header_len];
 
-                self.handle.borrow_mut().seek(SeekFrom::Start(offset as u64))?;
-				self.handle.borrow_mut().read_exact(&mut data_block)?;
-				
-				let sector = match Sector::new(&data_block, expanded_header) {
-					Ok(sector) => sector,
+				let mut handle = self.handle.borrow_mut();
+                handle.seek(SeekFrom::Start(offset as u64))?;
+				handle.read_exact(&mut data_block)?;
+
+				match Sector::new(&data_block, false) {
+					Ok(sector) => {
+						sector.header.validate(archive.id, chunk, archive.index_id)?;
+						data[current..current + remaining].copy_from_slice(sector.data_block);
+
+						break;
+					},
 					Err(_) => return Err(ParseError::Sector(archive.sector).into())
 				};
-				sector.header.validate(archive.id, chunk, archive.index_id)?;
-
-				data[current..current + remaining].copy_from_slice(sector.data_block);
-				break;
 			}
 
 			chunk += 1;

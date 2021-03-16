@@ -69,14 +69,19 @@ impl Definition for NpcDefinition {
 }
 
 fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<NpcDefinition> {
-	let mut npc_def = NpcDefinition::default();
-    npc_def.id = id;
-    npc_def.interactable = true;
-    npc_def.visible_on_minimap = true;
-    npc_def.model_data.rotate_flag = true;
-    npc_def.model_data.width_scale = 128;
-    npc_def.model_data.height_scale = 128;
-    npc_def.model_data.rotate_speed = 32;
+    let mut npc_def = NpcDefinition {
+        id,
+        interactable: true,
+        visible_on_minimap: true,
+        model_data: NpcModelData {
+            rotate_flag: true,
+            width_scale: 128,
+            height_scale: 128,
+            rotate_speed: 32,
+            .. NpcModelData::default()
+        },
+        .. NpcDefinition::default()
+    };
 
 	loop {
         let opcode = reader.read_u8()?;

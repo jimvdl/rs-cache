@@ -92,6 +92,7 @@ impl fmt::Display for CacheError {
 pub enum ReadError {
 	IndexNotFound(u8),
 	ArchiveNotFound(u8, u32),
+	ReferenceTableNotFound,
 	NameNotInArchive(i32, String, u8),
 	SectorArchiveMismatch(u32, u32),
 	SectorChunkMismatch(usize, usize),
@@ -107,6 +108,7 @@ impl fmt::Display for ReadError {
 		match self {
 			Self::IndexNotFound(id) => write!(f, "Index {} not found.", id),
 			Self::ArchiveNotFound(index_id, archive_id) => write!(f, "Index {} does not contain archive group {}.", index_id, archive_id),
+			Self::ReferenceTableNotFound => write!(f, "Reference table (index 255) not found."),
 			Self::NameNotInArchive(hash, name, index_id) => write!(f, "Identifier hash {} for name {} not found in index {}.", hash, name, index_id),
 			Self::SectorArchiveMismatch(received, expected) => write!(f, "Sector archive id was {} but expected {}.", received, expected),
 			Self::SectorChunkMismatch(received, expected) => write!(f, "Sector chunk was {} but expected {}.", received, expected),

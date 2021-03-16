@@ -1,6 +1,7 @@
 //! Helpful utility functions, macros and structs.
 
 /// All OSRS specific utilities.
+#[cfg(feature = "osrs")]
 pub mod osrs;
 
 use std::{ 
@@ -19,9 +20,10 @@ use crate::{
     codec,
     arc,
     ext::ReadExt,
-    def,
+    error::ReadError,
 };
 
+#[cfg(feature = "osrs")]
 #[macro_use]
 macro_rules! impl_loader {
    ($ldr:ident, $def:ty, $defs_field:ident, archive_id: $arc_id:expr) => {
@@ -99,7 +101,7 @@ pub mod djd2 {
 /// use rscache::{ Store, util };
 /// 
 /// # fn main() -> rscache::Result<()> {
-/// let store: CustomStore = util::load_store("./data/cache")?;
+/// let store: CustomStore = util::load_store("./data/osrs_cache")?;
 /// # Ok(())
 /// # }
 /// 
@@ -138,6 +140,11 @@ pub fn load_indices<P: AsRef<Path>>(path: P) -> crate::Result<HashMap<u8, Index>
     let path = path.as_ref();
 	let mut indices = HashMap::new();
 
+    let ref_tbl_path = path.join(format!("{}{}", IDX_PREFIX, REFERENCE_TABLE));
+    if !ref_tbl_path.exists() {
+        return Err(ReadError::ReferenceTableNotFound.into());
+    }
+
 	for index_id in 0..=REFERENCE_TABLE {
 		let path = path.join(format!("{}{}", IDX_PREFIX, index_id));
 
@@ -148,7 +155,7 @@ pub fn load_indices<P: AsRef<Path>>(path: P) -> crate::Result<HashMap<u8, Index>
 			index.read_to_end(&mut index_buffer)?;
 			indices.insert(index_id, Index::new(index_id, &index_buffer)?);
 		}
-	}
+    }
 
 	Ok(indices)
 }
@@ -165,7 +172,7 @@ pub fn load_indices<P: AsRef<Path>>(path: P) -> crate::Result<HashMap<u8, Index>
 /// # use std::collections::HashMap;
 /// # use rscache::{ OsrsCache, util, def::osrs::ItemDefinition };
 /// # fn main() -> rscache::Result<()> {
-/// # let cache = OsrsCache::new("./data/cache")?;
+/// # let cache = OsrsCache::new("./data/osrs_cache")?;
 /// let archive_id = 10; // Archive containing item definitions.
 /// let item_defs: HashMap<u16, ItemDefinition> = util::parse_defs(&cache, archive_id)?;
 /// # Ok(())
@@ -192,20 +199,7 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
     Ok(definitions)
 }
 
-#[inline]
-pub fn load_map_def<S: Store>(cache: &Cache<S>, region_id: u16) -> crate::Result<Option<def::osrs::MapDefinition>> {
-    let x = region_id as u32 >> 8;
-    let y = region_id as u32 & 0xFF;
 
-    if let Ok(map_archive) = cache.archive_by_name(5, format!("m{}_{}", x, y)) {
-        let buffer = cache.read_archive(&map_archive)?;
-        let buffer = codec::decode(&buffer)?;
-        
-        return Ok(Some(def::osrs::MapDefinition::new(region_id, &buffer)?))
-    }
-
-    Ok(None)
-}
 
 /// Useful for decoding parameters when reading from definition buffers.
 /// 

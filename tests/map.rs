@@ -1,5 +1,6 @@
 mod common;
 
+#[cfg(feature = "osrs")]
 mod osrs {
     use super::common;
     
@@ -11,7 +12,7 @@ mod osrs {
         let region_base_x = ((lumbridge_region_id as u32 >> 8) & 0xFF) << 6;
         let region_base_y = (lumbridge_region_id as u32 & 0xFF) << 6;
 
-        let map_def = rscache::util::load_map_def(&cache, lumbridge_region_id)
+        let map_def = rscache::util::osrs::load_map_def(&cache, lumbridge_region_id)
             .expect(&format!("Failed to load map definition for region: {}", lumbridge_region_id))
             .expect(&format!("Map data for region {} not found.", lumbridge_region_id));
 

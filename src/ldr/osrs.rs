@@ -5,7 +5,7 @@
 //! use rscache::ldr::osrs::ItemLoader;
 //! 
 //! # fn main() -> rscache::Result<()> {
-//! let cache = OsrsCache::new("./data/cache")?;
+//! let cache = OsrsCache::new("./data/osrs_cache")?;
 //! let item_ldr = ItemLoader::new(&cache)?;
 //! 
 //! if let Some(def) = item_ldr.load(1042) {

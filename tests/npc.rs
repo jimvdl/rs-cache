@@ -1,5 +1,6 @@
 mod common;
 
+#[cfg(feature = "osrs")]
 mod osrs {
     use super::common;
     

@@ -1,5 +1,6 @@
 mod common;
 
+#[cfg(feature = "osrs")]
 mod osrs {
     use super::common;
 
@@ -71,6 +72,45 @@ mod osrs {
     #[test]
     fn read_from_2_25000_fails() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
+        
+        assert!(cache.read(2, 25_000).is_err());
+        
+        Ok(())
+    }
+}
+
+mod rs3 {
+    use super::common;
+
+    #[test]
+    fn read_from_0_25() -> rscache::Result<()> {
+        let cache = common::rs3::setup()?;
+        
+        let archive = cache.read(0, 25)?;
+        
+        let hash = common::hash(&archive);
+        assert_eq!("81e455fc58fe5ac98fee4df5b78600bbf43e83f7", &hash);
+        assert_eq!(1576, archive.len());
+        
+        Ok(())
+    }
+
+    #[test]
+    fn read_from_7_0() -> rscache::Result<()> {
+        let cache = common::rs3::setup()?;
+        
+        let archive = cache.read(7, 0)?;
+
+        let hash = common::hash(&archive);
+        assert_eq!("b33919c6e4677abc6ec1c0bdd9557f820a163559", &hash);
+        assert_eq!(529, archive.len());
+        
+        Ok(())
+    }
+
+    #[test]
+    fn read_from_2_25000_fails() -> rscache::Result<()> {
+        let cache = common::rs3::setup()?;
         
         assert!(cache.read(2, 25_000).is_err());
         

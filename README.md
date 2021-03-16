@@ -22,6 +22,7 @@ Integration tests are running on RuneScape revision 180, which you can run at an
 The minimum supported `rustc` version is `1.41`.
 
 This crate is passively maintained. Additional features will be implemented once they are needed for my own server.
+The public API of this crate is still evolving due to constant discoveries and overhauls to improve the overal usage.
 __If you require a certain feature feel free to open an issue.__
 
 ## Usage

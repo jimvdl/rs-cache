@@ -110,11 +110,8 @@ fn parse_identified(buffer: &[u8]) -> crate::Result<(&[u8], bool)> {
 
 fn parse_identifiers(buffer: &[u8], identified: bool, archive_count: usize) -> crate::Result<(&[u8], Vec<i32>)> {
     let (buffer, taken) = cond(identified, take(archive_count * 4))(buffer)?;
-    let (_, mut identifiers) = many0(be_i32)(match taken {
-        Some(taken) => taken,
-        None => &[]
-    })?;
-    
+    let (_, mut identifiers) = many0(be_i32)(taken.unwrap_or(&[]))?;
+
     if identifiers.len() != archive_count {
         identifiers = vec![0; archive_count]; 
     }
