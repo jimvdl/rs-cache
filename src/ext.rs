@@ -18,6 +18,7 @@ pub trait ReadExt: Read {
     fn read_i64(&mut self) -> io::Result<i64>;
     fn read_u128(&mut self) -> io::Result<u128>;
     fn read_i128(&mut self) -> io::Result<i128>;
+    fn read_smart(&mut self) -> io::Result<u32>;
     fn read_string(&mut self) -> io::Result<String>;
 }
 
@@ -100,14 +101,39 @@ impl<T: Read> ReadExt for T {
         Ok(self.read_u128()? as i128)
     }
 
+    // clean this up.
+    // can't find a way to peek the first byte, even 
+    // an iterator reads the first byte... 
+    #[inline]
+    fn read_smart(&mut self) -> io::Result<u32> {
+        let byte = self.read_u8()?;
+
+        if (byte as i64 ^ 0xffffffff) as i8 <= -1 {
+            let value = self.read_u8()?;
+            let mut arr = [0; 2];
+            arr[0] = byte;
+            arr[1] = value;
+
+            return Ok(u16::from_be_bytes(arr) as u32)
+        }
+
+        let mut buffer = [0; 3];
+        self.read_exact(&mut buffer)?;
+        let mut arr = [0; 4];
+        arr[0] = byte;
+        arr[1] = buffer[0];
+        arr[2] = buffer[1];
+        arr[3] = buffer[2];
+
+        Ok(u32::from_be_bytes(arr) & 0x7fffffff)
+    }
+
     #[inline]
     fn read_string(&mut self) -> io::Result<String> {
         let mut bytes = Vec::new();
     
         loop {
-            let mut buffer = [0; 1];
-            self.read_exact(&mut buffer)?;
-            let byte = u8::from_be_bytes(buffer);
+            let byte = self.read_u8()?;
             if byte != 0 {
                 bytes.push(byte);
             } else {

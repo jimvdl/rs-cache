@@ -1,11 +1,15 @@
-//! [RuneScape](https://oldschool.runescape.com/) cache api for basic
+//! [Oldschool RuneScape](https://oldschool.runescape.com/) 
+//! & [RuneScape 3](https://www.runescape.com/) cache api for basic
 //! and simple cache interactions.
 //! 
 //! # Features
 //! 
-//! Currently rs-cache only supports OSRS with the features listed below.
+//! Currently rs-cache offers limited support for OSRS & RS3 with the features listed below.
 //! This crate also contains tools to help you with implementing your own cache
 //! if the currently supplied cache is insufficient for a specific use-case.
+//! 
+//! Note: this crate is still a work in progress and might contain bugs and is still
+//! incomplete.
 //! 
 //! The following features are currently provided:
 //! - Reading from the cache.
@@ -14,10 +18,12 @@
 //! - Compression and decompression:
 //!   - [Gzip](https://crates.io/crates/libflate)
 //!   - [Bzip2](https://crates.io/crates/bzip2)
-//! - Loaders
+//! - OSRS Loaders
 //!   - [`ItemLoader`](ldr/osrs/struct.ItemLoader.html)
 //!   - [`NpcLoader`](ldr/osrs/struct.NpcLoader.html)
 //!   - [`ObjectLoader`](ldr/osrs/struct.ObjectLoader.html)
+//! - RS3 Loaders
+//!   - [`ItemLoader`](ldr/rs3/struct.ItemLoader.html)
 //! - Utilities
 //!   - Huffman decompressor.
 //!   - Isaac randomizer.
@@ -25,12 +31,13 @@
 //! 
 //! Features to be implemented in the future: 
 //! - Writing data to the cache.
-//! - RS3 protocol support. (including LZMA compression)
+//! - LZMA compression.
 //! 
 //! # Quick Start
 //! 
 //! The quickest and easiest way to get started is by using 
-//! [`OsrsCache`](type.OsrsCache.html). 
+//! [`OsrsCache`](type.OsrsCache.html) or [`Rs3Cache`](type.Rs3Cache.html).
+//! (they work the same but use different reading methods)
 //! 
 //! ```
 //! use rscache::OsrsCache;
@@ -94,7 +101,7 @@
     clippy::explicit_iter_loop, 
     clippy::filter_map, 
     clippy::filter_map_next, 
-    clippy::find_map, 
+    clippy::manual_find_map, 
     clippy::get_unwrap,
     clippy::items_after_statements, 
     clippy::large_digit_groups, 
@@ -134,10 +141,10 @@ pub mod sec;
 
 /// Type alias for `Cache<MemoryStore>`.
 #[cfg(feature = "osrs")]
-pub type OsrsCache = Cache<store::MemoryStore>;
+pub type OsrsCache = Cache<MemoryStore>;
 /// Type alias for `Cache<FileStore>`.
-// #[cfg(feature = "rs3")]
-pub type Rs3Cache = Cache<store::FileStore>;
+#[cfg(feature = "rs3")]
+pub type Rs3Cache = Cache<FileStore>;
 
 #[doc(inline)]
 pub use error::Result;

@@ -192,7 +192,7 @@ impl<S: Store> Cache<S> {
         let archive = self.archive_by_name(index_id, "huffman")?;
         let buffer = self.store.read(&archive)?;
 		
-		Ok(codec::decode(&buffer)?)
+		codec::decode(&buffer)
     }
 
     /// Searches for the archive which contains the given name hash in the given
@@ -233,7 +233,7 @@ impl<S: Store> Cache<S> {
         let archives = arc::parse_archive_data(&data)?;
 
         for archive_data in archives {
-            if archive_data.hash == hash {
+            if archive_data.name_hash == hash {
                 match index.archives.get(&(archive_data.id as u32)) {
                     Some(archive) => return Ok(*archive),
                     None => return Err(
@@ -294,6 +294,6 @@ impl<S: Store> CacheRead for Cache<S> {
             None => return Err(ReadError::ArchiveNotFound(index_id, archive_id).into())
         };
 
-        Ok(self.store.read(archive)?)
+        self.store.read(archive)
     }
 }

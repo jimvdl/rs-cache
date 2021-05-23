@@ -1,3 +1,4 @@
+#[allow(clippy::too_many_lines)]
 mod item_def;
 mod npc_def;
 #[allow(clippy::too_many_lines)]

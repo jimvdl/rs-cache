@@ -58,7 +58,7 @@ impl IsaacRand {
 		let mem = vec![0; SIZE];
 		let mut rsl = vec![0; SIZE];
 		
-		rsl[..seed.len()].clone_from_slice(&seed[..]);
+		rsl[..seed.len()].clone_from_slice(seed);
 
 		let mut isaac = Self { a: 0, b: 0, c: 0, count: 0, mem, rsl };
 		isaac.init();

@@ -50,7 +50,7 @@ impl Store for FileStore {
                 handle.seek(SeekFrom::Start(offset as u64))?;
                 handle.read_exact(&mut data_block)?;
 				
-				match Sector::new(&data_block, false) {
+				match Sector::new(&data_block, expanded_header) {
 					Ok(sector) => {
 						sector.header.validate(archive.id, chunk, archive.index_id)?;
 
@@ -71,7 +71,7 @@ impl Store for FileStore {
                 handle.seek(SeekFrom::Start(offset as u64))?;
 				handle.read_exact(&mut data_block)?;
 
-				match Sector::new(&data_block, false) {
+				match Sector::new(&data_block, expanded_header) {
 					Ok(sector) => {
 						sector.header.validate(archive.id, chunk, archive.index_id)?;
 						data[current..current + remaining].copy_from_slice(sector.data_block);

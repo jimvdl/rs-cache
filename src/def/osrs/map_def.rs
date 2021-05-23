@@ -33,7 +33,7 @@ impl Definition for MapDefinition {
         let x = id as u32 >> 8;
         let y = id as u32 & 0xFF;
 
-        let mut reader = BufReader::new(&buffer[..]);
+        let mut reader = BufReader::new(buffer);
 		let map_def = decode_buffer(x, y, &mut reader)?;
 
 		Ok(map_def)

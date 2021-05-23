@@ -7,7 +7,7 @@ use std::{
 use crate::{ Definition, ext::ReadExt, util };
 
 /// Contains all the information about a certain item fetched from the cache through
-/// the [ItemLoader](struct.ItemLoader.html).
+/// the [ItemLoader](../../ldr/osrs/struct.ItemLoader.html).
 /// 
 /// The `InventoryModelData` and the `CharacterModelData` were hidden in the documents
 /// because these are rarely accessed, they contain useless information in most use-cases. 
@@ -25,8 +25,8 @@ pub struct ItemDefinition {
 	pub tradable: bool,
 	pub noted_id: Option<u16>,
 	pub noted_template: Option<u16>,
-	pub count_obj: Option<[i32; 10]>,
-	pub count_co: [u16; 10],
+	pub stack_ids: Option<[u16; 10]>,
+	pub stack_count: Option<[u16; 10]>,
 	pub team: u8,
 	pub bought_link: Option<u16>,
 	pub bought_tempalte: Option<u16>,
@@ -73,7 +73,7 @@ pub struct CharacterModelData {
 impl Definition for ItemDefinition {
 	#[inline]
     fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
-        let mut reader = BufReader::new(&buffer[..]);
+        let mut reader = BufReader::new(buffer);
 		let item_def = decode_buffer(id, &mut reader)?;
 
 		Ok(item_def)
@@ -135,14 +135,18 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefin
 			30..=34 => { item_def.options[opcode as usize - 30] = reader.read_string()?; },
 			35..=39 => { item_def.interface_options[opcode as usize - 35] = reader.read_string()?; },
 			40 => {
-				let len = reader.read_u8()?;
+				let len = reader.read_u8()? as usize;
+				item_def.inventory_model_data.color_find = Vec::with_capacity(len);
+				item_def.inventory_model_data.color_replace = Vec::with_capacity(len);
 				for _ in 0..len {
 					item_def.inventory_model_data.color_find.push(reader.read_u16()?);
 					item_def.inventory_model_data.color_replace.push(reader.read_u16()?);
 				}
 			},
 			41 => {
-				let len = reader.read_u8()?;
+				let len = reader.read_u8()? as usize;
+				item_def.inventory_model_data.texture_find = Vec::with_capacity(len);
+				item_def.inventory_model_data.texture_replace = Vec::with_capacity(len);
 				for _ in 0..len {
 					item_def.inventory_model_data.texture_find.push(reader.read_u16()?);
 					item_def.inventory_model_data.texture_replace.push(reader.read_u16()?);
@@ -160,13 +164,21 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefin
 			97 => { item_def.noted_id = Some(reader.read_u16()?); },
 			98 => { item_def.noted_template = Some(reader.read_u16()?); item_def.stackable = true; },
 			100..=109 => {
-				if item_def.count_obj.is_none() {
-					item_def.count_obj = Some([0; 10]);
-					item_def.count_co = [0; 10];
+				item_def.stack_ids = Some([0; 10]);
+				item_def.stack_count = Some([0; 10]);
+				
+				match item_def.stack_ids {
+					Some(mut stack_ids) => {
+						stack_ids[opcode as usize - 100] = reader.read_u16()?;
+					},
+					_ => unreachable!()
 				}
-				reader.read_u16()?;
-				//count_obj[opcode as usize - 100] = c_obj;
-				item_def.count_co[opcode as usize - 100] = reader.read_u16()?;
+				match item_def.stack_count {
+					Some(mut stack_count) => {
+						stack_count[opcode as usize - 100] = reader.read_u16()?;
+					},
+					_ => unreachable!()
+				}
 			},
 			110 => { item_def.inventory_model_data.resize_x = reader.read_u16()?; },
 			111 => { item_def.inventory_model_data.resize_y = reader.read_u16()?; },

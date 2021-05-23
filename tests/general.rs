@@ -96,6 +96,7 @@ mod osrs {
     }
 }
 
+#[cfg(feature = "rs3")]
 mod rs3 {
     use super::common;
     use rscache::Rs3Cache;

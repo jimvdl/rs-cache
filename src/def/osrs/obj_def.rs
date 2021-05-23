@@ -62,7 +62,7 @@ pub struct ObjectModelData {
 impl Definition for ObjectDefinition {
     #[inline]
     fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
-        let mut reader = BufReader::new(&buffer[..]);
+        let mut reader = BufReader::new(buffer);
         let mut obj_def = decode_buffer(id, &mut reader)?;
         post(&mut obj_def);
 

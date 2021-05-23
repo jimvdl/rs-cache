@@ -3,6 +3,9 @@
 /// OSRS specific loaders.
 #[cfg(feature = "osrs")]
 pub mod osrs;
+/// RS3 specific loaders.
+#[cfg(feature = "rs3")]
+pub mod rs3;
 
 use crate::{ Cache, Store, Definition };
 
