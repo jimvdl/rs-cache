@@ -9,6 +9,8 @@ use crate::{
     arc,
 };
 
+pub const ID_BLOCK_SIZE: usize = 256;
+
 #[macro_use]
 macro_rules! impl_rs3_loader {
    ($ldr:ident, $def:ty, $defs_field:ident, archive_id: $arc_id:expr) => {
@@ -40,6 +42,24 @@ macro_rules! impl_rs3_loader {
    };
 }
 
+/// Parses all definitions read from the passed `Cache<S>` from `archive_id`.
+/// 
+/// # Errors
+/// 
+/// Can return multiple errors: if reading, decoding or parsing definition buffers fail.
+/// 
+/// # Examples
+/// 
+/// ```
+/// # use std::collections::HashMap;
+/// # use rscache::{ Rs3Cache, util, def::rs3::ItemDefinition };
+/// # fn main() -> rscache::Result<()> {
+/// # let cache = Rs3Cache::new("./data/rs3_cache")?;
+/// let archive_id = 19; // Archive containing item definitions.
+/// let item_defs: HashMap<u16, ItemDefinition> = util::rs3::parse_defs(&cache, archive_id)?;
+/// # Ok(())
+/// # }
+/// ```
 #[inline]
 pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) -> crate::Result<HashMap<u16, T>> {
     let buffer = cache.read(REFERENCE_TABLE, archive_id)?;
@@ -60,7 +80,7 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
             definitions.insert(id as u16, T::new(id as u16, &data)?);
         }
 
-        base_id += 256;
+        base_id += ID_BLOCK_SIZE;
     }
 
     Ok(definitions)

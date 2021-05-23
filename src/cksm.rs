@@ -104,6 +104,9 @@ impl Checksum {
     /// Consumes the `Checksum` and encodes it into a byte buffer
     /// for RS3 clients.
     /// 
+    /// Note: RS3 clients use RSA. The encoding process requires an exponent
+    /// and a modulus to encode the buffer properly.
+    /// 
     /// After encoding the checksum it can be sent to the client.
     /// 
     /// # Errors
