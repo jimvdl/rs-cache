@@ -1,8 +1,6 @@
 //! Validator for the cache.
 
-#[cfg(feature = "osrs")]
 use crate::{ codec::Compression, codec };
-#[cfg(feature = "rs3")]
 use num_bigint::{ BigInt, Sign };
 
 #[derive(Debug, Clone)]
@@ -88,7 +86,6 @@ impl Checksum {
     ///     Ok(())
     /// }
     /// ```
-    #[cfg(feature = "osrs")]
     #[inline]
     pub fn encode_osrs(self) -> crate::Result<Vec<u8>> {
         let mut buffer = Vec::with_capacity(self.entries.len() * 8);
@@ -130,7 +127,6 @@ impl Checksum {
     ///     Ok(())
     /// }
     /// ```
-    #[cfg(feature = "rs3")]
     #[inline]
     pub fn encode_rs3(self, exponent: &[u8], modulus: &[u8]) -> crate::Result<Vec<u8>> {
         let index_count = self.index_count - 1;
@@ -164,7 +160,6 @@ impl Checksum {
     }
 }
 
-#[cfg(feature = "rs3")]
 use whirlpool::{ Whirlpool, Digest };
 
 impl Default for Entry {

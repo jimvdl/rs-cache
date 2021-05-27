@@ -100,7 +100,6 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefin
             12 => { item_def.cost = reader.read_i32()?; },
             13 => { item_def.equip_slot = reader.read_u8()?; },
             14 => { item_def.equip_hide_slot1 = reader.read_u8()?; },
-            15 => {  },
             16 => item_def.members_only = true,
 			23 => { item_def.model_data.male_equip1 = reader.read_smart()?; },
 			24 => { item_def.model_data.male_equip2 = reader.read_smart()?; },
@@ -191,7 +190,7 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefin
 				}
             },
 			249 => { util::read_parameters(reader)?; },
-			156 | 157 | 165 | 167 => {},
+			15 | 156 | 157 | 165 | 167 => {},
 			96 | 113 | 114 | 134 => { reader.read_u8()?; },
 			18 | 44 | 45 | 94 | 95 | 110..=112 | 142..=146 | 150..=154 | 161..=163 => { reader.read_u16()?; },
 			90..=93 | 242..=248 => { reader.read_smart()?; },

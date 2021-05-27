@@ -1,11 +1,9 @@
 //! Helpful utility functions, macros and structs.
 
 /// All OSRS specific utilities.
-#[cfg(feature = "osrs")]
 #[macro_use]
 pub mod osrs;
 /// All RS3 specific utilities.
-#[cfg(feature = "rs3")]
 #[macro_use]
 pub mod rs3;
 

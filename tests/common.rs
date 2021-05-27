@@ -9,7 +9,6 @@ pub fn hash(buffer: &[u8]) -> String {
     m.digest().to_string()
 }
 
-#[cfg(feature = "osrs")]
 pub mod osrs {
     use rscache::{ Cache, store::MemoryStore };
     
@@ -36,7 +35,6 @@ pub mod osrs {
     }
 }
 
-#[cfg(feature = "rs3")]
 pub mod rs3 {
     use rscache::{ Cache, store::FileStore };
 

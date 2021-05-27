@@ -1,6 +1,6 @@
 [package]
 name = "rs-cache"
-version = "0.4.0" # Remember to update usage
+version = "0.4.1" # Remember to update usage
 authors = ["jimvdl <jimvdlind@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -11,11 +11,6 @@ readme = "README.md"
 keywords = ["runescape", "osrs", "rs3"]
 exclude = [".gitignore", "data/*"]
 categories = ["development-tools"]
-
-[features]
-default = ["osrs"]
-osrs = []
-rs3 = ["num-bigint"]
 
 [lib]
 name = "rscache"
@@ -28,16 +23,7 @@ libflate = "0.1.27"
 nom = "5.1.2"
 itertools = "0.9.0"
 whirlpool = "0.9.0"
-# num-bigint rs3 specific
-num-bigint = { version = "0.3.1", optional = true }
+num-bigint = "0.3.1"
 
 [dev-dependencies]
 sha1 = "0.6.0"
-
-[[example]]
-name = "osrs_update_protocol"
-required-features = ["osrs"]
-
-[[example]]
-name = "rs3_update_protocol"
-required-features = ["rs3"]

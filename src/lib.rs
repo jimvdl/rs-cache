@@ -140,10 +140,8 @@ pub mod ldr;
 pub mod sec;
 
 /// Type alias for `Cache<MemoryStore>`.
-#[cfg(feature = "osrs")]
 pub type OsrsCache = Cache<MemoryStore>;
 /// Type alias for `Cache<FileStore>`.
-#[cfg(feature = "rs3")]
 pub type Rs3Cache = Cache<FileStore>;
 
 #[doc(inline)]
