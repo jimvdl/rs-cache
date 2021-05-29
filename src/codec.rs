@@ -139,7 +139,7 @@ fn compress_bzip2(data: &[u8]) -> io::Result<Vec<u8>> {
 }
 
 fn compress_gzip(data: &[u8]) -> io::Result<Vec<u8>> {
-	let compressor = BzEncoder::new(data.to_owned(), bzip2::Compression::Default);
+	let compressor = BzEncoder::new(data.to_owned(), bzip2::Compression::default());
 	let mut compressed_data = compressor.finish()?;
 	compressed_data.drain(..4);
 

@@ -18,9 +18,10 @@ path = "src/lib.rs"
 
 [dependencies]
 crc = "1.8.1"
-bzip2 = "0.3.3"
+bzip2 = "0.4"
 libflate = "0.1.27"
-nom = "5.1.2"
+# nom uses lexical-core by default which doesn't compile on nightly 1.54
+nom = { version = "6.1.2", default-features = false, features = ["std", "bitvec"] }
 itertools = "0.9.0"
 whirlpool = "0.9.0"
 num-bigint = "0.3.1"
