@@ -3,7 +3,7 @@ use rscache::{ Cache, Store, arc::Archive };
 
 fn main() -> rscache::Result<()> {
     // Uses default Cache struct with custom store.
-    let cache: Cache<CustomStore> = Cache::new("./data/cache")?;
+    let cache: Cache<CustomStore> = Cache::new("./data/osrs_cache")?;
     let buffer = cache.read(255, 18)?;
 
     println!("buffer: {:?}", buffer);

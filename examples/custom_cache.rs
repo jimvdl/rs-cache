@@ -14,7 +14,7 @@ use rscache::{
 };
 
 fn main() -> rscache::Result<()> {
-    let cache = CustomCache::new("./data/cache")?;
+    let cache = CustomCache::new("./data/osrs_cache")?;
     let buffer = cache.read(255, 2)?;
 
     println!("buffer: {:?}", buffer);
