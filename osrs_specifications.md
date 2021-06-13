@@ -20,7 +20,6 @@ Reference table: `main_file_cache.idx255`.
 | Structs | Size (bytes) | Variables (with size) |
 | - |:-:| -:|
 | Archive | 6 | `sector` - 3<br/>`length` - 3
-| Sector | 520 | _See sector layout below_ |
 | Sector header | 8 | `archive_id` - 2<br/>`chunk` - 2<br/>`next` - 3<br/>`index_id` - 1 |
 | Sector data | 512 | `data`
 
