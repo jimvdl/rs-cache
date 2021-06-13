@@ -18,6 +18,8 @@ Useful links:\
 
 Currently supports both OSRS & RS3, although both are still limited.
 
+The `osrs_specifications.md` & `rs3_specifications.md` documents (located in the root directory of this project) contain a detailed description of the design of the corresponding cache for educational purposes. Both documents are still a work in progress and are possibly incomplete.
+
 Integration tests are running on Oldschool RuneScape revision 180, which you can run at any time because the cache is included in the `./data/osrs_cache` directory. RS3 Integration tests are running on revision 904. The RS3 cache is too large to include on GitHub.
 
 The minimum supported `rustc` version is `1.41`.
