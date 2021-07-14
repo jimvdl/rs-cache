@@ -47,7 +47,7 @@ pub trait CacheRead {
 /// Main cache struct providing basic utilities.
 pub struct Cache<S: Store> {
     store: S,
-	indices: HashMap<u8, Index>
+	pub indices: HashMap<u8, Index>
 }
 
 impl<S: Store> Cache<S> {

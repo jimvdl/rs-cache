@@ -4,7 +4,7 @@ This document **(WIP)** contains specifications for the osrs cache.
 
 # General Details
 
-Main file containing all of the data: `main_file_cache.dat2`.\
+Main file containing all of the data: `main_file_cache.dat2`.
 
 The cache consists of multiple indices ranging from 0 to 255.\
 For example: 
