@@ -52,7 +52,6 @@ use crate::{
 //    };
 // }
 
-#[macro_use]
 macro_rules! impl_osrs_loader {
    ($ldr:ident, $def:ty, $defs_field:ident, index_id: $idx_id:expr $(, archive_id: $arc_id:expr)?) => {
         impl $ldr {
