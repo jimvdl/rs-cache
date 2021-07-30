@@ -20,9 +20,41 @@ use crate::{
     arc,
 };
 
+// #[macro_use]
+// macro_rules! impl_osrs_loader {
+//    ($ldr:ident, $def:ty, $defs_field:ident, $parse_func:ident, $($arg: expr),*) => {
+//         impl $ldr {
+//             #[inline]
+//             pub fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
+//                 Loader::new(cache)
+//             }
+
+//             #[inline]
+//             pub fn load(&self, id: u16) -> Option<&$def> {
+//                 Loader::load(self, id)
+//             }
+//         }
+
+//         impl Loader<$def> for $ldr {
+//             #[inline]
+//             fn new<S: Store>(cache: &Cache<S>) -> crate::Result<$ldr> {
+//                 // let $defs_field = util::osrs::parse_defs_from_archive(cache, $idx_id, $arc_id)?;
+//                 let $defs_field = $parse_func(cache, $($arg),*)?;
+
+//                 Ok($ldr { $defs_field })
+//             }
+
+//             #[inline]
+//             fn load(&self, id: u16) -> Option<&$def> {
+//                 self.$defs_field.get(&id)
+//             }
+//         }
+//    };
+// }
+
 #[macro_use]
 macro_rules! impl_osrs_loader {
-   ($ldr:ident, $def:ty, $defs_field:ident, archive_id: $arc_id:expr) => {
+   ($ldr:ident, $def:ty, $defs_field:ident, index_id: $idx_id:expr $(, archive_id: $arc_id:expr)?) => {
         impl $ldr {
             #[inline]
             pub fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
@@ -30,21 +62,27 @@ macro_rules! impl_osrs_loader {
             }
 
             #[inline]
-            pub fn load(&self, id: u16) -> Option<&$def> {
+            pub fn load(&self, id: u32) -> Option<&$def> {
                 Loader::load(self, id)
             }
         }
 
         impl Loader<$def> for $ldr {
             #[inline]
-            fn new<S: Store>(cache: &Cache<S>) -> crate::Result<$ldr> {
-                let $defs_field = util::osrs::parse_defs(cache, $arc_id)?;
+            fn new<S: Store>(cache: &Cache<S>) -> crate::Result<$ldr> {            
+                $(
+                    let $defs_field = parse_defs_from_archive(cache, $idx_id, $arc_id)?;
+
+                    return Ok($ldr { $defs_field });
+                )?
+
+                let $defs_field = parse_defs(cache, $idx_id)?;
 
                 Ok($ldr { $defs_field })
             }
 
             #[inline]
-            fn load(&self, id: u16) -> Option<&$def> {
+            fn load(&self, id: u32) -> Option<&$def> {
                 self.$defs_field.get(&id)
             }
         }
@@ -55,9 +93,9 @@ macro_rules! impl_osrs_loader {
 /// 
 /// Returns `None` if the given region id doesn't have a corresponding map definition.
 #[inline]
-pub fn load_map_def<S: Store>(cache: &Cache<S>, region_id: u16) -> crate::Result<Option<MapDefinition>> {
-    let x = region_id as u32 >> 8;
-    let y = region_id as u32 & 0xFF;
+pub fn load_map_def<S: Store>(cache: &Cache<S>, region_id: u32) -> crate::Result<Option<MapDefinition>> {
+    let x = region_id >> 8;
+    let y = region_id & 0xFF;
 
     if let Ok(map_archive) = cache.archive_by_name(5, format!("m{}_{}", x, y)) {
         let buffer = cache.read_archive(&map_archive)?;
@@ -82,20 +120,21 @@ pub fn load_map_def<S: Store>(cache: &Cache<S>, region_id: u16) -> crate::Result
 /// # use rscache::{ OsrsCache, util, def::osrs::ItemDefinition };
 /// # fn main() -> rscache::Result<()> {
 /// # let cache = OsrsCache::new("./data/osrs_cache")?;
+/// let index_id = 2; // Config index.
 /// let archive_id = 10; // Archive containing item definitions.
-/// let item_defs: HashMap<u16, ItemDefinition> = util::osrs::parse_defs(&cache, archive_id)?;
+/// let item_defs: HashMap<u16, ItemDefinition> = util::osrs::parse_defs_from_archive(&cache, index_id, archive_id)?;
 /// # Ok(())
 /// # }
 /// ```
 #[inline]
-pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) -> crate::Result<HashMap<u16, T>> {
-    let buffer = cache.read(REFERENCE_TABLE, 2)?;
+pub fn parse_defs_from_archive<T: Definition, S: Store>(cache: &Cache<S>, index_id: u8, archive_id: u32) -> crate::Result<HashMap<u32, T>> {
+    let buffer = cache.read(REFERENCE_TABLE, index_id as u32)?;
     let buffer = codec::decode(&buffer)?;
     
     let archives = arc::parse_archive_data(&buffer)?;
     let entry_count = archives[archive_id as usize - 1].entry_count;
     
-    let buffer = cache.read(2, archive_id)?;
+    let buffer = cache.read(index_id, archive_id)?;
     let buffer = codec::decode(&buffer)?;
 
     let archive_data = arc::parse_content(&buffer, entry_count)?;
@@ -103,6 +142,25 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
     let mut definitions = HashMap::new();
     for (id, buffer) in archive_data {
         definitions.insert(id, T::new(id, &buffer)?);
+    }
+
+    Ok(definitions)
+}
+
+// every archive is 1 def, not like the one above where one archive contains many defs
+#[inline]
+pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, index_id: u8) -> crate::Result<HashMap<u32, T>> {
+    let buffer = cache.read(REFERENCE_TABLE, index_id as u32)?;
+    let buffer = codec::decode(&buffer)?;
+    
+    let archives = arc::parse_archive_data(&buffer)?;
+    let mut definitions = HashMap::new();
+    
+    for archive in &archives {
+        let buffer = cache.read(index_id, archive.id as u32)?;
+        let buffer = codec::decode(&buffer)?;
+
+        definitions.insert(archive.id, T::new(archive.id, &buffer)?);
     }
 
     Ok(definitions)

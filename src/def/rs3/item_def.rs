@@ -9,7 +9,7 @@ use crate::{ Definition, ext::ReadExt, util };
 /// the [ItemLoader](../../ldr/rs3/struct.ItemLoader.html).
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ItemDefinition {
-	pub id: u16,
+	pub id: u32,
 	pub model_data: ModelData,
     pub name: String,
     pub stackable: bool,
@@ -56,7 +56,7 @@ pub struct ModelData {
 
 impl Definition for ItemDefinition {
 	#[inline]
-    fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
+    fn new(id: u32, buffer: &[u8]) -> io::Result<Self> {
         let mut reader = BufReader::new(buffer);
 		let item_def = decode_buffer(id, &mut reader)?;
 
@@ -64,7 +64,7 @@ impl Definition for ItemDefinition {
     }
 }
 
-fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefinition> {
+fn decode_buffer(id: u32, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefinition> {
     let mut item_def = ItemDefinition {
         id,
         options: [

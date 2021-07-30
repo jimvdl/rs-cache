@@ -13,7 +13,7 @@ use crate::{ Definition, ext::ReadExt, util };
 /// because these are rarely accessed, they contain useless information in most use-cases. 
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ItemDefinition {
-	pub id: u16,
+	pub id: u32,
 	pub inventory_model_data: InventoryModelData,
 	pub character_model_data: CharacterModelData,
 	pub name: String,
@@ -72,7 +72,7 @@ pub struct CharacterModelData {
 
 impl Definition for ItemDefinition {
 	#[inline]
-    fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
+    fn new(id: u32, buffer: &[u8]) -> io::Result<Self> {
         let mut reader = BufReader::new(buffer);
 		let item_def = decode_buffer(id, &mut reader)?;
 
@@ -80,7 +80,7 @@ impl Definition for ItemDefinition {
     }
 }
 
-fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefinition> {
+fn decode_buffer(id: u32, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefinition> {
 	let mut item_def = ItemDefinition {
 		id,
 		inventory_model_data: InventoryModelData {

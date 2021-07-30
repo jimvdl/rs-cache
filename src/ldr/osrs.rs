@@ -23,32 +23,52 @@
 
 use std::collections::HashMap;
 
-use crate::{ Store, Loader, util, Cache };
+use crate::{ Store, Loader, Cache };
+
+use crate::util::osrs::{
+    parse_defs,
+    parse_defs_from_archive
+};
 
 use crate::def::osrs::{
     ItemDefinition,
     NpcDefinition,
     ObjectDefinition,
+    ModelDefinition,
 };
 
 /// Loads all item definitions from the current cache.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ItemLoader {
-    pub items: HashMap<u16, ItemDefinition>
+    pub items: HashMap<u32, ItemDefinition>
 }
 
 /// Loads all npc definitions from the current cache.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct NpcLoader {
-    pub npcs: HashMap<u16, NpcDefinition>
+    pub npcs: HashMap<u32, NpcDefinition>
 }
 
 /// Loads all object definitions from the current cache.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ObjectLoader {
-    pub objs: HashMap<u16, ObjectDefinition>
+    pub objs: HashMap<u32, ObjectDefinition>
 }
 
-impl_osrs_loader!(ItemLoader, ItemDefinition, items, archive_id: 10);
-impl_osrs_loader!(NpcLoader, NpcDefinition, npcs, archive_id: 9);
-impl_osrs_loader!(ObjectLoader, ObjectDefinition, objs, archive_id: 6);
+/// Loads all model definitions from the current cache.
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
+pub struct ModelLoader {
+    pub mdls: HashMap<u32, ModelDefinition>
+}
+
+// TODO: make all fields private and impl iter on all loaders
+
+impl_osrs_loader!(ItemLoader, ItemDefinition, items, index_id: 2, archive_id: 10);
+impl_osrs_loader!(NpcLoader, NpcDefinition, npcs, index_id: 2, archive_id: 9);
+impl_osrs_loader!(ObjectLoader, ObjectDefinition, objs, index_id: 2, archive_id: 6);
+impl_osrs_loader!(ModelLoader, ModelDefinition, mdls, index_id: 7);
+
+// impl_osrs_loader!(ItemLoader, ItemDefinition, items, parse_defs_from_archive, 2, 10);
+// impl_osrs_loader!(NpcLoader, NpcDefinition, npcs, parse_defs_from_archive, 2, 9);
+// impl_osrs_loader!(ObjectLoader, ObjectDefinition, objs, parse_defs_from_archive, 2, 6);
+// impl_osrs_loader!(ModelLoader, ModelDefinition, mdls, parse_defs, 7);

@@ -29,9 +29,9 @@ pub struct MapData {
 
 impl Definition for MapDefinition {
     #[inline]
-    fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
-        let x = id as u32 >> 8;
-        let y = id as u32 & 0xFF;
+    fn new(id: u32, buffer: &[u8]) -> io::Result<Self> {
+        let x = id >> 8;
+        let y = id & 0xFF;
 
         let mut reader = BufReader::new(buffer);
 		let map_def = decode_buffer(x, y, &mut reader)?;

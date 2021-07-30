@@ -10,6 +10,7 @@ pub trait ReadExt: Read {
     fn read_i8(&mut self) -> io::Result<i8>;
     fn read_u16(&mut self) -> io::Result<u16>;
     fn read_i16(&mut self) -> io::Result<i16>;
+    fn read_smart_u16(&mut self) -> io::Result<u16>;
     fn read_u24(&mut self) -> io::Result<u32>;
     fn read_i24(&mut self) -> io::Result<i32>;
     fn read_u32(&mut self) -> io::Result<u32>;
@@ -47,6 +48,23 @@ impl<T: Read> ReadExt for T {
     #[inline]
     fn read_i16(&mut self) -> io::Result<i16> {
         Ok(self.read_u16()? as i16)
+    }
+
+    #[inline]
+    fn read_smart_u16(&mut self) -> io::Result<u16> {
+        let byte = self.read_u8()?;
+
+        if byte < 128 {
+           Ok(byte.wrapping_sub(64) as u16)
+        } else {
+            let value = self.read_u8()?;
+            let mut arr = [0; 2];
+            arr[0] = byte as u8;
+            arr[1] = value;
+
+            let value = u16::from_be_bytes(arr);
+            Ok(value - 0xC000)
+        }
     }
     
     #[inline]

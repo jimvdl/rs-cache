@@ -10,5 +10,5 @@ use crate::{ Cache, Store, Definition };
 /// The core of each Loader tasked with loading certain definitions.
 pub trait Loader<T: Definition>: Sized {
     fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self>;
-    fn load(&self, id: u16) -> Option<&T>;
+    fn load(&self, id: u32) -> Option<&T>;
 }

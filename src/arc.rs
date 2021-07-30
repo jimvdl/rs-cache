@@ -31,7 +31,7 @@ pub struct Archive {
 /// Represents archive metadata.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct ArchiveData {
-    pub id: u16,
+    pub id: u32,
     pub name_hash: i32,
     pub crc: u32,
     pub hash: i32,
@@ -42,7 +42,7 @@ pub struct ArchiveData {
 }
 
 #[inline]
-pub fn parse_content(buffer: &[u8], entry_count: usize) -> io::Result<HashMap<u16, Vec<u8>>> {
+pub fn parse_content(buffer: &[u8], entry_count: usize) -> io::Result<HashMap<u32, Vec<u8>>> {
     let chunks = buffer[buffer.len() - 1] as usize;
     let mut data = HashMap::new();
     let mut cached_chunks = Vec::new();
@@ -59,7 +59,7 @@ pub fn parse_content(buffer: &[u8], entry_count: usize) -> io::Result<HashMap<u1
             read_ptr += 4;
             chunk_size += delta;
 
-            cached_chunks.push((entry_id as u16, chunk_size as usize));
+            cached_chunks.push((entry_id as u32, chunk_size as usize));
         }
     }
     
@@ -97,10 +97,10 @@ pub fn parse_archive_data(buffer: &[u8]) -> crate::Result<Vec<ArchiveData>> {
     let mut last_archive_id = 0;
     let archive_data = izip!(ids, name_hashes, crcs, hashes, whirlpools, revisions, entry_counts, valid_ids);
     for (id, name_hash, crc, hash, whirlpool, revision, entry_count, valid_ids) in archive_data {
-        last_archive_id += id;
+        last_archive_id += id as i32;
         
         archives.push(ArchiveData { 
-            id: last_archive_id as u16, 
+            id: last_archive_id as u32, 
             name_hash,
             crc,
             hash,

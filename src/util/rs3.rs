@@ -21,7 +21,7 @@ macro_rules! impl_rs3_loader {
             }
 
             #[inline]
-            pub fn load(&self, id: u16) -> Option<&$def> {
+            pub fn load(&self, id: u32) -> Option<&$def> {
                 Loader::load(self, id)
             }
         }
@@ -35,7 +35,7 @@ macro_rules! impl_rs3_loader {
             }
 
             #[inline]
-            fn load(&self, id: u16) -> Option<&$def> {
+            fn load(&self, id: u32) -> Option<&$def> {
                 self.$defs_field.get(&id)
             }
         }
@@ -61,7 +61,7 @@ macro_rules! impl_rs3_loader {
 /// # }
 /// ```
 #[inline]
-pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) -> crate::Result<HashMap<u16, T>> {
+pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) -> crate::Result<HashMap<u32, T>> {
     let buffer = cache.read(REFERENCE_TABLE, archive_id)?;
     let buffer = codec::decode(&buffer)?;
 
@@ -77,7 +77,7 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
 
         for (index, data) in archive_data {
             let id = base_id + archive.valid_ids[index as usize] as usize;
-            definitions.insert(id as u16, T::new(id as u16, &data)?);
+            definitions.insert(id as u32, T::new(id as u32, &data)?);
         }
 
         base_id += ID_BLOCK_SIZE;
