@@ -11,7 +11,6 @@ use crate::{
 
 pub const ID_BLOCK_SIZE: usize = 256;
 
-#[macro_use]
 macro_rules! impl_rs3_loader {
    ($ldr:ident, $def:ty, $defs_field:ident, archive_id: $arc_id:expr) => {
         impl $ldr {

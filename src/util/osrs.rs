@@ -20,7 +20,6 @@ use crate::{
     arc,
 };
 
-#[macro_use]
 macro_rules! impl_osrs_loader {
    ($ldr:ident, $def:ty, $defs_field:ident, archive_id: $arc_id:expr) => {
         impl $ldr {
