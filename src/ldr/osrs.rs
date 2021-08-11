@@ -21,7 +21,7 @@
 //! 
 //! Every loader returns a `CacheError` with an inner error.
 
-use std::collections::HashMap;
+use std::collections::{ hash_map, HashMap };
 
 use crate::{ Store, Loader, Cache };
 
@@ -40,35 +40,33 @@ use crate::def::osrs::{
 /// Loads all item definitions from the current cache.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ItemLoader {
-    pub items: HashMap<u32, ItemDefinition>
+    itms: HashMap<u32, ItemDefinition>
 }
 
 /// Loads all npc definitions from the current cache.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct NpcLoader {
-    pub npcs: HashMap<u32, NpcDefinition>
+    npcs: HashMap<u32, NpcDefinition>
 }
 
 /// Loads all object definitions from the current cache.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ObjectLoader {
-    pub objs: HashMap<u32, ObjectDefinition>
+    objs: HashMap<u32, ObjectDefinition>
 }
 
 /// Loads all model definitions from the current cache.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ModelLoader {
-    pub mdls: HashMap<u32, ModelDefinition>
+    mdls: HashMap<u32, ModelDefinition>
 }
 
-// TODO: make all fields private and impl iter on all loaders
-
-impl_osrs_loader!(ItemLoader, ItemDefinition, items, index_id: 2, archive_id: 10);
+impl_osrs_loader!(ItemLoader, ItemDefinition, itms, index_id: 2, archive_id: 10);
 impl_osrs_loader!(NpcLoader, NpcDefinition, npcs, index_id: 2, archive_id: 9);
 impl_osrs_loader!(ObjectLoader, ObjectDefinition, objs, index_id: 2, archive_id: 6);
 impl_osrs_loader!(ModelLoader, ModelDefinition, mdls, index_id: 7);
 
-// impl_osrs_loader!(ItemLoader, ItemDefinition, items, parse_defs_from_archive, 2, 10);
-// impl_osrs_loader!(NpcLoader, NpcDefinition, npcs, parse_defs_from_archive, 2, 9);
-// impl_osrs_loader!(ObjectLoader, ObjectDefinition, objs, parse_defs_from_archive, 2, 6);
-// impl_osrs_loader!(ModelLoader, ModelDefinition, mdls, parse_defs, 7);
+impl_iter_for_loader!(ItemLoader, ItemDefinition, itms);
+impl_iter_for_loader!(NpcLoader, NpcDefinition, npcs);
+impl_iter_for_loader!(ObjectLoader, ObjectDefinition, objs);
+impl_iter_for_loader!(ModelLoader, ModelDefinition, mdls);

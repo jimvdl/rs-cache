@@ -9,7 +9,7 @@ mod osrs {
         let model_loader = common::osrs::load_models(&cache)?;
         
         // let model = model_loader.load(1042).unwrap();
-        for model in &model_loader.mdls {
+        for (id, model) in &model_loader {
             
         }
 

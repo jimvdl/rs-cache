@@ -8,7 +8,7 @@ pub mod xtea;
 pub use huffman::Huffman;
 pub use isaac_rand::IsaacRand;
 
-use std::collections::HashMap;
+use std::collections::{ hash_map, HashMap };
 
 use crate::{
     codec,
@@ -66,7 +66,9 @@ macro_rules! impl_osrs_loader {
             }
         }
 
-        impl Loader<$def> for $ldr {
+        impl Loader for $ldr {
+            type Definition = $def;
+
             #[inline]
             fn new<S: Store>(cache: &Cache<S>) -> crate::Result<$ldr> {            
                 $(
@@ -81,7 +83,7 @@ macro_rules! impl_osrs_loader {
             }
 
             #[inline]
-            fn load(&self, id: u32) -> Option<&$def> {
+            fn load(&self, id: u32) -> Option<&Self::Definition> {
                 self.$defs_field.get(&id)
             }
         }

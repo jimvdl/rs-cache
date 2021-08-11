@@ -22,6 +22,51 @@ use crate::{
     error::ReadError,
 };
 
+macro_rules! impl_iter_for_loader {
+    ($ldr:ident, $def:ty, $defs_field:ident) => {
+        impl $ldr {
+            #[inline]
+            pub fn iter(&self) -> hash_map::Iter<'_, u32, $def> {
+                self.$defs_field.iter()
+            }
+
+            #[inline]
+            pub fn iter_mut(&mut self) -> hash_map::IterMut<'_, u32, $def> {
+                self.$defs_field.iter_mut()
+            }
+        }
+
+        impl<'a> Iterator for &'a $ldr {
+            type Item = (&'a u32, &'a $def);
+        
+            #[inline]
+            fn next(&mut self) -> Option<Self::Item> {
+                self.$defs_field.iter().next()
+            }
+        }
+
+        impl IntoIterator for $ldr {
+            type Item = (u32, $def);
+            type IntoIter = hash_map::IntoIter<u32, $def>;
+
+            #[inline]
+            fn into_iter(self) -> Self::IntoIter {
+                self.$defs_field.into_iter()
+            }
+        }
+
+        impl<'a> IntoIterator for &'a mut $ldr {
+            type Item = (&'a u32, &'a mut $def);
+            type IntoIter = hash_map::IterMut<'a, u32, $def>;
+
+            #[inline]
+            fn into_iter(self) -> Self::IntoIter {
+                self.$defs_field.iter_mut()
+            }
+        }
+    };
+}
+
 /// djd2 module for hashing strings
 pub mod djd2 {
 
