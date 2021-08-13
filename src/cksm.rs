@@ -1,7 +1,9 @@
 //! Validator for the cache.
 
+use std::slice::{ Iter, IterMut };
 use crate::{ codec::Compression, codec };
 use num_bigint::{ BigInt, Sign };
+use whirlpool::{ Whirlpool, Digest };
 
 #[derive(Debug, Clone)]
 pub struct Entry {
@@ -21,7 +23,7 @@ pub struct Entry {
 /// called on `Cache`. 
 #[derive(Clone, Debug, Default)]
 pub struct Checksum {
-    pub index_count: usize,
+    index_count: usize,
     entries: Vec<Entry>
 }
 
@@ -158,9 +160,52 @@ impl Checksum {
 
         Ok(buffer)
     }
+
+    #[inline]
+    pub const fn index_count(&self) -> usize {
+        self.index_count
+    }
+
+    #[inline]
+    pub fn iter(&self) -> Iter<'_, Entry> {
+        self.entries.iter()
+    }
+
+    #[inline]
+    pub fn iter_mut(&mut self) -> IterMut<'_, Entry> {
+        self.entries.iter_mut()
+    }
 }
 
-use whirlpool::{ Whirlpool, Digest };
+impl IntoIterator for Checksum {
+    type Item = Entry;
+    type IntoIter = std::vec::IntoIter<Entry>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.entries.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a Checksum {
+    type Item = &'a Entry;
+    type IntoIter = Iter<'a, Entry>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.entries.iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut Checksum {
+    type Item = &'a mut Entry;
+    type IntoIter = IterMut<'a, Entry>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.entries.iter_mut()
+    }
+}
 
 impl Default for Entry {
     #[inline]

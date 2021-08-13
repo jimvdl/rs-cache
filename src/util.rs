@@ -36,15 +36,6 @@ macro_rules! impl_iter_for_loader {
             }
         }
 
-        impl<'a> Iterator for &'a $ldr {
-            type Item = (&'a u32, &'a $def);
-        
-            #[inline]
-            fn next(&mut self) -> Option<Self::Item> {
-                self.$defs_field.iter().next()
-            }
-        }
-
         impl IntoIterator for $ldr {
             type Item = (u32, $def);
             type IntoIter = hash_map::IntoIter<u32, $def>;
@@ -52,6 +43,16 @@ macro_rules! impl_iter_for_loader {
             #[inline]
             fn into_iter(self) -> Self::IntoIter {
                 self.$defs_field.into_iter()
+            }
+        }
+
+        impl<'a> IntoIterator for &'a $ldr {
+            type Item = (&'a u32, &'a $def);
+            type IntoIter = hash_map::Iter<'a, u32, $def>;
+        
+            #[inline]
+            fn into_iter(self) -> Self::IntoIter {
+                self.$defs_field.iter()
             }
         }
 

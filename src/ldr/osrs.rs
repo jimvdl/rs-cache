@@ -25,11 +25,6 @@ use std::collections::{ hash_map, HashMap };
 
 use crate::{ Store, Loader, Cache };
 
-use crate::util::osrs::{
-    parse_defs,
-    parse_defs_from_archive
-};
-
 use crate::def::osrs::{
     ItemDefinition,
     NpcDefinition,
@@ -65,8 +60,3 @@ impl_osrs_loader!(ItemLoader, ItemDefinition, itms, index_id: 2, archive_id: 10)
 impl_osrs_loader!(NpcLoader, NpcDefinition, npcs, index_id: 2, archive_id: 9);
 impl_osrs_loader!(ObjectLoader, ObjectDefinition, objs, index_id: 2, archive_id: 6);
 impl_osrs_loader!(ModelLoader, ModelDefinition, mdls, index_id: 7);
-
-impl_iter_for_loader!(ItemLoader, ItemDefinition, itms);
-impl_iter_for_loader!(NpcLoader, NpcDefinition, npcs);
-impl_iter_for_loader!(ObjectLoader, ObjectDefinition, objs);
-impl_iter_for_loader!(ModelLoader, ModelDefinition, mdls);

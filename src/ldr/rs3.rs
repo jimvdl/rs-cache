@@ -1,6 +1,6 @@
 use std::collections::{ hash_map, HashMap };
 
-use crate::{ Store, Loader, util, Cache };
+use crate::{ Store, Loader, Cache };
 
 use crate::def::rs3::ItemDefinition;
 
@@ -11,5 +11,3 @@ pub struct ItemLoader {
 }
 
 impl_rs3_loader!(ItemLoader, ItemDefinition, itms, archive_id: 19);
-
-impl_iter_for_loader!(ItemLoader, ItemDefinition, itms);

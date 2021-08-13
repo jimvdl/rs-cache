@@ -29,10 +29,10 @@ macro_rules! impl_rs3_loader {
             type Definition = $def;
 
             #[inline]
-            fn new<S: Store>(cache: &Cache<S>) -> crate::Result<$ldr> {
-                let $defs_field = util::rs3::parse_defs(cache, $arc_id)?;
+            fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
+                let $defs_field = crate::util::rs3::parse_defs(cache, $arc_id)?;
 
-                Ok($ldr { $defs_field })
+                Ok(Self { $defs_field })
             }
 
             #[inline]
@@ -40,6 +40,8 @@ macro_rules! impl_rs3_loader {
                 self.$defs_field.get(&id)
             }
         }
+
+        impl_iter_for_loader!($ldr, $def, $defs_field);
    };
 }
 

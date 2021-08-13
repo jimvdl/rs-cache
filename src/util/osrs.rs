@@ -71,16 +71,16 @@ macro_rules! impl_osrs_loader {
 
             #[allow(unreachable_code)]
             #[inline]
-            fn new<S: Store>(cache: &Cache<S>) -> crate::Result<$ldr> {            
+            fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {            
                 $(
-                    let $defs_field = parse_defs_from_archive(cache, $idx_id, $arc_id)?;
+                    let $defs_field = crate::util::osrs::parse_defs_from_archive(cache, $idx_id, $arc_id)?;
 
                     return Ok($ldr { $defs_field });
                 )?
 
-                let $defs_field = parse_defs(cache, $idx_id)?;
+                let $defs_field = crate::util::osrs::parse_defs(cache, $idx_id)?;
 
-                Ok($ldr { $defs_field })
+                Ok(Self { $defs_field })
             }
 
             #[inline]
@@ -88,6 +88,8 @@ macro_rules! impl_osrs_loader {
                 self.$defs_field.get(&id)
             }
         }
+
+        impl_iter_for_loader!($ldr, $def, $defs_field);
    };
 }
 
