@@ -25,6 +25,15 @@ pub struct Sector<'a> {
 	pub data_block: &'a [u8]
 }
 
+/// Conveys the size of the header.
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+pub enum SectorHeaderSize {
+	/// Header consisting of 8 bytes.
+	Normal,
+	/// Header consisting of 10 bytes.
+	Expanded
+}
+
 /// Contains the sector header for reading the next sector
 /// and validating the current sector.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
@@ -38,25 +47,26 @@ pub struct SectorHeader {
 impl<'a> Sector<'a> {
 	/// Decodes the buffer from the reference table into a `Sector`.
 	#[inline]
-	pub fn new(buffer: &'a [u8], expanded_header: bool) -> crate::Result<Self> {
-		let (buffer, header) = SectorHeader::new(buffer, expanded_header)?;
+	pub fn new(buffer: &'a [u8], header_size: &SectorHeaderSize) -> crate::Result<Self> {
+		let (buffer, header) = SectorHeader::new(buffer, header_size)?;
 		let (_, data_block) = rest(buffer)?;
 
 		Ok(Self { header, data_block })
 	}
 }
 
-impl SectorHeader {
+impl<'a> SectorHeader {
 	/// Decodes only the header data from the buffer leaving the data block untouched.
 	/// 
 	/// The expanded header should be 10 bytes instead of the usual 8 bytes.
 	#[inline]
-	pub fn new(buffer: &[u8], expanded_header: bool) -> crate::Result<(&[u8], Self)> {
-		let (buffer, archive_id) = if expanded_header {
-			be_u32(buffer)?
-		} else {
-			let (buffer, archive_id) = be_u16(buffer)?;
-			(buffer, archive_id as u32)
+	pub fn new(buffer: &'a [u8], header_size: &SectorHeaderSize) -> crate::Result<(&'a [u8], Self)> {
+		let (buffer, archive_id) = match header_size {
+			SectorHeaderSize::Normal => {
+				let (buffer, archive_id) = be_u16(buffer)?;
+				(buffer, archive_id as u32)
+			},
+			SectorHeaderSize::Expanded => be_u32(buffer)?
 		};
 		
 		let (buffer, chunk) = be_u16(buffer)?;
@@ -91,6 +101,13 @@ impl SectorHeader {
 	}
 }
 
+impl Default for SectorHeaderSize {
+	#[inline]
+	fn default() -> Self {
+		Self::Normal
+	}
+}
+
 #[cfg(test)]
 mod tests {
 	use super::*;
@@ -100,7 +117,7 @@ mod tests {
 		let buffer = &[0, 0, 0, 0, 0, 0, 2, 255];
 
 		let expected = SectorHeader { archive_id: 0, chunk: 0, next: 2, index_id: 255 };
-		let (_, actual) = SectorHeader::new(buffer, false)?;
+		let (_, actual) = SectorHeader::new(buffer, &SectorHeaderSize::Normal)?;
 
 		assert_eq!(actual, expected);
 

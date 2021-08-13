@@ -6,7 +6,7 @@ use std::{
 
 use crate::{
 	arc::Archive,
-	sec::Sector,
+	sec::{ Sector, SectorHeaderSize },
 	error::ParseError,
 	sec::{
 		SECTOR_SIZE,
@@ -32,15 +32,31 @@ impl Store for FileStore {
 
 	#[inline]
     fn read(&self, archive: &Archive) -> crate::Result<Vec<u8>> {
-        let expanded_header = archive.id > std::u16::MAX.into();
+		let header_size = if archive.id > std::u16::MAX.into() { 
+			SectorHeaderSize::Expanded 
+		} else { 
+			SectorHeaderSize::Normal 
+		};
+		
 		let mut current_sector = archive.sector;
         let mut data = vec![0; archive.length];
 		let mut remaining = archive.length;
 		let mut data_block = vec![0; SECTOR_SIZE];
 		let mut current = 0;
 		let mut chunk = 0;
-		let header_len = if expanded_header { SECTOR_EXPANDED_HEADER_SIZE } else { SECTOR_HEADER_SIZE };
-		let data_len = if expanded_header { SECTOR_EXPANDED_DATA_SIZE } else { SECTOR_DATA_SIZE };
+
+		let header_len;
+		let data_len;
+		match header_size {
+			SectorHeaderSize::Normal => {
+				header_len = SECTOR_HEADER_SIZE;
+				data_len = SECTOR_DATA_SIZE;
+			},
+			SectorHeaderSize::Expanded => {
+				header_len = SECTOR_EXPANDED_HEADER_SIZE;
+				data_len = SECTOR_EXPANDED_DATA_SIZE;
+			}
+		}
 
 		loop {
 			let offset = current_sector as usize * SECTOR_SIZE;
@@ -50,7 +66,7 @@ impl Store for FileStore {
                 handle.seek(SeekFrom::Start(offset as u64))?;
                 handle.read_exact(&mut data_block)?;
 				
-				match Sector::new(&data_block, expanded_header) {
+				match Sector::new(&data_block, &header_size) {
 					Ok(sector) => {
 						sector.header.validate(archive.id, chunk, archive.index_id)?;
 
@@ -71,7 +87,7 @@ impl Store for FileStore {
                 handle.seek(SeekFrom::Start(offset as u64))?;
 				handle.read_exact(&mut data_block)?;
 
-				match Sector::new(&data_block, expanded_header) {
+				match Sector::new(&data_block, &header_size) {
 					Ok(sector) => {
 						sector.header.validate(archive.id, chunk, archive.index_id)?;
 						data[current..current + remaining].copy_from_slice(sector.data_block);

@@ -2,7 +2,7 @@ use std::{ io::Read, fs::File };
 
 use crate::{
 	arc::Archive,
-	sec::Sector,
+	sec::{ Sector, SectorHeaderSize },
 	error::ParseError,
 	sec::{
 		SECTOR_SIZE,
@@ -41,7 +41,7 @@ impl Store for MemoryStore {
 			if remaining >= SECTOR_DATA_SIZE {
 				let data_block = &self.data[offset..offset + SECTOR_SIZE];
 				
-				match Sector::new(data_block, false) {
+				match Sector::new(data_block, &SectorHeaderSize::Normal) {
 					Ok(sector) => {
 						sector.header.validate(archive.id, chunk, archive.index_id)?;
 
@@ -58,7 +58,7 @@ impl Store for MemoryStore {
 				
 				let data_block = &self.data[offset..offset + SECTOR_HEADER_SIZE + remaining];
 				
-				match Sector::new(data_block, false) {
+				match Sector::new(data_block, &SectorHeaderSize::Normal) {
 					Ok(sector) => {
 						sector.header.validate(archive.id, chunk, archive.index_id)?;
 						data[current..current + remaining].copy_from_slice(sector.data_block);
