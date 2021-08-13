@@ -57,7 +57,7 @@ macro_rules! impl_rs3_loader {
 /// # fn main() -> rscache::Result<()> {
 /// # let cache = Rs3Cache::new("./data/rs3_cache")?;
 /// let archive_id = 19; // Archive containing item definitions.
-/// let item_defs: HashMap<u16, ItemDefinition> = util::rs3::parse_defs(&cache, archive_id)?;
+/// let item_defs: HashMap<u32, ItemDefinition> = util::rs3::parse_defs(&cache, archive_id)?;
 /// # Ok(())
 /// # }
 /// ```

@@ -1,4 +1,4 @@
-//! Represents linked sectors in main data file.
+//! Represents linked sectors in the main data file.
 
 use nom::{
     combinator::rest,
