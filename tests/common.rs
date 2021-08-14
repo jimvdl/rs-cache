@@ -16,7 +16,6 @@ pub mod osrs {
         ItemLoader,
         NpcLoader,
         ObjectLoader,
-        ModelLoader
     };
 
     pub fn setup() -> rscache::Result<Cache<MemoryStore>> {
@@ -33,10 +32,6 @@ pub mod osrs {
     
     pub fn load_objects(cache: &Cache<MemoryStore>) -> rscache::Result<ObjectLoader> {
         ObjectLoader::new(&cache)
-    }
-
-    pub fn load_models(cache: &Cache<MemoryStore>) -> rscache::Result<ModelLoader> {
-        ModelLoader::new(&cache)
     }
 }
 

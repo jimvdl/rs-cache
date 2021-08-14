@@ -29,7 +29,6 @@ use crate::def::osrs::{
     ItemDefinition,
     NpcDefinition,
     ObjectDefinition,
-    ModelDefinition,
 };
 
 /// Loads all item definitions from the current cache.
@@ -50,13 +49,6 @@ pub struct ObjectLoader {
     objs: HashMap<u32, ObjectDefinition>
 }
 
-/// Loads all model definitions from the current cache.
-#[derive(Clone, Eq, PartialEq, Debug, Default)]
-pub struct ModelLoader {
-    mdls: HashMap<u32, ModelDefinition>
-}
-
 impl_osrs_loader!(ItemLoader, ItemDefinition, itms, index_id: 2, archive_id: 10);
 impl_osrs_loader!(NpcLoader, NpcDefinition, npcs, index_id: 2, archive_id: 9);
 impl_osrs_loader!(ObjectLoader, ObjectDefinition, objs, index_id: 2, archive_id: 6);
-impl_osrs_loader!(ModelLoader, ModelDefinition, mdls, index_id: 7);
