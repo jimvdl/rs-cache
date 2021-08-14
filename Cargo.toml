@@ -1,6 +1,7 @@
 [package]
 name = "rs-cache"
 version = "0.4.2" # Remember to update usage
+rust = "1.0"
 authors = ["jimvdl <jimvdlind@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -11,7 +12,6 @@ readme = "README.md"
 keywords = ["runescape", "osrs", "rs3"]
 exclude = [".gitignore", "data/*"]
 categories = ["development-tools"]
-rust = "1.31"
 
 [lib]
 name = "rscache"
