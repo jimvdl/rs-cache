@@ -16,6 +16,7 @@ Useful links:\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/7/74/Water_rune_detail.png/800px-Water_rune_detail.png?4e790" width="10"> &nbsp;[Documentation](https://docs.rs/rs-cache)\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/e/ef/Nature_rune_detail.png/800px-Nature_rune_detail.png?a062f" width="10"> &nbsp;[Examples](examples/)
 
+The public API of this crate is still evolving.
 Currently supports both OSRS & RS3, although both are still limited.
 
 The `osrs_specifications.md` & `rs3_specifications.md` documents (located in the root directory of this project) contain a detailed description of the design of the corresponding cache for educational purposes. Both documents are still a work in progress and are possibly incomplete.
