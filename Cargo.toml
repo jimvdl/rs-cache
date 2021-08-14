@@ -11,6 +11,7 @@ readme = "README.md"
 keywords = ["runescape", "osrs", "rs3"]
 exclude = [".gitignore", "data/*"]
 categories = ["development-tools"]
+rust = "1.31"
 
 [lib]
 name = "rscache"
@@ -19,12 +20,11 @@ path = "src/lib.rs"
 [dependencies]
 crc = "1.8.1"
 bzip2 = "0.4"
-libflate = "0.1.27"
-# nom uses lexical-core by default which doesn't compile on nightly 1.54
-nom = { version = "6.1.2", default-features = false, features = ["std", "bitvec"] }
+libflate = "1.1.0"
+nom = "6.2.1"
 itertools = "0.9.0"
 whirlpool = "0.9.0"
-num-bigint = "0.3.1"
+num-bigint = "0.4"
 
 [dev-dependencies]
 sha1 = "0.6.0"
