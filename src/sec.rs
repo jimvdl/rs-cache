@@ -20,6 +20,9 @@ pub const SECTOR_DATA_SIZE: usize = 512;
 pub const SECTOR_EXPANDED_DATA_SIZE: usize = 510;
 pub const SECTOR_SIZE: usize = SECTOR_HEADER_SIZE + SECTOR_DATA_SIZE;
 
+pub type HeaderSize = usize;
+pub type DataSize = usize;
+
 /// Sector data for reading.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Sector<'a> {
@@ -82,7 +85,7 @@ impl SectorHeaderSize {
 }
 
 /// Converts a `SectorHeaderSize` to the corresponding header size and data size.
-impl From<SectorHeaderSize> for (usize, usize) {
+impl From<SectorHeaderSize> for (HeaderSize, DataSize) {
 	#[inline]
 	fn from(header_size: SectorHeaderSize) -> Self {
 		match header_size {
