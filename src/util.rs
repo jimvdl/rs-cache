@@ -148,7 +148,6 @@ pub fn load_store<S: Store, P: AsRef<Path>>(path: P) -> crate::Result<S> {
 /// 
 /// Can return multiple errors: if the index couldnt be parsed or the index 
 /// couldn't be opened.
-// TODO: parse the actual path of the index file to have a more accurate id.
 #[inline]
 pub fn load_indices<P: AsRef<Path>>(path: P) -> crate::Result<HashMap<u8, Index>> {
     let path = path.as_ref();

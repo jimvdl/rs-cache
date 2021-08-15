@@ -35,7 +35,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rs-cache = "0.4"
+rs-cache = "0.5"
 ```
 
 Examples can be found in the [examples](examples/) directory. These examples include setting up your own custom cache or store and how the update protocol could be handled.
