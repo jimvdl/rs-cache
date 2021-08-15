@@ -21,7 +21,7 @@ use crate::{
 };
 
 macro_rules! impl_osrs_loader {
-   ($ldr:ident, $def:ty, $defs_field:ident, index_id: $idx_id:expr $(, archive_id: $arc_id:expr)?) => {
+   ($ldr:ident, $def:ty, index_id: $idx_id:expr $(, archive_id: $arc_id:expr)?) => {
         impl $ldr {
             #[inline]
             pub fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
@@ -41,23 +41,23 @@ macro_rules! impl_osrs_loader {
             #[inline]
             fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {            
                 $(
-                    let $defs_field = crate::util::osrs::parse_defs_from_archive(cache, $idx_id, $arc_id)?;
+                    let map = crate::util::osrs::parse_defs_from_archive(cache, $idx_id, $arc_id)?;
 
-                    return Ok($ldr { $defs_field });
+                    return Ok(Self(map));
                 )?
 
-                let $defs_field = crate::util::osrs::parse_defs(cache, $idx_id)?;
+                let map = crate::util::osrs::parse_defs(cache, $idx_id)?;
 
-                Ok(Self { $defs_field })
+                Ok(Self(map))
             }
 
             #[inline]
             fn load(&self, id: u32) -> Option<&Self::Definition> {
-                self.$defs_field.get(&id)
+                self.0.get(&id)
             }
         }
 
-        impl_iter_for_loader!($ldr, $def, $defs_field);
+        impl_iter_for_loader!($ldr, $def);
    };
 }
 

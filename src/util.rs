@@ -23,16 +23,16 @@ use crate::{
 };
 
 macro_rules! impl_iter_for_loader {
-    ($ldr:ident, $def:ty, $defs_field:ident) => {
+    ($ldr:ident, $def:ty) => {
         impl $ldr {
             #[inline]
             pub fn iter(&self) -> hash_map::Iter<'_, u32, $def> {
-                self.$defs_field.iter()
+                self.0.iter()
             }
 
             #[inline]
             pub fn iter_mut(&mut self) -> hash_map::IterMut<'_, u32, $def> {
-                self.$defs_field.iter_mut()
+                self.0.iter_mut()
             }
         }
 
@@ -42,7 +42,7 @@ macro_rules! impl_iter_for_loader {
 
             #[inline]
             fn into_iter(self) -> Self::IntoIter {
-                self.$defs_field.into_iter()
+                self.0.into_iter()
             }
         }
 
@@ -52,7 +52,7 @@ macro_rules! impl_iter_for_loader {
         
             #[inline]
             fn into_iter(self) -> Self::IntoIter {
-                self.$defs_field.iter()
+                self.0.iter()
             }
         }
 
@@ -62,7 +62,7 @@ macro_rules! impl_iter_for_loader {
 
             #[inline]
             fn into_iter(self) -> Self::IntoIter {
-                self.$defs_field.iter_mut()
+                self.0.iter_mut()
             }
         }
     };

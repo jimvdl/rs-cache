@@ -33,22 +33,16 @@ use crate::def::osrs::{
 
 /// Loads all item definitions from the current cache.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
-pub struct ItemLoader {
-    itms: HashMap<u32, ItemDefinition>
-}
+pub struct ItemLoader(HashMap<u32, ItemDefinition>);
 
 /// Loads all npc definitions from the current cache.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
-pub struct NpcLoader {
-    npcs: HashMap<u32, NpcDefinition>
-}
+pub struct NpcLoader(HashMap<u32, NpcDefinition>);
 
 /// Loads all object definitions from the current cache.
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
-pub struct ObjectLoader {
-    objs: HashMap<u32, ObjectDefinition>
-}
+pub struct ObjectLoader(HashMap<u32, ObjectDefinition>);
 
-impl_osrs_loader!(ItemLoader, ItemDefinition, itms, index_id: 2, archive_id: 10);
-impl_osrs_loader!(NpcLoader, NpcDefinition, npcs, index_id: 2, archive_id: 9);
-impl_osrs_loader!(ObjectLoader, ObjectDefinition, objs, index_id: 2, archive_id: 6);
+impl_osrs_loader!(ItemLoader, ItemDefinition, index_id: 2, archive_id: 10);
+impl_osrs_loader!(NpcLoader, NpcDefinition, index_id: 2, archive_id: 9);
+impl_osrs_loader!(ObjectLoader, ObjectDefinition, index_id: 2, archive_id: 6);
