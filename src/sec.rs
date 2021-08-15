@@ -61,7 +61,7 @@ impl<'a> Sector<'a> {
 		Self::new(buffer, &SectorHeaderSize::Normal)
 	}
 
-	// Convenience function to create a `Sector` with a `Expanded` header size.
+	/// Convenience function to create a `Sector` with a `Expanded` header size.
 	#[inline]
 	pub fn from_expanded_header(buffer: &'a [u8]) -> crate::Result<Self> {
 		Self::new(buffer, &SectorHeaderSize::Expanded)
@@ -80,6 +80,7 @@ impl SectorHeaderSize {
 	}
 }
 
+/// Converts a `SectorHeaderSize` to the corresponding header size and data size.
 impl From<SectorHeaderSize> for (usize, usize) {
 	#[inline]
 	fn from(header_size: SectorHeaderSize) -> Self {
