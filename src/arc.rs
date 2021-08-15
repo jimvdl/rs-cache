@@ -5,6 +5,10 @@ use std::{
     collections::HashMap,
 };
 
+use serde::{ Serialize, Deserialize };
+use serde_big_array::big_array;
+big_array! { BigArray; }
+
 use nom::{
     multi::{ many0, many_m_n },
     combinator::cond,
@@ -20,7 +24,7 @@ use nom::{
 use itertools::izip;
 
 /// Represents an archive contained in an index.
-#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Archive {
     pub id: u32,
     pub index_id: u8,
@@ -29,12 +33,13 @@ pub struct Archive {
 }
 
 /// Represents archive metadata.
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct ArchiveData {
     pub id: u32,
     pub name_hash: i32,
     pub crc: u32,
     pub hash: i32,
+    #[serde(with = "BigArray")]
     pub whirlpool: [u8; 64],
     pub revision: u32,
     pub entry_count: usize,

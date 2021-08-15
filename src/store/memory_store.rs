@@ -14,6 +14,7 @@ use crate::{
 use super::Store;
 
 /// Cache inner reading from memory.
+#[derive(Debug)]
 pub struct MemoryStore {
     data: Vec<u8>
 }

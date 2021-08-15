@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use serde::{ Serialize, Deserialize };
 use nom::number::complete::be_u24;
 
 use crate::{ arc::Archive, error::ParseError };
@@ -9,7 +10,7 @@ use crate::{ arc::Archive, error::ParseError };
 pub const IDX_LENGTH: usize = 6;
 
 /// Represents an .idx file.
-#[derive(Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Index {
 	pub id: u8,
 	pub archives: HashMap<u32, Archive>,

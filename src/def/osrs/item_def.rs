@@ -4,6 +4,8 @@ use std::{
 	collections::HashMap,
 };
 
+use serde::{ Serialize, Deserialize };
+
 use crate::{ Definition, ext::ReadExt, util };
 
 /// Contains all the information about a certain item fetched from the cache through
@@ -11,11 +13,9 @@ use crate::{ Definition, ext::ReadExt, util };
 /// 
 /// The `InventoryModelData` and the `CharacterModelData` were hidden in the documents
 /// because these are rarely accessed, they contain useless information in most use-cases. 
-#[derive(Clone, Eq, PartialEq, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
 pub struct ItemDefinition {
 	pub id: u32,
-	pub inventory_model_data: InventoryModelData,
-	pub character_model_data: CharacterModelData,
 	pub name: String,
 	pub stackable: bool,
 	pub cost: i32,
@@ -32,9 +32,11 @@ pub struct ItemDefinition {
 	pub bought_tempalte: Option<u16>,
 	pub shift_click_drop_index: Option<u8>,
 	pub params: HashMap<u32, String>,
+	pub inventory_model_data: InventoryModelData,
+	pub character_model_data: CharacterModelData,
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct InventoryModelData {
 	pub inventory_model: u16,
 	pub zoom2d: u16,
@@ -54,7 +56,7 @@ pub struct InventoryModelData {
 	pub contrast: i8,
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct CharacterModelData {
 	pub male_model10: Option<u16>,
 	pub male_model_offset: u8,

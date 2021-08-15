@@ -23,8 +23,9 @@
 
 use std::collections::{ hash_map, HashMap };
 
-use crate::{ Store, Loader, Cache };
+use serde::{ Serialize, Deserialize };
 
+use crate::{ Store, Loader, Cache };
 use crate::def::osrs::{
     ItemDefinition,
     NpcDefinition,
@@ -32,15 +33,15 @@ use crate::def::osrs::{
 };
 
 /// Loads all item definitions from the current cache.
-#[derive(Clone, Eq, PartialEq, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
 pub struct ItemLoader(HashMap<u32, ItemDefinition>);
 
 /// Loads all npc definitions from the current cache.
-#[derive(Clone, Eq, PartialEq, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
 pub struct NpcLoader(HashMap<u32, NpcDefinition>);
 
 /// Loads all object definitions from the current cache.
-#[derive(Clone, Eq, PartialEq, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
 pub struct ObjectLoader(HashMap<u32, ObjectDefinition>);
 
 impl_osrs_loader!(ItemLoader, ItemDefinition, index_id: 2, archive_id: 10);

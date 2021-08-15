@@ -4,6 +4,8 @@ use std::{
 	collections::HashMap,
 };
 
+use serde::{ Serialize, Deserialize };
+
 use crate::{ Definition, ext::ReadExt, util };
 
 /// Contains all the information about a certain npc fetched from the cache through
@@ -11,12 +13,10 @@ use crate::{ Definition, ext::ReadExt, util };
 /// 
 /// The `NpcModelData` and the `NpcAnimationData` were hidden in the documents
 /// because these are rarely accessed, they contain useless information in most use-cases. 
-#[derive(Clone, Eq, PartialEq, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
 pub struct NpcDefinition {
     pub id: u32,
     pub name: String,
-    pub model_data: NpcModelData,
-    pub animation_data: NpcAnimationData,
     pub size: usize,
     pub actions: [String; 5],
     pub visible_on_minimap: bool,
@@ -27,9 +27,11 @@ pub struct NpcDefinition {
     pub interactable: bool,
     pub pet: bool,
     pub params: HashMap<u32, String>,
+    pub model_data: NpcModelData,
+    pub animation_data: NpcAnimationData,
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct NpcModelData {
     pub models: Vec<u16>,
     pub chat_head_models: Vec<u16>,
@@ -47,7 +49,7 @@ pub struct NpcModelData {
     pub rotate_flag: bool,
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct NpcAnimationData {
     pub standing: Option<u16>,
     pub walking: Option<u16>,

@@ -45,6 +45,7 @@ pub trait CacheRead {
 }
 
 /// Main cache struct providing basic utilities.
+#[derive(Clone, Debug)]
 pub struct Cache<S: Store> {
     store: S,
 	pub indices: HashMap<u8, Index>

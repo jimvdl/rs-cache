@@ -14,6 +14,7 @@ use crate::{
 use super::Store;
 
 /// Cache inner reading using a file handle.
+#[derive(Debug)]
 pub struct FileStore {
     handle: RefCell<BufReader<File>>
 }

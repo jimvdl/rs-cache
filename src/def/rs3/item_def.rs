@@ -3,11 +3,13 @@ use std::{
 	io::BufReader,
 };
 
+use serde::{ Serialize, Deserialize };
+
 use crate::{ Definition, ext::ReadExt, util };
 
 /// Contains all the information about a certain item fetched from the cache through
 /// the [ItemLoader](../../ldr/rs3/struct.ItemLoader.html).
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ItemDefinition {
 	pub id: u32,
 	pub model_data: ModelData,
@@ -34,7 +36,7 @@ pub struct ItemDefinition {
 	pub bind_tempalte: Option<u16>,
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ModelData {
 	pub id: u32,
 	pub zoom: u16,

@@ -1,5 +1,6 @@
 //! Represents linked sectors in the main data file.
 
+use serde::{ Serialize, Deserialize };
 use nom::{
     combinator::rest,
 	number::complete::{
@@ -20,14 +21,14 @@ pub const SECTOR_EXPANDED_DATA_SIZE: usize = 510;
 pub const SECTOR_SIZE: usize = SECTOR_HEADER_SIZE + SECTOR_DATA_SIZE;
 
 /// Sector data for reading.
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Sector<'a> {
 	pub header: SectorHeader,
 	pub data_block: &'a [u8]
 }
 
 /// Conveys the size of the header.
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum SectorHeaderSize {
 	/// Header consisting of 8 bytes.
 	Normal,
@@ -37,7 +38,7 @@ pub enum SectorHeaderSize {
 
 /// Contains the sector header for reading the next sector
 /// and validating the current sector.
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct SectorHeader {
 	pub archive_id: u32,
 	pub chunk: usize,

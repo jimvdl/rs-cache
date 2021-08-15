@@ -4,6 +4,8 @@ use std::{
 	collections::HashMap,
 };
 
+use serde::{ Serialize, Deserialize };
+
 use crate::{ Definition, ext::ReadExt, util };
 
 /// Contains all the information about a certain object fetched from the cache through
@@ -11,10 +13,9 @@ use crate::{ Definition, ext::ReadExt, util };
 /// 
 /// The `ObjectModelData` is hidden in the documents
 /// because it is rarely accessed, it contains useless information in most use-cases. 
-#[derive(Clone, Eq, PartialEq, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
 pub struct ObjectDefinition {
     pub id: u32,
-    pub model_data: ObjectModelData,
     pub name: String,
     pub config_id: Option<u16>,
     pub map_area_id: Option<u16>,
@@ -33,9 +34,10 @@ pub struct ObjectDefinition {
     pub contoured_ground: Option<u8>,
     pub config_change_dest: Vec<u16>,
     pub params: HashMap<u32, String>,
+    pub model_data: ObjectModelData,
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ObjectModelData {
     pub models: Vec<u16>,
     pub types: Vec<u8>,
