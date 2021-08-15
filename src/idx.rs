@@ -16,6 +16,26 @@ pub struct Index {
 }
 
 impl Index {
+	/// Creates an `Index` from the given buffer.
+	/// 
+	/// The buffer always contains the entire index file in bytes
+	/// and is internally parsed.
+	/// 
+	/// # Examples
+	/// 
+	/// ```
+	/// # use std::fs::File;
+	/// # use std::io::{self, Read};
+	/// # use rscache::idx::Index;
+	/// # fn main() -> rscache::Result<()> {
+	///     let mut index_file = File::open("./data/osrs_cache/main_file_cache.idx2")?;
+	///     let mut index_buffer = Vec::with_capacity(index_file.metadata()?.len() as usize);
+	/// 
+	///     index_file.read_to_end(&mut index_buffer)?;
+	///     let index = Index::new(2, &index_buffer)?;
+	/// # Ok(())
+	/// # }
+	/// ```
 	#[inline]
     pub fn new(id: u8, buffer: &[u8]) -> crate::Result<Self> {
 		let mut archives = HashMap::new();

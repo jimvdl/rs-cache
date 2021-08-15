@@ -8,13 +8,7 @@ use crate::{
 	arc::Archive,
 	sec::{ Sector, SectorHeaderSize },
 	error::ParseError,
-	sec::{
-		SECTOR_SIZE,
-		SECTOR_EXPANDED_DATA_SIZE,
-		SECTOR_EXPANDED_HEADER_SIZE,
-		SECTOR_HEADER_SIZE,
-		SECTOR_DATA_SIZE
-	},
+	sec::SECTOR_SIZE,
 };
 
 use super::Store;
@@ -32,31 +26,14 @@ impl Store for FileStore {
 
 	#[inline]
     fn read(&self, archive: &Archive) -> crate::Result<Vec<u8>> {
-		let header_size = if archive.id > std::u16::MAX.into() { 
-			SectorHeaderSize::Expanded 
-		} else { 
-			SectorHeaderSize::Normal 
-		};
-		
+		let header_size = SectorHeaderSize::from_archive(archive);
+		let (header_len, data_len) = header_size.clone().into();
 		let mut current_sector = archive.sector;
         let mut data = vec![0; archive.length];
 		let mut remaining = archive.length;
 		let mut data_block = vec![0; SECTOR_SIZE];
 		let mut current = 0;
 		let mut chunk = 0;
-
-		let header_len;
-		let data_len;
-		match header_size {
-			SectorHeaderSize::Normal => {
-				header_len = SECTOR_HEADER_SIZE;
-				data_len = SECTOR_DATA_SIZE;
-			},
-			SectorHeaderSize::Expanded => {
-				header_len = SECTOR_EXPANDED_HEADER_SIZE;
-				data_len = SECTOR_EXPANDED_DATA_SIZE;
-			}
-		}
 
 		loop {
 			let offset = current_sector as usize * SECTOR_SIZE;

@@ -148,6 +148,7 @@ pub fn load_store<S: Store, P: AsRef<Path>>(path: P) -> crate::Result<S> {
 /// 
 /// Can return multiple errors: if the index couldnt be parsed or the index 
 /// couldn't be opened.
+// TODO: parse the actual path of the index file to have a more accurate id.
 #[inline]
 pub fn load_indices<P: AsRef<Path>>(path: P) -> crate::Result<HashMap<u8, Index>> {
     let path = path.as_ref();
@@ -162,10 +163,10 @@ pub fn load_indices<P: AsRef<Path>>(path: P) -> crate::Result<HashMap<u8, Index>
 		let path = path.join(format!("{}{}", IDX_PREFIX, index_id));
 
 		if path.exists() {
-			let mut index = File::open(path)?;
-			let mut index_buffer = Vec::new();
+			let mut index_file = File::open(path)?;
+			let mut index_buffer = Vec::with_capacity(index_file.metadata()?.len() as usize);
 
-			index.read_to_end(&mut index_buffer)?;
+			index_file.read_to_end(&mut index_buffer)?;
 			indices.insert(index_id, Index::new(index_id, &index_buffer)?);
 		}
     }

@@ -11,6 +11,7 @@ use nom::{
 };
 
 use crate::error::ReadError;
+use crate::arc::Archive;
 
 pub const SECTOR_HEADER_SIZE: usize = 8;
 pub const SECTOR_EXPANDED_HEADER_SIZE: usize = 10;
@@ -52,6 +53,44 @@ impl<'a> Sector<'a> {
 		let (_, data_block) = rest(buffer)?;
 
 		Ok(Self { header, data_block })
+	}
+
+	/// Convenience function to create a `Sector` with a `Normal` header size.
+	#[inline]
+	pub fn from_normal_header(buffer: &'a [u8]) -> crate::Result<Self> {
+		Self::new(buffer, &SectorHeaderSize::Normal)
+	}
+
+	// Convenience function to create a `Sector` with a `Expanded` header size.
+	#[inline]
+	pub fn from_expanded_header(buffer: &'a [u8]) -> crate::Result<Self> {
+		Self::new(buffer, &SectorHeaderSize::Expanded)
+	}
+}
+
+impl SectorHeaderSize {
+	/// Determines the size of the header for the given archive.
+	#[inline]
+	pub fn from_archive(archive: &Archive) -> Self {
+		if archive.id > std::u16::MAX.into() { 
+			Self::Expanded 
+		} else { 
+			Self::Normal 
+		}
+	}
+}
+
+impl From<SectorHeaderSize> for (usize, usize) {
+	#[inline]
+	fn from(header_size: SectorHeaderSize) -> Self {
+		match header_size {
+			SectorHeaderSize::Normal => {
+				(SECTOR_HEADER_SIZE, SECTOR_DATA_SIZE)
+			},
+			SectorHeaderSize::Expanded => {
+				(SECTOR_EXPANDED_HEADER_SIZE, SECTOR_EXPANDED_DATA_SIZE)
+			}
+		}
 	}
 }
 
@@ -111,6 +150,30 @@ impl Default for SectorHeaderSize {
 #[cfg(test)]
 mod tests {
 	use super::*;
+
+	#[test]
+	fn test_header_size_normal() -> crate::Result<()> {
+		let archive = Archive{ id: u16::MAX as u32, index_id: 0, sector: 0, length: 0 };
+
+		let header_size = SectorHeaderSize::from_archive(&archive);
+		let expected = SectorHeaderSize::Normal;
+
+		assert_eq!(header_size, expected);
+
+		Ok(())
+	}
+
+	#[test]
+	fn test_header_size_expanded() -> crate::Result<()> {
+		let archive = Archive{ id: (u16::MAX as u32) + 1, index_id: 0, sector: 0, length: 0 };
+
+		let header_size = SectorHeaderSize::from_archive(&archive);
+		let expected = SectorHeaderSize::Expanded;
+
+		assert_eq!(header_size, expected);
+
+		Ok(())
+	}
 
 	#[test]
 	fn test_parse_header() -> crate::Result<()> {

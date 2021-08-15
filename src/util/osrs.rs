@@ -20,38 +20,6 @@ use crate::{
     arc,
 };
 
-// #[macro_use]
-// macro_rules! impl_osrs_loader {
-//    ($ldr:ident, $def:ty, $defs_field:ident, $parse_func:ident, $($arg: expr),*) => {
-//         impl $ldr {
-//             #[inline]
-//             pub fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
-//                 Loader::new(cache)
-//             }
-
-//             #[inline]
-//             pub fn load(&self, id: u16) -> Option<&$def> {
-//                 Loader::load(self, id)
-//             }
-//         }
-
-//         impl Loader<$def> for $ldr {
-//             #[inline]
-//             fn new<S: Store>(cache: &Cache<S>) -> crate::Result<$ldr> {
-//                 // let $defs_field = util::osrs::parse_defs_from_archive(cache, $idx_id, $arc_id)?;
-//                 let $defs_field = $parse_func(cache, $($arg),*)?;
-
-//                 Ok($ldr { $defs_field })
-//             }
-
-//             #[inline]
-//             fn load(&self, id: u16) -> Option<&$def> {
-//                 self.$defs_field.get(&id)
-//             }
-//         }
-//    };
-// }
-
 macro_rules! impl_osrs_loader {
    ($ldr:ident, $def:ty, $defs_field:ident, index_id: $idx_id:expr $(, archive_id: $arc_id:expr)?) => {
         impl $ldr {
@@ -151,6 +119,7 @@ pub fn parse_defs_from_archive<T: Definition, S: Store>(cache: &Cache<S>, index_
     Ok(definitions)
 }
 
+// TODO: document when model loader is implemented
 // every archive is 1 def, not like the one above where one archive contains many defs
 #[inline]
 pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, index_id: u8) -> crate::Result<HashMap<u32, T>> {
