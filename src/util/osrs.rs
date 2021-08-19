@@ -17,7 +17,7 @@ use crate::{
     Store,
     Cache,
     Definition,
-    arc,
+    arc::{ ArchiveMetadata, ArchiveFileGroup },
 };
 
 macro_rules! impl_osrs_loader {
@@ -103,17 +103,17 @@ pub fn parse_defs_from_archive<T: Definition, S: Store>(cache: &Cache<S>, index_
     let buffer = cache.read(REFERENCE_TABLE, index_id as u32)?;
     let buffer = codec::decode(&buffer)?;
     
-    let archives = arc::parse_archive_data(&buffer)?;
+    let archives = ArchiveMetadata::parse(&buffer)?;
     let entry_count = archives[archive_id as usize - 1].entry_count;
     
     let buffer = cache.read(index_id, archive_id)?;
     let buffer = codec::decode(&buffer)?;
 
-    let archive_data = arc::parse_content(&buffer, entry_count)?;
+    let archive_group = ArchiveFileGroup::parse(&buffer, entry_count)?;
 
     let mut definitions = HashMap::new();
-    for (id, buffer) in archive_data {
-        definitions.insert(id, T::new(id, &buffer)?);
+    for archive_file in archive_group {
+        definitions.insert(archive_file.id, T::new(archive_file.id, &archive_file.data)?);
     }
 
     Ok(definitions)
@@ -126,7 +126,7 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, index_id: u8) -> cr
     let buffer = cache.read(REFERENCE_TABLE, index_id as u32)?;
     let buffer = codec::decode(&buffer)?;
     
-    let archives = arc::parse_archive_data(&buffer)?;
+    let archives = ArchiveMetadata::parse(&buffer)?;
     let mut definitions = HashMap::new();
     
     for archive in &archives {

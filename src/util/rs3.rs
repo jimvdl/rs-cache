@@ -6,7 +6,7 @@ use crate::{
     Definition,
     Cache,
     codec,
-    arc,
+    arc::{ ArchiveMetadata, ArchiveFileGroup },
 };
 
 pub const ID_BLOCK_SIZE: usize = 256;
@@ -68,7 +68,7 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
     let buffer = cache.read(REFERENCE_TABLE, archive_id)?;
     let buffer = codec::decode(&buffer)?;
 
-    let archives = arc::parse_archive_data(&buffer)?;
+    let archives = ArchiveMetadata::parse(&buffer)?;
     let mut definitions = std::collections::HashMap::new();
     let mut base_id = 0;
 
@@ -76,11 +76,11 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
         let buffer = cache.read(archive_id as u8, archive.id as u32)?;
         let buffer = codec::decode(&buffer)?;
 
-        let archive_data = arc::parse_content(&buffer, archive.entry_count)?;
+        let archive_group = ArchiveFileGroup::parse(&buffer, archive.entry_count)?;
 
-        for (index, data) in archive_data {
-            let id = base_id + archive.valid_ids[index as usize] as usize;
-            definitions.insert(id as u32, T::new(id as u32, &data)?);
+        for archive_file in archive_group {
+            let id = base_id + archive.valid_ids[archive_file.id as usize] as usize;
+            definitions.insert(id as u32, T::new(id as u32, &archive_file.data)?);
         }
 
         base_id += ID_BLOCK_SIZE;

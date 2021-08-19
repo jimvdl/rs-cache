@@ -13,7 +13,7 @@ use crate::{
     store::Store, 
     cksm::{ Checksum, Entry },
     idx::Indices,
-    arc::{ self, Archive },
+    arc::{ Archive, ArchiveMetadata },
     error::ReadError, 
     util,
     codec,
@@ -225,7 +225,7 @@ impl<S: Store> Cache<S> {
         let buffer = self.read(REFERENCE_TABLE, index_id as u32)?;
         let data = codec::decode(&buffer)?;
 
-        let archives = arc::parse_archive_data(&data)?;
+        let archives = ArchiveMetadata::parse(&data)?;
 
         for archive_data in archives {
             if archive_data.name_hash == hash {

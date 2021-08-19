@@ -1,8 +1,10 @@
 //! Archives with parsing and decoding.
 
+// TODO: docs and determine what functions to expose.
+
 use std::{
     io,
-    collections::HashMap,
+    slice::{ Iter, IterMut },
 };
 
 use serde::{ Serialize, Deserialize };
@@ -35,7 +37,7 @@ pub struct Archive {
 
 /// Represents archive metadata.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-pub struct ArchiveData {
+pub struct ArchiveMetadata {
     pub id: u32,
     pub name_hash: i32,
     pub crc: u32,
@@ -44,8 +46,17 @@ pub struct ArchiveData {
     pub whirlpool: [u8; 64],
     pub revision: u32,
     pub entry_count: usize,
-    pub valid_ids: Vec<u16>,
+    pub valid_ids: Vec<u16>
 }
+
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+pub struct ArchiveFileData {
+    pub id: u32,
+    pub data: Vec<u8>
+}
+
+#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+pub struct ArchiveFileGroup(Vec<ArchiveFileData>);
 
 impl Archive {
     #[inline]
@@ -57,79 +68,111 @@ impl Archive {
     }
 }
 
-// TODO: give the hashmap a better type
-// TODO: it shows the individual files of an archive "group".
-#[inline]
-pub fn parse_content(buffer: &[u8], entry_count: usize) -> io::Result<HashMap<u32, Vec<u8>>> {
-    let chunks = buffer[buffer.len() - 1] as usize;
-    let mut data = HashMap::new();
-    let mut cached_chunks = Vec::new();
-    let mut read_ptr = buffer.len() - 1 - chunks * entry_count * 4;
-
-    for _ in 0..chunks {
-        let mut chunk_size = 0;
-
-        for entry_id in 0..entry_count {
-            let mut bytes = [0; 4];
-            bytes.copy_from_slice(&buffer[read_ptr..read_ptr + 4]);
-            let delta = i32::from_be_bytes(bytes);
-            
-            read_ptr += 4;
-            chunk_size += delta;
-
-            cached_chunks.push((entry_id as u32, chunk_size as usize));
-        }
-    }
+impl ArchiveMetadata {
+    #[inline]
+    pub(crate) fn parse(buffer: &[u8]) -> crate::Result<Vec<Self>> {
+        let (buffer, protocol) = be_u8(buffer)?;
+        let (buffer, _) = cond(protocol >= 6, be_u32)(buffer)?;
+        let (buffer, identified, whirlpool, codec, hash) = parse_identified(buffer)?;
+        let (buffer, archive_count) = parse_archive_count(buffer)?;
+        let (buffer, ids) = many_m_n(0, archive_count, be_i16)(buffer)?;
+        let (buffer, name_hashes) = parse_hashes(buffer, identified, archive_count)?;
+        let (buffer, crcs) = many_m_n(0, archive_count, be_u32)(buffer)?;
+        let (buffer, hashes) = parse_hashes(buffer, hash, archive_count)?;
+        let (buffer, whirlpools) = parse_whirlpools(buffer, whirlpool, archive_count)?;
+        // skip for now
+        //let (buffer, compressed, decompressed) = parse_codec(buffer, codec, archive_count)?;
+        let (buffer, _) = cond(codec, many_m_n(0, archive_count * 8, be_u8))(buffer)?;
+        let (buffer, revisions) = many_m_n(0, archive_count, be_u32)(buffer)?;
+        let (buffer, entry_counts) = many_m_n(0, archive_count, be_u16)(buffer)?;
+        let entry_counts: Vec<usize> = entry_counts.iter().map(|&entry_count| entry_count as usize).collect();
+        let (_, valid_ids) = parse_valid_ids(buffer, &entry_counts)?;
     
-    read_ptr = 0;
-    for (entry_id, chunk_size) in cached_chunks {
-        let buf = buffer[read_ptr..read_ptr + chunk_size].to_vec();
-
-        data.insert(entry_id, buf);
-        read_ptr += chunk_size;
+        let mut archives = Vec::with_capacity(archive_count);
+        let mut last_archive_id = 0;
+        let archive_data = izip!(ids, name_hashes, crcs, hashes, whirlpools, revisions, entry_counts, valid_ids);
+        for (id, name_hash, crc, hash, whirlpool, revision, entry_count, valid_ids) in archive_data {
+            last_archive_id += id as i32;
+            
+            archives.push(Self { 
+                id: last_archive_id as u32, 
+                name_hash,
+                crc,
+                hash,
+                whirlpool,
+                revision, 
+                entry_count: entry_count as usize,
+                valid_ids,
+            });
+        }
+        
+        Ok(archives)
     }
-
-    Ok(data)
 }
 
-#[inline]
-pub fn parse_archive_data(buffer: &[u8]) -> crate::Result<Vec<ArchiveData>> {
-    let (buffer, protocol) = be_u8(buffer)?;
-    let (buffer, _) = cond(protocol >= 6, be_u32)(buffer)?;
-    let (buffer, identified, whirlpool, codec, hash) = parse_identified(buffer)?;
-    let (buffer, archive_count) = parse_archive_count(buffer)?;
-    let (buffer, ids) = many_m_n(0, archive_count, be_i16)(buffer)?;
-    let (buffer, name_hashes) = parse_hashes(buffer, identified, archive_count)?;
-    let (buffer, crcs) = many_m_n(0, archive_count, be_u32)(buffer)?;
-    let (buffer, hashes) = parse_hashes(buffer, hash, archive_count)?;
-    let (buffer, whirlpools) = parse_whirlpools(buffer, whirlpool, archive_count)?;
-    // skip for now
-    //let (buffer, compressed, decompressed) = parse_codec(buffer, codec, archive_count)?;
-    let (buffer, _) = cond(codec, many_m_n(0, archive_count * 8, be_u8))(buffer)?;
-    let (buffer, revisions) = many_m_n(0, archive_count, be_u32)(buffer)?;
-    let (buffer, entry_counts) = many_m_n(0, archive_count, be_u16)(buffer)?;
-    let entry_counts: Vec<usize> = entry_counts.iter().map(|&entry_count| entry_count as usize).collect();
-    let (_, valid_ids) = parse_valid_ids(buffer, &entry_counts)?;
+impl ArchiveFileGroup {
+    #[inline]
+    pub(crate) fn parse(buffer: &[u8], entry_count: usize) -> io::Result<Self> {
+        let chunks = buffer[buffer.len() - 1] as usize;
+        let mut data = Vec::with_capacity(chunks);
+        let mut cached_chunks = Vec::new();
+        let mut read_ptr = buffer.len() - 1 - chunks * entry_count * 4;
 
-    let mut archives = Vec::with_capacity(archive_count);
-    let mut last_archive_id = 0;
-    let archive_data = izip!(ids, name_hashes, crcs, hashes, whirlpools, revisions, entry_counts, valid_ids);
-    for (id, name_hash, crc, hash, whirlpool, revision, entry_count, valid_ids) in archive_data {
-        last_archive_id += id as i32;
+        for _ in 0..chunks {
+            let mut chunk_size = 0;
+
+            for entry_id in 0..entry_count {
+                let mut bytes = [0; 4];
+                bytes.copy_from_slice(&buffer[read_ptr..read_ptr + 4]);
+                let delta = i32::from_be_bytes(bytes);
+                
+                read_ptr += 4;
+                chunk_size += delta;
+
+                cached_chunks.push((entry_id as u32, chunk_size as usize));
+            }
+        }
         
-        archives.push(ArchiveData { 
-            id: last_archive_id as u32, 
-            name_hash,
-            crc,
-            hash,
-            whirlpool,
-            revision, 
-            entry_count: entry_count as usize,
-            valid_ids,
-        });
+        read_ptr = 0;
+        for (entry_id, chunk_size) in cached_chunks {
+            let buf = buffer[read_ptr..read_ptr + chunk_size].to_vec();
+
+            data.push(ArchiveFileData{ id: entry_id, data: buf });
+            read_ptr += chunk_size;
+        }
+
+        Ok(Self(data))
     }
-    
-    Ok(archives)
+
+    #[inline]
+    pub fn iter(&self) -> Iter<'_, ArchiveFileData> {
+        self.0.iter()
+    }
+
+    #[inline]
+    pub fn iter_mut(&mut self) -> IterMut<'_, ArchiveFileData> {
+        self.0.iter_mut()
+    }
+}
+
+impl IntoIterator for ArchiveFileGroup {
+    type Item = ArchiveFileData;
+    type IntoIter = std::vec::IntoIter<ArchiveFileData>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a ArchiveFileGroup {
+    type Item = &'a ArchiveFileData;
+    type IntoIter = Iter<'a, ArchiveFileData>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
+    }
 }
 
 fn parse_identified(buffer: &[u8]) -> crate::Result<(&[u8], bool, bool, bool, bool)> {
