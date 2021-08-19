@@ -139,7 +139,7 @@ impl<S: Store> Cache<S> {
                     let data = codec::decode(&buffer)?;
                     
                     let (_, version) = cond(data[0] >= 6, be_u32)(&data[1..5])?;
-                    let version = if let Some(version) = version { version } else { 0 };
+                    let version = version.unwrap_or(0);
 
                     let mut hasher = Whirlpool::new();
                     hasher.update(&buffer);
@@ -218,10 +218,8 @@ impl<S: Store> Cache<S> {
     pub fn archive_by_name<T: Into<String>>(&self, index_id: u8, name: T) -> crate::Result<Archive> {
         let name = name.into();
 
-        let index = match self.indices.get(&index_id) {
-            Some(index) => index,
-            None => return Err(ReadError::IndexNotFound(index_id).into())
-        };
+        let index = self.indices.get(&index_id)
+            .ok_or(ReadError::IndexNotFound(index_id))?;
         let hash = util::djd2::hash(&name);
 
         let buffer = self.read(REFERENCE_TABLE, index_id as u32)?;
@@ -231,12 +229,10 @@ impl<S: Store> Cache<S> {
 
         for archive_data in archives {
             if archive_data.name_hash == hash {
-                match index.archives.get(&(archive_data.id as u32)) {
-                    Some(archive) => return Ok(*archive),
-                    None => return Err(
-                        ReadError::ArchiveNotFound(index_id, archive_data.id as u32).into()
-                    ),
-                }
+                let archive = index.archives.get(&(archive_data.id as u32))
+                    .ok_or(ReadError::ArchiveNotFound(index_id, archive_data.id as u32))?;
+
+                return Ok(*archive)
             }
         }
 
@@ -277,7 +273,6 @@ impl<S: Store> CacheCore for Cache<S> {
         let path = path.as_ref();
 
         let store = util::load_store(path)?;
-        // let indices = util::load_indices(path)?;
         let indices = Indices::new(path)?;
 
         Ok(Self { store, indices })
@@ -287,15 +282,11 @@ impl<S: Store> CacheCore for Cache<S> {
 impl<S: Store> CacheRead for Cache<S> {
     #[inline]
     fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
-        let index = match self.indices.get(&index_id) {
-            Some(index) => index,
-            None => return Err(ReadError::IndexNotFound(index_id).into())
-        };
+        let index = self.indices.get(&index_id)
+            .ok_or(ReadError::IndexNotFound(index_id))?;
 
-        let archive = match index.archives.get(&archive_id) {
-            Some(archive) => archive,
-            None => return Err(ReadError::ArchiveNotFound(index_id, archive_id).into())
-        };
+        let archive = index.archives.get(&archive_id)
+            .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
 
         self.store.read(archive)
     }
