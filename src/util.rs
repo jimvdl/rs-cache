@@ -16,8 +16,8 @@ use std::{
 
 use crate::{
     store::Store,
-    cache::{ MAIN_DATA, IDX_PREFIX, REFERENCE_TABLE},
-    idx::Index,
+    cache::{ MAIN_DATA, REFERENCE_TABLE },
+    idx::{ Index, IDX_PREFIX },
     ext::ReadExt,
     error::ReadError,
 };

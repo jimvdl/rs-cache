@@ -1,9 +1,6 @@
 //! Main cache implementation and traits.
 
-use std::{ 
-    path::Path,
-    collections::HashMap,
-};
+use std::path::Path;
 
 use nom::{
     combinator::cond,
@@ -15,7 +12,7 @@ use nom::{
 use crate::{ 
     store::Store, 
     cksm::{ Checksum, Entry },
-    idx::Index,
+    idx::Indices,
     arc::{ self, Archive },
     error::ReadError, 
     util,
@@ -27,7 +24,6 @@ use whirlpool::{ Whirlpool, Digest };
 
 pub const MAIN_DATA: &str = "main_file_cache.dat2";
 pub const MAIN_MUSIC_DATA: &str = "main_file_cache.dat2m";
-pub const IDX_PREFIX: &str = "main_file_cache.idx";
 pub const REFERENCE_TABLE: u8 = 255;
 
 /// The core of a cache.
@@ -48,7 +44,7 @@ pub trait CacheRead {
 #[derive(Clone, Debug)]
 pub struct Cache<S: Store> {
     store: S,
-	pub indices: HashMap<u8, Index>
+	indices: Indices,
 }
 
 impl<S: Store> Cache<S> {
@@ -268,6 +264,11 @@ impl<S: Store> Cache<S> {
     pub fn index_count(&self) -> usize {
         self.indices.len()
     }
+
+    #[inline]
+    pub fn indices(&self) -> &Indices {
+        &self.indices
+    }
 }
 
 impl<S: Store> CacheCore for Cache<S> {
@@ -276,7 +277,8 @@ impl<S: Store> CacheCore for Cache<S> {
         let path = path.as_ref();
 
         let store = util::load_store(path)?;
-        let indices = util::load_indices(path)?;
+        // let indices = util::load_indices(path)?;
+        let indices = Indices::new(path)?;
 
         Ok(Self { store, indices })
     }

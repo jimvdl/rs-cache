@@ -16,6 +16,7 @@ use nom::{
 	number::complete::{
         be_u8,
         be_u16,
+        be_u24,
         be_u32,
         be_i16,
         be_i32
@@ -46,6 +47,18 @@ pub struct ArchiveData {
     pub valid_ids: Vec<u16>,
 }
 
+impl Archive {
+    #[inline]
+    pub(crate) fn from_buffer(id: u32, index_id: u8, buffer: &[u8]) -> crate::Result<Self> {
+        let (buffer, len) = be_u24(buffer)?;
+        let (_, sec) = be_u24(buffer)?;
+        
+        Ok(Self { id, index_id, sector: sec as usize, length: len as usize })
+    }
+}
+
+// TODO: give the hashmap a better type
+// TODO: it shows the individual files of an archive "group".
 #[inline]
 pub fn parse_content(buffer: &[u8], entry_count: usize) -> io::Result<HashMap<u32, Vec<u8>>> {
     let chunks = buffer[buffer.len() - 1] as usize;
