@@ -20,13 +20,72 @@ use libflate::gzip::{
 	Encoder,
 };
 
-use crate::error::CompressionError;
+use crate::error::{ CacheError, CompressionError };
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Compression {
 	None,
 	Bzip2,
 	Gzip,
+}
+
+/// Decodes a cache buffer with some additional data.
+/// 
+/// This struct can be useful if you need more details then just the decoded data.
+/// 
+/// # Examples
+/// 
+/// `TryFrom<&[u8]> -> DecodedBuffer`:  
+/// ```
+/// # use rscache::{ Cache, store::MemoryStore };
+/// # use rscache::codec::Compression;
+/// use rscache::codec::DecodedBuffer;
+/// use std::convert::TryFrom;
+/// 
+/// # fn main() -> rscache::Result<()> {
+/// # let path = "./data/osrs_cache";
+/// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+/// let buffer = cache.read(2, 10)?;
+/// let decoded = DecodedBuffer::try_from(buffer.as_slice())?;
+/// 
+/// assert_eq!(decoded.compression, Compression::Bzip2);
+/// assert_eq!(decoded.len, 260526);
+/// assert_eq!(decoded.version, Some(12609));
+/// # Ok(())
+/// # }
+/// ```
+/// 
+/// Getting the inner buffer:
+/// This conversion is free.
+/// ```
+/// # use rscache::{ Cache, store::MemoryStore };
+/// # use rscache::codec::Compression;
+/// # use rscache::codec::DecodedBuffer;
+/// # use std::convert::TryFrom;
+/// # fn main() -> rscache::Result<()> {
+/// # let path = "./data/osrs_cache";
+/// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+/// let buffer = cache.read(2, 10)?;
+/// let decoded = DecodedBuffer::try_from(buffer.as_slice())?;
+/// 
+/// let inner_buffer: Vec<u8> = decoded.into_vec();
+/// # Ok(())
+/// # }
+/// ```
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+pub struct DecodedBuffer {
+	pub compression: Compression,
+	pub version: Option<i16>,
+	buffer: Vec<u8>
+}
+
+impl DecodedBuffer {
+	// False positive, issue already open but not being worked on atm.
+	#[allow(clippy::missing_const_for_fn)]
+	#[inline]
+	pub fn into_vec(self) -> Vec<u8> {
+		self.buffer
+	}
 }
 
 /// Encodes a buffer, with the selected `Compression` format. Revision is an optional argument
@@ -69,7 +128,7 @@ pub enum Compression {
 /// # }
 /// ```
 #[inline]
-pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> crate::Result<Vec<u8>> {
+pub fn encode(compression: Compression, data: &[u8], version: Option<i16>) -> crate::Result<Vec<u8>> {
 	let compressed_data = match compression {
 		Compression::None => data.to_owned(),
 		Compression::Bzip2 => compress_bzip2(data)?,
@@ -86,8 +145,8 @@ pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> c
 
 	buffer.extend(compressed_data);
 
-	if let Some(revision) = revision {
-		buffer.extend(&i16::to_be_bytes(revision));
+	if let Some(version) = version {
+		buffer.extend(&i16::to_be_bytes(version));
 	}
 
 	Ok(buffer)
@@ -120,17 +179,7 @@ pub fn encode(compression: Compression, data: &[u8], revision: Option<i16>) -> c
 /// ```
 #[inline]
 pub fn decode(buffer: &[u8]) -> crate::Result<Vec<u8>> {
-	let (buffer, compression) = be_u8(buffer)?;
-	let compression = Compression::try_from(compression)?;
-
-	let (buffer, len) = be_u32(buffer)?;
-	let (_revision, buffer) = match compression {
-		Compression::None => decompress_none(buffer, len as usize)?,
-		Compression::Bzip2 => decompress_bzip2(buffer, len as usize)?,
-		Compression::Gzip => decompress_gzip(buffer, len as usize)?,
-	};
-
-	Ok(buffer)
+	Ok(DecodedBuffer::try_from(buffer)?.into_vec())
 }
 
 fn compress_bzip2(data: &[u8]) -> io::Result<Vec<u8>> {
@@ -184,6 +233,13 @@ fn decompress_gzip(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Vec
 	Ok((revision, decompressed_data))
 }
 
+impl Default for Compression {
+	#[inline]
+	fn default() -> Self {
+		Self::None
+	}
+}
+
 impl From<Compression> for u8 {
 	#[inline]
 	fn from(compression: Compression) -> Self {
@@ -206,5 +262,28 @@ impl TryFrom<u8> for Compression {
 			2 => Ok(Self::Gzip),
 			_ => Err(CompressionError::Unsupported(compression))
 		}
+	}
+}
+
+impl TryFrom<&[u8]> for DecodedBuffer {
+	type Error = CacheError;
+
+	#[inline]
+	fn try_from(buffer: &[u8]) -> Result<Self, Self::Error> {
+		let (buffer, compression) = be_u8(buffer)?;
+		let compression = Compression::try_from(compression)?;
+
+		let (buffer, len) = be_u32(buffer)?;
+		let (version, buffer) = match compression {
+			Compression::None => decompress_none(buffer, len as usize)?,
+			Compression::Bzip2 => decompress_bzip2(buffer, len as usize)?,
+			Compression::Gzip => decompress_gzip(buffer, len as usize)?,
+		};
+
+		Ok(Self{ 
+			compression,
+			version,
+			buffer
+		})
 	}
 }
