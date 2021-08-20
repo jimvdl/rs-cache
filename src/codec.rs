@@ -75,6 +75,7 @@ pub enum Compression {
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct DecodedBuffer {
 	pub compression: Compression,
+	pub len: usize,
 	pub version: Option<i16>,
 	buffer: Vec<u8>
 }
@@ -88,8 +89,8 @@ impl DecodedBuffer {
 	}
 }
 
-/// Encodes a buffer, with the selected `Compression` format. Revision is an optional argument
-/// that encodes the version of this buffer into it, if no revision should be encoded
+/// Encodes a buffer, with the selected `Compression` format. version is an optional argument
+/// that encodes the version of this buffer into it, if no version should be encoded
 /// pass None.
 /// 
 /// The following process takes place when encoding:
@@ -99,7 +100,7 @@ impl DecodedBuffer {
 /// 4. Push the length (u32) into the buffer of the compressed data from step 1.
 /// 5. If a compression type was selected (and not `Compression::None`) insert the uncompressed length as u32.
 /// 6. Extend the buffer with the compressed data.
-/// 7. Add the `revision` as i16 if present.
+/// 7. Add the `version` as i16 if present.
 /// 8. Encode complete.
 /// 
 /// Supported compression types:
@@ -199,9 +200,9 @@ fn decompress_none(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Vec
 	let mut compressed_data = vec![0; len];
 	compressed_data.copy_from_slice(buffer);
 
-	let (_, revision) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
+	let (_, version) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
 
-	Ok((revision, compressed_data))
+	Ok((version, compressed_data))
 }
 
 fn decompress_bzip2(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Vec<u8>)> {
@@ -210,13 +211,13 @@ fn decompress_bzip2(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Ve
 	compressed_data[4..len].copy_from_slice(&buffer[..len - 4]);
 	compressed_data[..4].copy_from_slice(b"BZh1");
 
-	let (_, revision) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
+	let (_, version) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
 
 	let mut decompressor = BzDecoder::new(compressed_data.as_slice());
 	let mut decompressed_data = vec![0; decompressed_len as usize];
 	decompressor.read_exact(&mut decompressed_data)?;
 
-	Ok((revision, decompressed_data))
+	Ok((version, decompressed_data))
 }
 
 fn decompress_gzip(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Vec<u8>)> {
@@ -224,13 +225,13 @@ fn decompress_gzip(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Vec
 	let mut compressed_data = vec![0; len - 4];
 	compressed_data.copy_from_slice(&buffer[..len - 4]);
 
-	let (_, revision) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
+	let (_, version) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
 
 	let mut decoder = Decoder::new(&compressed_data[..])?;
 	let mut decompressed_data = vec![0; decompressed_len as usize];
 	decoder.read_exact(&mut decompressed_data)?;
 
-	Ok((revision, decompressed_data))
+	Ok((version, decompressed_data))
 }
 
 impl Default for Compression {
@@ -274,14 +275,16 @@ impl TryFrom<&[u8]> for DecodedBuffer {
 		let compression = Compression::try_from(compression)?;
 
 		let (buffer, len) = be_u32(buffer)?;
+		let len = len as usize;
 		let (version, buffer) = match compression {
-			Compression::None => decompress_none(buffer, len as usize)?,
-			Compression::Bzip2 => decompress_bzip2(buffer, len as usize)?,
-			Compression::Gzip => decompress_gzip(buffer, len as usize)?,
+			Compression::None => decompress_none(buffer, len)?,
+			Compression::Bzip2 => decompress_bzip2(buffer, len)?,
+			Compression::Gzip => decompress_gzip(buffer, len)?,
 		};
 
 		Ok(Self{ 
 			compression,
+			len,
 			version,
 			buffer
 		})
