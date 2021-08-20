@@ -159,11 +159,9 @@ mod tests {
 	#[test]
 	fn test_header_size_normal() -> crate::Result<()> {
 		let archive = Archive{ id: u16::MAX as u32, index_id: 0, sector: 0, length: 0 };
-
 		let header_size = SectorHeaderSize::from_archive(&archive);
-		let expected = SectorHeaderSize::Normal;
 
-		assert_eq!(header_size, expected);
+		assert_eq!(header_size, SectorHeaderSize::Normal);
 
 		Ok(())
 	}
@@ -171,11 +169,9 @@ mod tests {
 	#[test]
 	fn test_header_size_expanded() -> crate::Result<()> {
 		let archive = Archive{ id: (u16::MAX as u32) + 1, index_id: 0, sector: 0, length: 0 };
-
 		let header_size = SectorHeaderSize::from_archive(&archive);
-		let expected = SectorHeaderSize::Expanded;
 
-		assert_eq!(header_size, expected);
+		assert_eq!(header_size, SectorHeaderSize::Expanded);
 
 		Ok(())
 	}
@@ -183,11 +179,9 @@ mod tests {
 	#[test]
 	fn test_parse_header() -> crate::Result<()> {
 		let buffer = &[0, 0, 0, 0, 0, 0, 2, 255];
+		let (_, header) = SectorHeader::new(buffer, &SectorHeaderSize::Normal)?;
 
-		let expected = SectorHeader { archive_id: 0, chunk: 0, next: 2, index_id: 255 };
-		let (_, actual) = SectorHeader::new(buffer, &SectorHeaderSize::Normal)?;
-
-		assert_eq!(actual, expected);
+		assert_eq!(header, SectorHeader { archive_id: 0, chunk: 0, next: 2, index_id: 255 });
 
 		Ok(())
 	}

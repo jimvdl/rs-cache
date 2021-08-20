@@ -29,7 +29,7 @@ mod osrs {
             }
         }
 
-        assert_eq!(533, blocked_tiles.len());
+        assert_eq!(blocked_tiles.len(), 533);
         
         Ok(())
     }

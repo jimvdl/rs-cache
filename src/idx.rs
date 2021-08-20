@@ -125,23 +125,6 @@ impl Index {
 	}
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_parse_archive() -> crate::Result<()> {
-		let buffer = &[0, 0, 77, 0, 1, 196];
-
-		let expected = Archive { id: 10, index_id: 255, sector: 452, length: 77 };
-		let actual = Archive::from_buffer(10, 255, buffer)?;
-
-		assert_eq!(actual, expected);
-
-		Ok(())
-	}
-}
-
 impl IntoIterator for Indices {
 	type Item = (u8, Index);
 	type IntoIter = hash_map::IntoIter<u8, Index>;
@@ -159,5 +142,20 @@ impl<'a> IntoIterator for &'a Indices {
 	#[inline]
 	fn into_iter(self) -> Self::IntoIter {
 		self.0.iter()
+	}
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_archive() -> crate::Result<()> {
+		let buffer = &[0, 0, 77, 0, 1, 196];
+		let archive = Archive::from_buffer(10, 255, buffer)?;
+
+		assert_eq!(archive, Archive { id: 10, index_id: 255, sector: 452, length: 77 });
+
+		Ok(())
 	}
 }

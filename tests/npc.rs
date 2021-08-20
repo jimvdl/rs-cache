@@ -10,7 +10,7 @@ mod osrs {
         
         let npc = npc_loader.load(3226).unwrap();
         
-        assert_eq!("Woodsman tutor", npc.name);
+        assert_eq!(npc.name, "Woodsman tutor");
         assert!(npc.interactable);
         
         Ok(())
@@ -23,7 +23,7 @@ mod osrs {
         
         let npc = npc_loader.load(8691).unwrap();
         
-        assert_eq!("Mosol Rei", npc.name);
+        assert_eq!(npc.name, "Mosol Rei");
         assert!(npc.interactable);
         
         Ok(())

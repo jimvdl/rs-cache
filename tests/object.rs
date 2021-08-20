@@ -10,8 +10,8 @@ mod osrs {
         
         let obj = obj_loader.load(25034).unwrap();
         
-        assert_eq!("Law rift", obj.name);
-        assert_eq!(2178, obj.animation_id);
+        assert_eq!(obj.name, "Law rift");
+        assert_eq!(obj.animation_id, 2178);
         assert!(obj.solid);
         assert!(!obj.obstruct_ground);
         
@@ -25,7 +25,7 @@ mod osrs {
         
         let obj = obj_loader.load(2030).unwrap();
         
-        assert_eq!("Furnace", obj.name);
+        assert_eq!(obj.name, "Furnace");
         assert!(obj.solid);
         assert!(!obj.obstruct_ground);
         
@@ -39,8 +39,8 @@ mod osrs {
         
         let obj = obj_loader.load(590).unwrap();
         
-        assert_eq!("Bank table", obj.name);
-        assert_eq!(Some(1), obj.supports_items);
+        assert_eq!(obj.name, "Bank table");
+        assert_eq!(obj.supports_items, Some(1));
         assert!(obj.solid);
         assert!(!obj.obstruct_ground);
         
@@ -54,9 +54,9 @@ mod osrs {
         
         let obj = obj_loader.load(1725).unwrap();
         
-        assert_eq!("Dungeon door", obj.name);
-        assert_eq!(Some(1), obj.wall_or_door);
-        assert_eq!(Some(0), obj.supports_items);
+        assert_eq!(obj.name, "Dungeon door");
+        assert_eq!(obj.wall_or_door, Some(1));
+        assert_eq!(obj.supports_items, Some(0));
         assert!(obj.solid);
         assert!(!obj.obstruct_ground);
         

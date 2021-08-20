@@ -10,7 +10,7 @@ mod osrs {
         let cache = common::osrs::setup();
 
         assert!(cache.is_ok());
-        assert_eq!(22, cache?.index_count());
+        assert_eq!(cache?.index_count(), 22);
 
         Ok(())
     }
@@ -41,8 +41,8 @@ mod osrs {
         let buffer = checksum.encode_osrs()?;
 
         let hash = common::hash(&buffer);
-        assert_eq!("0cb64350dc138e91bb83bc9c84b454631711f5de", &hash);
-        assert_eq!(173, buffer.len());
+        assert_eq!(&hash, "0cb64350dc138e91bb83bc9c84b454631711f5de");
+        assert_eq!(buffer.len(), 173);
 
         Ok(())
     }
@@ -70,8 +70,8 @@ mod osrs {
         let huffman_table = cache.huffman_table()?;
 
         let hash = common::hash(&huffman_table);
-        assert_eq!("664e89cf25a0af7da138dd0f3904ca79cd1fe767", &hash);
-        assert_eq!(256, huffman_table.len());
+        assert_eq!(&hash, "664e89cf25a0af7da138dd0f3904ca79cd1fe767");
+        assert_eq!(huffman_table.len(), 256);
 
         Ok(())
     }
@@ -104,7 +104,7 @@ mod rs3 {
         let cache = common::rs3::setup();
 
         assert!(cache.is_ok());
-        assert_eq!(58, cache?.index_count());
+        assert_eq!(cache?.index_count(), 58);
 
         Ok(())
     }
@@ -135,8 +135,8 @@ mod rs3 {
         let buffer = checksum.encode_rs3(common::rs3::EXPONENT, common::rs3::MODULUS)?;
 
         let hash = common::hash(&buffer);
-        assert_eq!("118e0146af6cf288630357eec6298c34a2430065", &hash);
-        assert_eq!(4681, buffer.len());
+        assert_eq!(&hash, "118e0146af6cf288630357eec6298c34a2430065");
+        assert_eq!(buffer.len(), 4681);
 
         Ok(())
     }

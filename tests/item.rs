@@ -10,7 +10,7 @@ mod osrs {
         
         let item = item_loader.load(1042).unwrap();
         
-        assert_eq!("Blue partyhat", item.name);
+        assert_eq!(item.name, "Blue partyhat");
         assert!(!item.stackable);
         assert!(!item.members_only);
         
@@ -24,7 +24,7 @@ mod osrs {
         
         let item = item_loader.load(1513).unwrap();
         
-        assert_eq!("Magic logs", item.name);
+        assert_eq!(item.name, "Magic logs");
         assert!(!item.stackable);
         assert!(item.members_only);
         
@@ -67,7 +67,7 @@ mod rs3 {
         
         let item = item_loader.load(1042).unwrap();
         
-        assert_eq!("Blue partyhat", item.name);
+        assert_eq!(item.name, "Blue partyhat");
         assert!(!item.stackable);
         assert!(!item.members_only);
         
@@ -81,11 +81,11 @@ mod rs3 {
 
         let item = item_loader.load(31285).unwrap();
 
-        assert_eq!("Mining master cape", item.name);
+        assert_eq!(item.name, "Mining master cape");
         assert!(!item.stackable);
         assert!(item.members_only);
-        assert_eq!(120_000, item.cost);
-        assert_eq!("Wear".to_owned(), item.interface_options[1]);
+        assert_eq!(item.cost, 120_000);
+        assert_eq!(item.interface_options[1], "Wear");
         
         Ok(())
     }
@@ -97,10 +97,10 @@ mod rs3 {
 
         let item = item_loader.load(44806).unwrap();
 
-        assert_eq!("Luminite stone spirit", item.name);
+        assert_eq!(item.name, "Luminite stone spirit");
         assert!(item.stackable);
         assert!(!item.members_only);
-        assert_eq!(840, item.cost);
+        assert_eq!(item.cost, 840);
         
         Ok(())
     }
@@ -112,7 +112,7 @@ mod rs3 {
 
         let item = item_loader.load(44830).unwrap();
 
-        assert_eq!("Light animica", item.name);
+        assert_eq!(item.name, "Light animica");
         assert!(!item.stackable);
         assert!(item.members_only);
         assert_eq!(1734, item.cost);
@@ -127,11 +127,11 @@ mod rs3 {
 
         let item = item_loader.load(45652).unwrap();
 
-        assert_eq!("Elder rune pickaxe + 5", item.name);
+        assert_eq!(item.name, "Elder rune pickaxe + 5");
         assert!(!item.stackable);
         assert!(item.members_only);
-        assert_eq!(1_066_668, item.cost);
-        assert_eq!("Wield".to_owned(), item.interface_options[1]);
+        assert_eq!(item.cost, 1_066_668);
+        assert_eq!(item.interface_options[1], "Wield");
         
         Ok(())
     }
@@ -143,11 +143,11 @@ mod rs3 {
 
         let item = item_loader.load(47707).unwrap();
 
-        assert_eq!("Wergali incense sticks", item.name);
+        assert_eq!(item.name, "Wergali incense sticks");
         assert!(item.stackable);
         assert!(item.members_only);
-        assert_eq!(208, item.cost);
-        assert_eq!("Light".to_owned(), item.interface_options[0]);
+        assert_eq!(item.cost, 208);
+        assert_eq!(item.interface_options[0], "Light");
         
         Ok(())
     }
