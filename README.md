@@ -19,7 +19,7 @@ Useful links:\
 The public API of this crate is still evolving.
 Currently supports both OSRS & RS3, although both are still limited.
 
-The `osrs_specifications.md` & `rs3_specifications.md` documents (located in the root directory of this project) contain a detailed description of the design of the corresponding cache for educational purposes. Both documents are still a work in progress and are possibly incomplete.
+The [osrs specifications](osrs_specifications.md) and [rs3 specifications](rs3_specifications.md) documents contain a detailed description of the design of the corresponding cache for educational purposes. Both documents are still a work in progress and are possibly incomplete.
 
 Integration tests are running on Oldschool RuneScape version 180, which you can run at any time because the cache is included in the `./data/osrs_cache` directory. RS3 Integration tests are running on version 904. The RS3 cache is too large to include on GitHub.
 
