@@ -1,8 +1,8 @@
 # RS-Cache
 [![Build](https://github.com/jimvdl/rs-cache/workflows/build/badge.svg)](https://github.com/jimvdl/rs-cache)
 [![Crate](https://img.shields.io/crates/v/rs-cache)](https://crates.io/crates/rs-cache)
-[![OSRS Revision](https://img.shields.io/badge/OSRS-180-blue)]()
-[![RS3 Revision](https://img.shields.io/badge/RS3-904-blue)]()
+[![OSRS Version](https://img.shields.io/badge/OSRS-180-blue)]()
+[![RS3 Version](https://img.shields.io/badge/RS3-904-blue)]()
 [![API](https://docs.rs/rs-cache/badge.svg)](https://docs.rs/rs-cache)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.41%2B-yellow)](https://blog.rust-lang.org/2020/01/30/Rust-1.41.0.html)
 [![License](https://img.shields.io/crates/l/rs-cache?color=black)](https://github.com/jimvdl/rs-cache/blob/master/LICENSE)
@@ -21,7 +21,7 @@ Currently supports both OSRS & RS3, although both are still limited.
 
 The `osrs_specifications.md` & `rs3_specifications.md` documents (located in the root directory of this project) contain a detailed description of the design of the corresponding cache for educational purposes. Both documents are still a work in progress and are possibly incomplete.
 
-Integration tests are running on Oldschool RuneScape revision 180, which you can run at any time because the cache is included in the `./data/osrs_cache` directory. RS3 Integration tests are running on revision 904. The RS3 cache is too large to include on GitHub.
+Integration tests are running on Oldschool RuneScape version 180, which you can run at any time because the cache is included in the `./data/osrs_cache` directory. RS3 Integration tests are running on version 904. The RS3 cache is too large to include on GitHub.
 
 The minimum supported `rustc` version is `1.41`.
 

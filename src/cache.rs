@@ -110,7 +110,7 @@ impl<S: Store> Cache<S> {
     /// that the client received during the update protocol.
     /// 
     /// NOTE: The RuneScape client doesn't have a valid crc for index 16.
-    /// This checksum sets the crc and revision for index 16 both to 0.
+    /// This checksum sets the crc and version for index 16 both to 0.
     /// The crc for index 16 should be skipped.
     /// 
     /// # Errors
