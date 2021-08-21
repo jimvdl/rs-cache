@@ -110,7 +110,7 @@ pub mod djd2 {
 /// 
 /// ```
 /// # use std::{ fs::File, path::Path, collections::HashMap };
-/// # use rscache::arc::Archive;
+/// # use rscache::arc::ArchiveRef;
 /// use rscache::{ Store, util };
 /// 
 /// # fn main() -> rscache::Result<()> {
@@ -127,7 +127,7 @@ pub mod djd2 {
 /// 
 ///         Ok(Self {  })
 ///     }
-/// # fn read(&self, archive: &Archive) -> rscache::Result<Vec<u8>> {
+/// # fn read(&self, archive: &ArchiveRef) -> rscache::Result<Vec<u8>> {
 /// # unimplemented!()
 /// # }
 /// }

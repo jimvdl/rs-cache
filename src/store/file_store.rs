@@ -5,7 +5,7 @@ use std::{
 };
 
 use crate::{
-	arc::Archive,
+	arc::ArchiveRef,
 	sec::{ Sector, SectorHeaderSize },
 	error::ParseError,
 	sec::SECTOR_SIZE,
@@ -26,7 +26,7 @@ impl Store for FileStore {
     }
 
 	#[inline]
-    fn read(&self, archive: &Archive) -> crate::Result<Vec<u8>> {
+    fn read(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
 		let header_size = SectorHeaderSize::from_archive(archive);
 		let (header_len, data_len) = header_size.clone().into();
 		let mut current_sector = archive.sector;

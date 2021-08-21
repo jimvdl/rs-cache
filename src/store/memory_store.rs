@@ -1,7 +1,7 @@
 use std::{ io::Read, fs::File };
 
 use crate::{
-	arc::Archive,
+	arc::ArchiveRef,
 	sec::Sector,
 	error::ParseError,
 	sec::{
@@ -29,7 +29,7 @@ impl Store for MemoryStore {
     }
 
 	#[inline]
-    fn read(&self, archive: &Archive) -> crate::Result<Vec<u8>> {
+    fn read(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
 		let mut current_sector = archive.sector;
         let mut data = vec![0; archive.length];
 		let mut remaining = archive.length;

@@ -17,7 +17,7 @@ use crate::{
     Store,
     Cache,
     Definition,
-    arc::{ ArchiveMetadata, ArchiveFileGroup },
+    arc::{ Archive, ArchiveFileGroup },
 };
 
 macro_rules! impl_osrs_loader {
@@ -99,11 +99,11 @@ pub fn load_map_def<S: Store>(cache: &Cache<S>, region_id: u32) -> crate::Result
 /// # }
 /// ```
 #[inline]
-pub fn parse_defs_from_archive<T: Definition, S: Store>(cache: &Cache<S>, index_id: u8, archive_id: u32) -> crate::Result<HashMap<u32, T>> {
+pub fn parse_defs_from_archive<D: Definition, S: Store>(cache: &Cache<S>, index_id: u8, archive_id: u32) -> crate::Result<HashMap<u32, D>> {
     let buffer = cache.read(REFERENCE_TABLE, index_id as u32)?;
     let buffer = codec::decode(&buffer)?;
     
-    let archives = ArchiveMetadata::parse(&buffer)?;
+    let archives = Archive::parse(&buffer)?;
     let entry_count = archives[archive_id as usize - 1].entry_count;
     
     let buffer = cache.read(index_id, archive_id)?;
@@ -113,7 +113,7 @@ pub fn parse_defs_from_archive<T: Definition, S: Store>(cache: &Cache<S>, index_
 
     let mut definitions = HashMap::new();
     for archive_file in archive_group {
-        definitions.insert(archive_file.id, T::new(archive_file.id, &archive_file.data)?);
+        definitions.insert(archive_file.id, D::new(archive_file.id, &archive_file.data)?);
     }
 
     Ok(definitions)
@@ -121,19 +121,20 @@ pub fn parse_defs_from_archive<T: Definition, S: Store>(cache: &Cache<S>, index_
 
 // TODO: document when model loader is implemented
 // every archive is 1 def, not like the one above where one archive contains many defs
+// TODO: remove (crate) when ready
 #[inline]
-pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, index_id: u8) -> crate::Result<HashMap<u32, T>> {
+pub(crate) fn parse_defs<D: Definition, S: Store>(cache: &Cache<S>, index_id: u8) -> crate::Result<HashMap<u32, D>> {
     let buffer = cache.read(REFERENCE_TABLE, index_id as u32)?;
     let buffer = codec::decode(&buffer)?;
     
-    let archives = ArchiveMetadata::parse(&buffer)?;
+    let archives = Archive::parse(&buffer)?;
     let mut definitions = HashMap::new();
     
     for archive in &archives {
         let buffer = cache.read(index_id, archive.id as u32)?;
         let buffer = codec::decode(&buffer)?;
 
-        definitions.insert(archive.id, T::new(archive.id, &buffer)?);
+        definitions.insert(archive.id, D::new(archive.id, &buffer)?);
     }
 
     Ok(definitions)

@@ -7,7 +7,7 @@ use std::{
 use rscache::{ 
     CacheCore, CacheRead, 
     Store,
-    arc::Archive,
+    arc::ArchiveRef,
     idx::Index,
     error::ReadError,
     util,
@@ -72,7 +72,7 @@ impl Store for CustomStore {
         Ok(Self { data: buffer })
     }
 
-    fn read(&self, archive: &Archive) -> rscache::Result<Vec<u8>> {
+    fn read(&self, archive: &ArchiveRef) -> rscache::Result<Vec<u8>> {
         // Implement your own read here.
 
         println!("{:?}", archive);

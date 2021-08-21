@@ -1,6 +1,6 @@
 //! Archives with parsing and decoding.
 
-// TODO: docs and determine what functions to expose.
+// TODO: determine what functions to expose. best done when writing is available
 
 use std::{
     io,
@@ -26,39 +26,43 @@ use nom::{
 };
 use itertools::izip;
 
-/// Represents an archive contained in an index.
+pub const ARC_REF_LENGTH: usize = 6;
+
+/// Represents an archive reference to an archive within the main data file.
 #[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-pub struct Archive {
+pub struct ArchiveRef {
     pub id: u32,
     pub index_id: u8,
     pub sector: usize,
     pub length: usize
 }
 
-/// Represents archive metadata.
+/// Represents an archive.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-pub struct ArchiveMetadata {
+pub struct Archive {
     pub id: u32,
     pub name_hash: i32,
     pub crc: u32,
     pub hash: i32,
     #[serde(with = "BigArray")]
     pub whirlpool: [u8; 64],
-    pub revision: u32,
+    pub version: u32,
     pub entry_count: usize,
     pub valid_ids: Vec<u16>
 }
 
+/// Represents one file inside an `ArchiveGroup`, contains only its id and a byte buffer.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ArchiveFileData {
     pub id: u32,
     pub data: Vec<u8>
 }
 
+/// Represents a group of `ArchiveFileData`.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ArchiveFileGroup(Vec<ArchiveFileData>);
 
-impl Archive {
+impl ArchiveRef {
     #[inline]
     pub(crate) fn from_buffer(id: u32, index_id: u8, buffer: &[u8]) -> crate::Result<Self> {
         let (buffer, len) = be_u24(buffer)?;
@@ -68,7 +72,7 @@ impl Archive {
     }
 }
 
-impl ArchiveMetadata {
+impl Archive {
     #[inline]
     pub(crate) fn parse(buffer: &[u8]) -> crate::Result<Vec<Self>> {
         let (buffer, protocol) = be_u8(buffer)?;
@@ -83,15 +87,15 @@ impl ArchiveMetadata {
         // skip for now
         //let (buffer, compressed, decompressed) = parse_codec(buffer, codec, archive_count)?;
         let (buffer, _) = cond(codec, many_m_n(0, archive_count * 8, be_u8))(buffer)?;
-        let (buffer, revisions) = many_m_n(0, archive_count, be_u32)(buffer)?;
+        let (buffer, versions) = many_m_n(0, archive_count, be_u32)(buffer)?;
         let (buffer, entry_counts) = many_m_n(0, archive_count, be_u16)(buffer)?;
         let entry_counts: Vec<usize> = entry_counts.iter().map(|&entry_count| entry_count as usize).collect();
         let (_, valid_ids) = parse_valid_ids(buffer, &entry_counts)?;
     
         let mut archives = Vec::with_capacity(archive_count);
         let mut last_archive_id = 0;
-        let archive_data = izip!(ids, name_hashes, crcs, hashes, whirlpools, revisions, entry_counts, valid_ids);
-        for (id, name_hash, crc, hash, whirlpool, revision, entry_count, valid_ids) in archive_data {
+        let archive_data = izip!(ids, name_hashes, crcs, hashes, whirlpools, versions, entry_counts, valid_ids);
+        for (id, name_hash, crc, hash, whirlpool, version, entry_count, valid_ids) in archive_data {
             last_archive_id += id as i32;
             
             archives.push(Self { 
@@ -100,7 +104,7 @@ impl ArchiveMetadata {
                 crc,
                 hash,
                 whirlpool,
-                revision, 
+                version, 
                 entry_count: entry_count as usize,
                 valid_ids,
             });
@@ -152,26 +156,6 @@ impl ArchiveFileGroup {
     #[inline]
     pub fn iter_mut(&mut self) -> IterMut<'_, ArchiveFileData> {
         self.0.iter_mut()
-    }
-}
-
-impl IntoIterator for ArchiveFileGroup {
-    type Item = ArchiveFileData;
-    type IntoIter = std::vec::IntoIter<ArchiveFileData>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.into_iter()
-    }
-}
-
-impl<'a> IntoIterator for &'a ArchiveFileGroup {
-    type Item = &'a ArchiveFileData;
-    type IntoIter = Iter<'a, ArchiveFileData>;
-
-    #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        self.0.iter()
     }
 }
 
@@ -242,4 +226,24 @@ fn parse_archive_count(buffer: &[u8]) -> crate::Result<(&[u8], usize)> {
     let (buffer, value) = be_u16(buffer)?;
 
     Ok((buffer, value as usize))
+}
+
+impl IntoIterator for ArchiveFileGroup {
+    type Item = ArchiveFileData;
+    type IntoIter = std::vec::IntoIter<ArchiveFileData>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a ArchiveFileGroup {
+    type Item = &'a ArchiveFileData;
+    type IntoIter = Iter<'a, ArchiveFileData>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
+    }
 }

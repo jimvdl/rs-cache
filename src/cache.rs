@@ -13,7 +13,7 @@ use crate::{
     store::Store, 
     cksm::{ Checksum, Entry },
     idx::Indices,
-    arc::{ Archive, ArchiveMetadata },
+    arc::{ Archive, ArchiveRef },
     error::ReadError, 
     util,
     codec,
@@ -35,7 +35,7 @@ pub trait CacheCore: CacheRead + Sized {
 pub trait CacheRead {
     fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>>;
     #[inline]
-    fn read_archive(&self, archive: &Archive) -> crate::Result<Vec<u8>> {
+    fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
         self.read(archive.index_id, archive.id)
     }
 }
@@ -102,7 +102,7 @@ impl<S: Store> Cache<S> {
     }
 
     #[inline]
-    pub fn read_archive(&self, archive: &Archive) -> crate::Result<Vec<u8>> {
+    pub fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
         CacheRead::read_archive(self, archive)
     }
 
@@ -215,7 +215,7 @@ impl<S: Store> Cache<S> {
     /// # }
     /// ```
     #[inline]
-    pub fn archive_by_name<T: Into<String>>(&self, index_id: u8, name: T) -> crate::Result<Archive> {
+    pub fn archive_by_name<T: Into<String>>(&self, index_id: u8, name: T) -> crate::Result<ArchiveRef> {
         let name = name.into();
 
         let index = self.indices.get(&index_id)
@@ -225,12 +225,12 @@ impl<S: Store> Cache<S> {
         let buffer = self.read(REFERENCE_TABLE, index_id as u32)?;
         let data = codec::decode(&buffer)?;
 
-        let archives = ArchiveMetadata::parse(&data)?;
+        let archives = Archive::parse(&data)?;
 
-        for archive_data in archives {
-            if archive_data.name_hash == hash {
-                let archive = index.archives.get(&(archive_data.id as u32))
-                    .ok_or(ReadError::ArchiveNotFound(index_id, archive_data.id as u32))?;
+        for archive in archives {
+            if archive.name_hash == hash {
+                let archive = index.archives.get(&(archive.id as u32))
+                    .ok_or(ReadError::ArchiveNotFound(index_id, archive.id as u32))?;
 
                 return Ok(*archive)
             }

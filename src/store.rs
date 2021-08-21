@@ -8,10 +8,10 @@ pub use file_store::*;
 
 use std::fs::File;
 
-use crate::arc::Archive;
+use crate::arc::ArchiveRef;
 
 /// The internal storage for a cache with a way to read internal data.
 pub trait Store: Sized {
     fn new(main_file: File) -> crate::Result<Self>;
-    fn read(&self, archive: &Archive) -> crate::Result<Vec<u8>>;
+    fn read(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>>;
 }

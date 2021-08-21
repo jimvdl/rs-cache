@@ -11,13 +11,12 @@ use std::{
 use serde::{ Serialize, Deserialize };
 
 use crate::{ 
-	arc::Archive, 
+	arc::{ ArchiveRef, ARC_REF_LENGTH }, 
 	error::{ ReadError, ParseError },
 	cache::REFERENCE_TABLE,
 };
 
 pub const IDX_PREFIX: &str = "main_file_cache.idx";
-pub const IDX_LENGTH: usize = 6;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Indices(HashMap<u8, Index>);
@@ -26,7 +25,7 @@ pub struct Indices(HashMap<u8, Index>);
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Index {
 	pub id: u8,
-	pub archives: HashMap<u32, Archive>,
+	pub archives: HashMap<u32, ArchiveRef>,
 }
 
 impl Indices {
@@ -110,10 +109,10 @@ impl Index {
     pub fn new(id: u8, buffer: &[u8]) -> crate::Result<Self> {
 		let mut archives = HashMap::new();
 
-		for (archive_id, archive_metadata) in buffer.chunks_exact(IDX_LENGTH).enumerate() {
+		for (archive_id, archive_data) in buffer.chunks_exact(ARC_REF_LENGTH).enumerate() {
 			let archive_id = archive_id as u32;
 
-			let archive = match Archive::from_buffer(archive_id, id, archive_metadata) {
+			let archive = match ArchiveRef::from_buffer(archive_id, id, archive_data) {
 				Ok(archive) => archive,
 				Err(_) => return Err(ParseError::Archive(archive_id).into())
 			};
@@ -152,9 +151,9 @@ mod tests {
     #[test]
     fn test_parse_archive() -> crate::Result<()> {
 		let buffer = &[0, 0, 77, 0, 1, 196];
-		let archive = Archive::from_buffer(10, 255, buffer)?;
+		let archive = ArchiveRef::from_buffer(10, 255, buffer)?;
 
-		assert_eq!(archive, Archive { id: 10, index_id: 255, sector: 452, length: 77 });
+		assert_eq!(archive, ArchiveRef{ id: 10, index_id: 255, sector: 452, length: 77 });
 
 		Ok(())
 	}

@@ -20,7 +20,7 @@ Reference table: `main_file_cache.idx255`.
 ## Structs
 | Structs | Size (bytes) | Variables (with size) |
 | - |:-:| -:|
-| Archive | 6 | `sector` - 3<br/>`length` - 3
+| ArchiveRef | 6 | `sector` - 3<br/>`length` - 3
 | Sector | 520 | _See sector layout below_ |
 | Sector header | 8 \| 10* | `archive_id` - 2 \| 4*<br/>`chunk` - 2<br/>`next` - 3<br/>`index_id` - 1 |
 | Sector data | 512 \| 510* | `data`
@@ -45,11 +45,11 @@ Fetch buffer from cache:
  2. Cache does an internal hashmap lookup for the specified index id.
  3. Within this index does the same lookup for the archive id.
  4. Archive contains the starting `sector` and the `length`.
- 5. Main file reader uses the fetched archive to read the corresponding data.
+ 5. Main file reader uses the fetched archive reference to read the corresponding data.
  6. Return the byte buffer.
 
 Main file reading:
- 1. Set read pointer to sector starting pointer from archive.
+ 1. Set read pointer to sector starting pointer from archive reference.
  2. Parse & validate the sector header.
  3. Copy sector data into the total byte buffer.
  4. Set the read pointer to the next sector (header of current sector contains the next sector).

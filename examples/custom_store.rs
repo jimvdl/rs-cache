@@ -1,5 +1,5 @@
 use std::{ io::Read, fs::File };
-use rscache::{ Cache, Store, arc::Archive };
+use rscache::{ Cache, Store, arc::ArchiveRef };
 
 fn main() -> rscache::Result<()> {
     // Uses default Cache struct with custom store.
@@ -26,7 +26,7 @@ impl Store for CustomStore {
         Ok(Self { data: buffer })
     }
 
-    fn read(&self, archive: &Archive) -> rscache::Result<Vec<u8>> {
+    fn read(&self, archive: &ArchiveRef) -> rscache::Result<Vec<u8>> {
         // Implement your own read here.
 
         println!("{:?}", archive);

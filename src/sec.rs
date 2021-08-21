@@ -12,7 +12,7 @@ use nom::{
 };
 
 use crate::error::ReadError;
-use crate::arc::Archive;
+use crate::arc::ArchiveRef;
 
 pub const SECTOR_HEADER_SIZE: usize = 8;
 pub const SECTOR_EXPANDED_HEADER_SIZE: usize = 10;
@@ -75,7 +75,7 @@ impl<'a> Sector<'a> {
 impl SectorHeaderSize {
 	/// Determines the size of the header for the given archive.
 	#[inline]
-	pub fn from_archive(archive: &Archive) -> Self {
+	pub fn from_archive(archive: &ArchiveRef) -> Self {
 		if archive.id > std::u16::MAX.into() { 
 			Self::Expanded 
 		} else { 
@@ -158,7 +158,7 @@ mod tests {
 
 	#[test]
 	fn test_header_size_normal() -> crate::Result<()> {
-		let archive = Archive{ id: u16::MAX as u32, index_id: 0, sector: 0, length: 0 };
+		let archive = ArchiveRef{ id: u16::MAX as u32, index_id: 0, sector: 0, length: 0 };
 		let header_size = SectorHeaderSize::from_archive(&archive);
 
 		assert_eq!(header_size, SectorHeaderSize::Normal);
@@ -168,7 +168,7 @@ mod tests {
 
 	#[test]
 	fn test_header_size_expanded() -> crate::Result<()> {
-		let archive = Archive{ id: (u16::MAX as u32) + 1, index_id: 0, sector: 0, length: 0 };
+		let archive = ArchiveRef{ id: (u16::MAX as u32) + 1, index_id: 0, sector: 0, length: 0 };
 		let header_size = SectorHeaderSize::from_archive(&archive);
 
 		assert_eq!(header_size, SectorHeaderSize::Expanded);

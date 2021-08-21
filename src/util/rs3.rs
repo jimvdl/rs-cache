@@ -6,7 +6,7 @@ use crate::{
     Definition,
     Cache,
     codec,
-    arc::{ ArchiveMetadata, ArchiveFileGroup },
+    arc::{ Archive, ArchiveFileGroup },
 };
 
 pub const ID_BLOCK_SIZE: usize = 256;
@@ -64,11 +64,11 @@ macro_rules! impl_rs3_loader {
 /// # }
 /// ```
 #[inline]
-pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) -> crate::Result<HashMap<u32, T>> {
+pub fn parse_defs<D: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) -> crate::Result<HashMap<u32, D>> {
     let buffer = cache.read(REFERENCE_TABLE, archive_id)?;
     let buffer = codec::decode(&buffer)?;
 
-    let archives = ArchiveMetadata::parse(&buffer)?;
+    let archives = Archive::parse(&buffer)?;
     let mut definitions = std::collections::HashMap::new();
     let mut base_id = 0;
 
@@ -80,7 +80,7 @@ pub fn parse_defs<T: Definition, S: Store>(cache: &Cache<S>, archive_id: u32) ->
 
         for archive_file in archive_group {
             let id = base_id + archive.valid_ids[archive_file.id as usize] as usize;
-            definitions.insert(id as u32, T::new(id as u32, &archive_file.data)?);
+            definitions.insert(id as u32, D::new(id as u32, &archive_file.data)?);
         }
 
         base_id += ID_BLOCK_SIZE;
