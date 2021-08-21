@@ -18,6 +18,7 @@ use crate::{
 
 pub const IDX_PREFIX: &str = "main_file_cache.idx";
 
+/// Represents all indicies loaded by the cache.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Indices(HashMap<u8, Index>);
 
@@ -29,6 +30,17 @@ pub struct Index {
 }
 
 impl Indices {
+	/// Loads all indices present in the cache folder.
+	/// 
+	/// It loops through the directory searching for the reference table and
+	/// every index that is compatible.
+	/// 
+	/// # Errors
+	/// 
+	/// Can return multiple errors: 
+	/// - Reference table not found.
+	/// - Index failed to parse. 
+	/// - Index couldn't be opened.
 	#[inline]
 	pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
 		let path = path.as_ref();

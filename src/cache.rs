@@ -148,7 +148,7 @@ impl<S: Store> Cache<S> {
                     checksum.push(
                         Entry { 
                             crc: crc32::checksum_ieee(&buffer), 
-                            revision: version,
+                            version,
                             hash
                         }
                     );

@@ -143,11 +143,15 @@ pub fn load_store<S: Store, P: AsRef<Path>>(path: P) -> crate::Result<S> {
 /// Loads all indices present in the cache folder.
 /// 
 /// The `u8` in `HashMap<u8, Index>` represents the id of the index.
+/// It loops through the directory searching for the reference table and
+/// every index that is compatible.
 /// 
 /// # Errors
 /// 
-/// Can return multiple errors: if the index couldnt be parsed or the index 
-/// couldn't be opened.
+/// Can return multiple errors: 
+/// - Reference table not found.
+/// - Index failed to parse. 
+/// - Index couldn't be opened.
 #[inline]
 pub fn load_indices<P: AsRef<Path>>(path: P) -> crate::Result<HashMap<u8, Index>> {
     let path = path.as_ref();

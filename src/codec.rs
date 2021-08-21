@@ -81,6 +81,25 @@ pub struct DecodedBuffer {
 }
 
 impl DecodedBuffer {
+	/// Free conversion from `DecodedBuffer` into `Vec<u8>`.
+	/// 
+	/// # Examples
+	/// 
+	/// ```
+	/// # use rscache::{ Cache, store::MemoryStore };
+	/// # use rscache::codec::Compression;
+	/// # use rscache::codec::DecodedBuffer;
+	/// # use std::convert::TryFrom;
+	/// # fn main() -> rscache::Result<()> {
+	/// # let path = "./data/osrs_cache";
+	/// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+	/// let buffer = cache.read(2, 10)?;
+	/// let decoded = DecodedBuffer::try_from(buffer.as_slice())?;
+	/// 
+	/// let inner_buffer: Vec<u8> = decoded.into_vec();
+	/// # Ok(())
+	/// # }
+	/// ```
 	// False positive, issue already open but not being worked on atm.
 	#[allow(clippy::missing_const_for_fn)]
 	#[inline]

@@ -8,10 +8,11 @@ use serde::{ Serialize, Deserialize };
 use num_bigint::{ BigInt, Sign };
 use whirlpool::{ Whirlpool, Digest };
 
+/// Contains validation data for a specific index.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Entry {
     pub crc: u32,
-    pub revision: u32,
+    pub version: u32,
     pub hash: Vec<u8>,
 }
 
@@ -19,7 +20,6 @@ pub struct Entry {
 /// 
 /// The `Checksum` is used to validate if every file used by the cache
 /// is still valid. It contains a list of entries, one entry for each index file.
-/// Every entry contains a crc and a revision.
 /// 
 /// In order to create the `Checksum` the 
 /// [create_checksum()](struct.Cache.html#method.create_checksum) function has to be 
@@ -97,7 +97,7 @@ impl Checksum {
 
 		for entry in self.entries {
             buffer.extend(&u32::to_be_bytes(entry.crc));
-            buffer.extend(&u32::to_be_bytes(entry.revision));
+            buffer.extend(&u32::to_be_bytes(entry.version));
         }
 
         codec::encode(Compression::None, &buffer, None)
@@ -141,7 +141,7 @@ impl Checksum {
         for (index, entry) in self.entries.iter().enumerate() {
             let offset = index * 80;
             buffer[offset + 1..=offset + 4].copy_from_slice(&u32::to_be_bytes(entry.crc));
-            buffer[offset + 5..=offset + 8].copy_from_slice(&u32::to_be_bytes(entry.revision));
+            buffer[offset + 5..=offset + 8].copy_from_slice(&u32::to_be_bytes(entry.version));
             buffer[offset + 9..=offset + 12].copy_from_slice(&u32::to_be_bytes(0));
             buffer[offset + 13..=offset + 16].copy_from_slice(&u32::to_be_bytes(0));
             buffer[offset + 17..=offset + 80].copy_from_slice(&entry.hash);
@@ -215,7 +215,7 @@ impl Default for Entry {
     fn default() -> Self {
         Self {
             crc: 0,
-            revision: 0,
+            version: 0,
             hash: vec![0; 64]
         }
     }
