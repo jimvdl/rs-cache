@@ -6,14 +6,15 @@ pub const MODULUS: &'static [u8] = b"6950273013450460376345707589939362735767433
 struct IncomingUpdatePacket {
     pub index_id: u8,
     pub archive_id: u32,
-    pub packet_id: u8
+    // 0 is low priority, 1 is high priority
+    pub priority: u8
 }
 
 // This example illustrates the rs3 update protocol.
 // You can use this to handle client requests for cache data.
 fn main() -> rscache::Result<()> {
     let cache: Cache<FileStore> = Cache::new("./data/rs3_cache")?;
-    let packet = IncomingUpdatePacket{ index_id: 255, archive_id: 10, packet_id: 0 };
+    let packet = IncomingUpdatePacket{ index_id: 255, archive_id: 10, priority: 0 };
 
     let buf = if packet.index_id == 255 && packet.archive_id == 255 {
         cache.create_checksum()?.encode_rs3(EXPONENT, MODULUS)?
@@ -26,7 +27,7 @@ fn main() -> rscache::Result<()> {
         let mut data = allocate_buffer(packet.index_id, packet.archive_id, data_block.len());
 
         encode_index_id(&mut data, packet.index_id);
-        encode_archive_id(&mut data, packet.archive_id, packet.packet_id);
+        encode_archive_id(&mut data, packet.archive_id, packet.priority);
         if packet.index_id == 255 && packet.archive_id == 255 {
             encode_length(&mut data, buf.len() as u32);
             encode_remaining(&mut data[10..], &buf);
@@ -64,9 +65,9 @@ fn encode_index_id(buffer: &mut [u8], index_id: u8) {
     buffer[0] = index_id;
 }
 
-fn encode_archive_id(buffer: &mut [u8], archive_id: u32, packet_id: u8) {
+fn encode_archive_id(buffer: &mut [u8], archive_id: u32, priority: u8) {
     // packet_id 1 means it is a priority packet, 0 means no priority.
-    let archive_id = if packet_id == 0 { 
+    let archive_id = if priority == 0 { 
         archive_id | !0x7fffffff 
     } else { 
         archive_id 
