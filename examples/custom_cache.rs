@@ -1,5 +1,4 @@
 use std::{ 
-    collections::HashMap, 
     path::Path,
     fs::File,
     io::Read,
@@ -8,7 +7,7 @@ use rscache::{
     CacheCore, CacheRead, 
     Store,
     arc::ArchiveRef,
-    idx::Index,
+    idx::Indices,
     error::ReadError,
     util,
 };
@@ -26,7 +25,7 @@ fn main() -> rscache::Result<()> {
 // idea of how to implement your own cache.
 struct CustomCache {
     store: CustomStore,
-    indices: HashMap<u8, Index>
+    indices: Indices
 }
 
 // Identical to MemoryStore.
@@ -42,7 +41,7 @@ impl CacheCore for CustomCache {
         let path = path.as_ref();
 
         let store = util::load_store(path)?;
-        let indices = util::load_indices(path)?;
+        let indices = Indices::new(path)?;
 
         Ok(Self { store, indices })
     }
@@ -50,15 +49,11 @@ impl CacheCore for CustomCache {
 
 impl CacheRead for CustomCache {
     fn read(&self, index_id: u8, archive_id: u32) -> rscache::Result<Vec<u8>> {
-        let index = match self.indices.get(&index_id) {
-            Some(index) => index,
-            None => return Err(ReadError::IndexNotFound(index_id).into())
-        };
+        let index = self.indices.get(&index_id)
+            .ok_or(ReadError::IndexNotFound(index_id))?;
 
-        let archive = match index.archives.get(&archive_id) {
-            Some(archive) => archive,
-            None => return Err(ReadError::ArchiveNotFound(index_id, archive_id).into())
-        };
+        let archive = index.archives.get(&archive_id)
+            .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
 
         Ok(self.store.read(&archive)?)
     }
