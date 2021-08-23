@@ -9,12 +9,30 @@
 
 A simple-to-use basic RuneScape cache utility. RS-Cache provides utilities to interact with the RuneScape cache. 
 
-Follow this [Quick Start](https://docs.rs/rs-cache/#quick-start) guide to begin using rs-cache.
-
 Useful links:\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/5/5d/Fire_rune_detail.png/800px-Fire_rune_detail.png?07ed5" width="10"> &nbsp;[Releases](https://github.com/jimvdl/rs-cache/releases)\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/7/74/Water_rune_detail.png/800px-Water_rune_detail.png?4e790" width="10"> &nbsp;[Documentation](https://docs.rs/rs-cache)\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/e/ef/Nature_rune_detail.png/800px-Nature_rune_detail.png?a062f" width="10"> &nbsp;[Examples](examples/)
+
+## Quick Start
+
+The quickest and easiest way to get started is by using 
+[`OsrsCache`]([type.OsrsCache.html](https://docs.rs/rs-cache/0.6.3/rscache/type.OsrsCache.html)) or [`Rs3Cache`]([type.Rs3Cache.html](https://docs.rs/rs-cache/0.6.3/rscache/type.Rs3Cache.html)).
+
+```
+use rscache::OsrsCache;
+
+fn main() -> rscache::Result<()> {
+    let cache = OsrsCache::new("./data/osrs_cache")?;
+
+    let index_id = 2; // Config index.
+    let archive_id = 10; // Archive containing item definitions.
+
+    let buffer: Vec<u8> = cache.read(index_id, archive_id)?;
+
+    Ok(())
+}
+```
 
 The public API of this crate is still evolving.
 Currently supports both OSRS & RS3, although both are still limited.
