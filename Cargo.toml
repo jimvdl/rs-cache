@@ -1,6 +1,6 @@
 [package]
 name = "rs-cache"
-version = "0.6.2" # Remember to update usage
+version = "0.6.3" # Remember to update usage
 authors = ["jimvdl <jimvdlind@gmail.com>"]
 edition = "2018"
 license = "MIT"
@@ -17,15 +17,16 @@ name = "rscache"
 path = "src/lib.rs"
 
 [dependencies]
-crc = "1.8.1"
+crc = "1.8"
 bzip2 = "0.4"
-libflate = "1.1.0"
-nom = "6.2.1"
-itertools = "0.9.0"
-whirlpool = "0.9.0"
+nom = "6.2"
+itertools = "0.9"
+whirlpool = "0.9"
 num-bigint = "0.4"
-serde = { version = "1.0.127", features = ["derive"] }
-serde-big-array = "0.3.2"
+serde = { version = "1.0", features = ["derive"] }
+serde-big-array = "0.3"
+lzma-rs = "0.2"
+flate2 = "1.0"
 
 [dev-dependencies]
-sha1 = "0.6.0"
+sha1 = "0.6"

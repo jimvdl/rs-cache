@@ -16,8 +16,9 @@
 //! - Huffman buffer access.
 //! - Checksum with simple-to-use validation.
 //! - Compression and decompression:
-//!   - [Gzip](https://crates.io/crates/libflate)
+//!   - [Gzip](https://crates.io/crates/flate2)
 //!   - [Bzip2](https://crates.io/crates/bzip2)
+//!   - [LZMA](https://crates.io/crates/lzma_rs)
 //! - OSRS Loaders
 //!   - [`ItemLoader`](ldr/osrs/struct.ItemLoader.html)
 //!   - [`NpcLoader`](ldr/osrs/struct.NpcLoader.html)
@@ -29,15 +30,13 @@
 //!   - Isaac randomizer.
 //!   - Xtea decipher.
 //! 
-//! Features to be implemented in the future: 
+//! Feature to be implemented in the future: 
 //! - Writing data to the cache.
-//! - LZMA compression.
 //! 
 //! # Quick Start
 //! 
 //! The quickest and easiest way to get started is by using 
 //! [`OsrsCache`](type.OsrsCache.html) or [`Rs3Cache`](type.Rs3Cache.html).
-//! (they work the same but use different reading methods)
 //! 
 //! ```
 //! use rscache::OsrsCache;
