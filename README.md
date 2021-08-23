@@ -19,7 +19,7 @@ Useful links:\
 The quickest and easiest way to get started is by using 
 [`OsrsCache`]([type.OsrsCache.html](https://docs.rs/rs-cache/0.6.3/rscache/type.OsrsCache.html)) or [`Rs3Cache`]([type.Rs3Cache.html](https://docs.rs/rs-cache/0.6.3/rscache/type.Rs3Cache.html)).
 
-```
+```rust
 use rscache::OsrsCache;
 
 fn main() -> rscache::Result<()> {
