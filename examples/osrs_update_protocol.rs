@@ -10,6 +10,7 @@ struct IncomingUpdatePacket {
 fn main() -> rscache::Result<()> {
     let cache = OsrsCache::new("./data/osrs_cache")?;
     let packet = IncomingUpdatePacket{ index_id: 255, archive_id: 10 };
+    let test = 1;
 
     let mut buffer = if packet.index_id == 255 && packet.archive_id == 255 {
         cache.create_checksum()?.encode_osrs()?
