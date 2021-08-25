@@ -1,8 +1,8 @@
 use rscache::OsrsCache;
 
 struct IncomingUpdatePacket {
-    pub index_id: u8,
-    pub archive_id: u32,
+	pub index_id: u8,
+	pub archive_id: u32,
 }
 
 // This example illustrates the osrs update protocol.
@@ -11,11 +11,11 @@ fn main() -> rscache::Result<()> {
 	let cache = OsrsCache::new("./data/osrs_cache")?;
 	let packet = IncomingUpdatePacket{ index_id: 255, archive_id: 10 };
 
-    let mut buffer = if packet.index_id == 255 && packet.archive_id == 255 {
+	let mut buffer = if packet.index_id == 255 && packet.archive_id == 255 {
 		cache.create_checksum()?.encode_osrs()?
 	} else {
 		let buf = cache.read(packet.index_id, packet.archive_id)?;
-        format_buffer(buf, packet.index_id)
+		format_buffer(buf, packet.index_id)
 	};
 
 	let compression = buffer[0];
@@ -40,21 +40,21 @@ fn main() -> rscache::Result<()> {
 		data.insert(index_id, 255);
 	}
 
-    // write data to the client
-    // stream.write_all(&data)?;
+	// write data to the client
+	// stream.write_all(&data)?;
 
-    println!("{:?}", data);
-    
+	println!("{:?}", data);
+	
 	Ok(())
 }
 
 fn format_buffer(mut buffer: Vec<u8>, index_id: u8) -> Vec<u8> {
-    if index_id != 255 {
-        buffer.truncate(buffer.len() - 2);
-        buffer
-    } else {
-        buffer
-    }
+	if index_id != 255 {
+		buffer.truncate(buffer.len() - 2);
+		buffer
+	} else {
+		buffer
+	}
 }
 
 fn parse_length(buffer: &[u8]) -> u32 {

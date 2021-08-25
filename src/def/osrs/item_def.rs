@@ -74,12 +74,12 @@ pub struct CharacterModelData {
 
 impl Definition for ItemDefinition {
 	#[inline]
-    fn new(id: u32, buffer: &[u8]) -> io::Result<Self> {
-        let mut reader = BufReader::new(buffer);
+	fn new(id: u32, buffer: &[u8]) -> io::Result<Self> {
+		let mut reader = BufReader::new(buffer);
 		let item_def = decode_buffer(id, &mut reader)?;
 
 		Ok(item_def)
-    }
+	}
 }
 
 fn decode_buffer(id: u32, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefinition> {
