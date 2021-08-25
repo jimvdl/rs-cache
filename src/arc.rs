@@ -15,7 +15,7 @@ use nom::{
     multi::{ many0, many_m_n },
     combinator::cond,
     bytes::complete::take,
-	number::complete::{
+    number::complete::{
         be_u8,
         be_u16,
         be_u24,

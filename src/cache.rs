@@ -4,7 +4,7 @@ use std::path::Path;
 
 use nom::{
     combinator::cond,
-	number::complete::{
+    number::complete::{
         be_u32,
     },
 };
@@ -44,7 +44,7 @@ pub trait CacheRead {
 #[derive(Clone, Debug)]
 pub struct Cache<S: Store> {
     store: S,
-	indices: Indices,
+    indices: Indices,
 }
 
 impl<S: Store> Cache<S> {
@@ -188,8 +188,8 @@ impl<S: Store> Cache<S> {
 
         let archive = self.archive_by_name(index_id, "huffman")?;
         let buffer = self.store.read(&archive)?;
-		
-		codec::decode(&buffer)
+        
+        codec::decode(&buffer)
     }
 
     /// Searches for the archive which contains the given name hash in the given

@@ -155,26 +155,26 @@ pub fn load_store<S: Store, P: AsRef<Path>>(path: P) -> crate::Result<S> {
 #[inline]
 pub fn load_indices<P: AsRef<Path>>(path: P) -> crate::Result<HashMap<u8, Index>> {
     let path = path.as_ref();
-	let mut indices = HashMap::new();
+    let mut indices = HashMap::new();
 
     let ref_tbl_path = path.join(format!("{}{}", IDX_PREFIX, REFERENCE_TABLE));
     if !ref_tbl_path.exists() {
         return Err(ReadError::ReferenceTableNotFound.into());
     }
 
-	for index_id in 0..=REFERENCE_TABLE {
-		let path = path.join(format!("{}{}", IDX_PREFIX, index_id));
+    for index_id in 0..=REFERENCE_TABLE {
+        let path = path.join(format!("{}{}", IDX_PREFIX, index_id));
 
-		if path.exists() {
-			let mut index_file = File::open(path)?;
-			let mut index_buffer = Vec::with_capacity(index_file.metadata()?.len() as usize);
+        if path.exists() {
+            let mut index_file = File::open(path)?;
+            let mut index_buffer = Vec::with_capacity(index_file.metadata()?.len() as usize);
 
-			index_file.read_to_end(&mut index_buffer)?;
-			indices.insert(index_id, Index::new(index_id, &index_buffer)?);
-		}
+            index_file.read_to_end(&mut index_buffer)?;
+            indices.insert(index_id, Index::new(index_id, &index_buffer)?);
+        }
     }
 
-	Ok(indices)
+    Ok(indices)
 }
 
 /// Useful for decoding parameters when reading from definition buffers.

@@ -83,11 +83,11 @@ mod osrs {
         let huffman_table = cache.huffman_table()?;
         let huffman = Huffman::new(&huffman_table);
 
-	    let compressed_msg = &[174, 128, 35, 32, 208, 96];
-	    let decompressed_len = 8;
+        let compressed_msg = &[174, 128, 35, 32, 208, 96];
+        let decompressed_len = 8;
     
         let decompressed_msg = huffman.decompress(compressed_msg, decompressed_len);
-	 
+     
         let msg = String::from_utf8(decompressed_msg).unwrap_or_default();
         assert_eq!(msg, "rs-cache");
 

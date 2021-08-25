@@ -5,35 +5,35 @@ use std::convert::TryFrom;
 
 use nom::{
     combinator::cond,
-	number::complete::{
+    number::complete::{
         be_u8,
-		be_i16,
-		be_u32,
+        be_i16,
+        be_u32,
     },
 };
 use bzip2::{
-	read::BzDecoder,
-	write::BzEncoder,
+    read::BzDecoder,
+    write::BzEncoder,
 };
 use flate2::{
-	write::GzEncoder,
-	bufread::GzDecoder,
+    write::GzEncoder,
+    bufread::GzDecoder,
 };
 use lzma_rs::{
-	lzma_decompress_with_options,
-	lzma_compress_with_options,
-	compress,
-	decompress,
+    lzma_decompress_with_options,
+    lzma_compress_with_options,
+    compress,
+    decompress,
 };
 
 use crate::error::{ CacheError, CompressionError };
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Compression {
-	None,
-	Bzip2,
-	Gzip,
-	Lzma,
+    None,
+    Bzip2,
+    Gzip,
+    Lzma,
 }
 
 /// Decodes a cache buffer with some additional data.
@@ -81,38 +81,38 @@ pub enum Compression {
 /// ```
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct DecodedBuffer {
-	pub compression: Compression,
-	pub len: usize,
-	pub version: Option<i16>,
-	buffer: Vec<u8>
+    pub compression: Compression,
+    pub len: usize,
+    pub version: Option<i16>,
+    buffer: Vec<u8>
 }
 
 impl DecodedBuffer {
-	/// Free conversion from `DecodedBuffer` into `Vec<u8>`.
-	/// 
-	/// # Examples
-	/// 
-	/// ```
-	/// # use rscache::{ Cache, store::MemoryStore };
-	/// # use rscache::codec::Compression;
-	/// # use rscache::codec::DecodedBuffer;
-	/// # use std::convert::TryFrom;
-	/// # fn main() -> rscache::Result<()> {
-	/// # let path = "./data/osrs_cache";
-	/// # let cache: Cache<MemoryStore> = Cache::new(path)?;
-	/// let buffer = cache.read(2, 10)?;
-	/// let decoded = DecodedBuffer::try_from(buffer.as_slice())?;
-	/// 
-	/// let inner_buffer: Vec<u8> = decoded.into_vec();
-	/// # Ok(())
-	/// # }
-	/// ```
-	// False positive, issue already open but not being worked on atm.
-	#[allow(clippy::missing_const_for_fn)]
-	#[inline]
-	pub fn into_vec(self) -> Vec<u8> {
-		self.buffer
-	}
+    /// Free conversion from `DecodedBuffer` into `Vec<u8>`.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use rscache::{ Cache, store::MemoryStore };
+    /// # use rscache::codec::Compression;
+    /// # use rscache::codec::DecodedBuffer;
+    /// # use std::convert::TryFrom;
+    /// # fn main() -> rscache::Result<()> {
+    /// # let path = "./data/osrs_cache";
+    /// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+    /// let buffer = cache.read(2, 10)?;
+    /// let decoded = DecodedBuffer::try_from(buffer.as_slice())?;
+    /// 
+    /// let inner_buffer: Vec<u8> = decoded.into_vec();
+    /// # Ok(())
+    /// # }
+    /// ```
+    // False positive, issue already open but not being worked on atm.
+    #[allow(clippy::missing_const_for_fn)]
+    #[inline]
+    pub fn into_vec(self) -> Vec<u8> {
+        self.buffer
+    }
 }
 
 /// Encodes a buffer, with the selected `Compression` format. version is an optional argument
@@ -156,28 +156,28 @@ impl DecodedBuffer {
 /// ```
 #[inline]
 pub fn encode(compression: Compression, data: &[u8], version: Option<i16>) -> crate::Result<Vec<u8>> {
-	let compressed_data = match compression {
-		Compression::None => data.to_owned(),
-		Compression::Bzip2 => compress_bzip2(data)?,
-		Compression::Gzip => compress_gzip(data)?,
-		Compression::Lzma => compress_lzma(data)?,
-	};
+    let compressed_data = match compression {
+        Compression::None => data.to_owned(),
+        Compression::Bzip2 => compress_bzip2(data)?,
+        Compression::Gzip => compress_gzip(data)?,
+        Compression::Lzma => compress_lzma(data)?,
+    };
 
-	let mut buffer = Vec::with_capacity(compressed_data.len() + 11);
-	buffer.push(compression as u8);
-	buffer.extend(&u32::to_be_bytes(compressed_data.len() as u32));
-	
-	if compression != Compression::None {
-		buffer.extend(&u32::to_be_bytes(data.len() as u32));
-	}
+    let mut buffer = Vec::with_capacity(compressed_data.len() + 11);
+    buffer.push(compression as u8);
+    buffer.extend(&u32::to_be_bytes(compressed_data.len() as u32));
+    
+    if compression != Compression::None {
+        buffer.extend(&u32::to_be_bytes(data.len() as u32));
+    }
 
-	buffer.extend(compressed_data);
+    buffer.extend(compressed_data);
 
-	if let Some(version) = version {
-		buffer.extend(&i16::to_be_bytes(version));
-	}
+    if let Some(version) = version {
+        buffer.extend(&i16::to_be_bytes(version));
+    }
 
-	Ok(buffer)
+    Ok(buffer)
 }
 
 /// Decodes the buffer.
@@ -207,151 +207,151 @@ pub fn encode(compression: Compression, data: &[u8], version: Option<i16>) -> cr
 /// ```
 #[inline]
 pub fn decode(buffer: &[u8]) -> crate::Result<Vec<u8>> {
-	Ok(DecodedBuffer::try_from(buffer)?.into_vec())
+    Ok(DecodedBuffer::try_from(buffer)?.into_vec())
 }
 
 fn compress_bzip2(data: &[u8]) -> io::Result<Vec<u8>> {
-	let mut compressor = BzEncoder::new(Vec::new(), bzip2::Compression::fast());
-	compressor.write_all(data)?;
-	let mut compressed_data = compressor.finish()?;
-	compressed_data.drain(..4);
+    let mut compressor = BzEncoder::new(Vec::new(), bzip2::Compression::fast());
+    compressor.write_all(data)?;
+    let mut compressed_data = compressor.finish()?;
+    compressed_data.drain(..4);
 
-	Ok(compressed_data)
+    Ok(compressed_data)
 }
 
 fn compress_gzip(data: &[u8]) -> io::Result<Vec<u8>> {
-	let mut compressor = GzEncoder::new(Vec::new(), flate2::Compression::best());
-	compressor.write_all(data)?;
-	let compressed_data: Vec<u8> = compressor.finish()?;
+    let mut compressor = GzEncoder::new(Vec::new(), flate2::Compression::best());
+    compressor.write_all(data)?;
+    let compressed_data: Vec<u8> = compressor.finish()?;
 
-	Ok(compressed_data)
+    Ok(compressed_data)
 }
 
 fn compress_lzma(data: &[u8]) -> io::Result<Vec<u8>> {
-	let input = data.to_owned();
-	let mut output = Vec::new();
-	let options = compress::Options{
-		unpacked_size: compress::UnpackedSize::SkipWritingToHeader,
-	};
+    let input = data.to_owned();
+    let mut output = Vec::new();
+    let options = compress::Options{
+        unpacked_size: compress::UnpackedSize::SkipWritingToHeader,
+    };
 
-	lzma_compress_with_options(&mut input.as_slice(), &mut output, &options)?;
+    lzma_compress_with_options(&mut input.as_slice(), &mut output, &options)?;
 
-	Ok(output)
+    Ok(output)
 }
 
 fn decompress_none(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i16>, Vec<u8>)> {
-	let mut compressed_data = vec![0; len];
-	compressed_data.copy_from_slice(buffer);
+    let mut compressed_data = vec![0; len];
+    compressed_data.copy_from_slice(buffer);
 
-	let (_, version) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
+    let (_, version) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
 
-	Ok((len, version, compressed_data))
+    Ok((len, version, compressed_data))
 }
 
 fn decompress_bzip2(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i16>, Vec<u8>)> {
-	let (buffer, decompressed_len) = be_u32(buffer)?;
-	let mut compressed_data = vec![0; len];
-	compressed_data[4..len].copy_from_slice(&buffer[..len - 4]);
-	compressed_data[..4].copy_from_slice(b"BZh1");
+    let (buffer, decompressed_len) = be_u32(buffer)?;
+    let mut compressed_data = vec![0; len];
+    compressed_data[4..len].copy_from_slice(&buffer[..len - 4]);
+    compressed_data[..4].copy_from_slice(b"BZh1");
 
-	let (_, version) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
+    let (_, version) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
 
-	let mut decompressor = BzDecoder::new(compressed_data.as_slice());
-	let mut decompressed_data = vec![0; decompressed_len as usize];
-	decompressor.read_exact(&mut decompressed_data)?;
+    let mut decompressor = BzDecoder::new(compressed_data.as_slice());
+    let mut decompressed_data = vec![0; decompressed_len as usize];
+    decompressor.read_exact(&mut decompressed_data)?;
 
-	Ok((decompressed_len as usize, version, decompressed_data))
+    Ok((decompressed_len as usize, version, decompressed_data))
 }
 
 fn decompress_gzip(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i16>, Vec<u8>)> {
-	let (buffer, decompressed_len) = be_u32(buffer)?;
-	let mut compressed_data = vec![0; len];
-	compressed_data.copy_from_slice(&buffer[..len]);
+    let (buffer, decompressed_len) = be_u32(buffer)?;
+    let mut compressed_data = vec![0; len];
+    compressed_data.copy_from_slice(&buffer[..len]);
 
-	let (_, version) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
+    let (_, version) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
 
-	let mut decompressor = GzDecoder::new(compressed_data.as_slice());
-	let mut decompressed_data = vec![0; decompressed_len as usize];
-	decompressor.read_exact(&mut decompressed_data)?;
+    let mut decompressor = GzDecoder::new(compressed_data.as_slice());
+    let mut decompressed_data = vec![0; decompressed_len as usize];
+    decompressor.read_exact(&mut decompressed_data)?;
 
-	Ok((decompressed_len as usize, version, decompressed_data))
+    Ok((decompressed_len as usize, version, decompressed_data))
 }
 
 fn decompress_lzma(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i16>, Vec<u8>)> {
-	let (buffer, decompressed_len) = be_u32(buffer)?;
-	let mut compressed_data = vec![0; len - 4];
-	compressed_data.copy_from_slice(&buffer[..len - 4]);
+    let (buffer, decompressed_len) = be_u32(buffer)?;
+    let mut compressed_data = vec![0; len - 4];
+    compressed_data.copy_from_slice(&buffer[..len - 4]);
 
-	let (_, version) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
+    let (_, version) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
 
-	let mut decompressed_data = Vec::with_capacity(decompressed_len as usize);
-	let mut wrapper = BufReader::new(buffer);
-	let options = decompress::Options{ 
-		unpacked_size: decompress::UnpackedSize::UseProvided(Some(decompressed_len as u64)), 
-		.. decompress::Options::default()
-	};
+    let mut decompressed_data = Vec::with_capacity(decompressed_len as usize);
+    let mut wrapper = BufReader::new(buffer);
+    let options = decompress::Options{ 
+        unpacked_size: decompress::UnpackedSize::UseProvided(Some(decompressed_len as u64)), 
+        .. decompress::Options::default()
+    };
 
-	lzma_decompress_with_options(&mut wrapper, &mut decompressed_data, &options).unwrap();
+    lzma_decompress_with_options(&mut wrapper, &mut decompressed_data, &options).unwrap();
 
-	Ok((decompressed_len as usize, version, decompressed_data))
+    Ok((decompressed_len as usize, version, decompressed_data))
 }
 
 impl Default for Compression {
-	#[inline]
-	fn default() -> Self {
-		Self::None
-	}
+    #[inline]
+    fn default() -> Self {
+        Self::None
+    }
 }
 
 impl From<Compression> for u8 {
-	#[inline]
-	fn from(compression: Compression) -> Self {
-		match compression {
-			Compression::None => 0,
-			Compression::Bzip2 => 1,
-			Compression::Gzip => 2,
-			Compression::Lzma => 3,
-		}
-	}
+    #[inline]
+    fn from(compression: Compression) -> Self {
+        match compression {
+            Compression::None => 0,
+            Compression::Bzip2 => 1,
+            Compression::Gzip => 2,
+            Compression::Lzma => 3,
+        }
+    }
 }
 
 impl TryFrom<u8> for Compression {
-	type Error = CompressionError;
+    type Error = CompressionError;
 
-	#[inline]
-	fn try_from(compression: u8) -> Result<Self, Self::Error> {
-		match compression {
-			0 => Ok(Self::None),
-			1 => Ok(Self::Bzip2),
-			2 => Ok(Self::Gzip),
-			3 => Ok(Self::Lzma),
-			_ => Err(CompressionError::Unsupported(compression))
-		}
-	}
+    #[inline]
+    fn try_from(compression: u8) -> Result<Self, Self::Error> {
+        match compression {
+            0 => Ok(Self::None),
+            1 => Ok(Self::Bzip2),
+            2 => Ok(Self::Gzip),
+            3 => Ok(Self::Lzma),
+            _ => Err(CompressionError::Unsupported(compression))
+        }
+    }
 }
 
 impl TryFrom<&[u8]> for DecodedBuffer {
-	type Error = CacheError;
+    type Error = CacheError;
 
-	#[inline]
-	fn try_from(buffer: &[u8]) -> Result<Self, Self::Error> {
-		let (buffer, compression) = be_u8(buffer)?;
-		let compression = Compression::try_from(compression)?;
+    #[inline]
+    fn try_from(buffer: &[u8]) -> Result<Self, Self::Error> {
+        let (buffer, compression) = be_u8(buffer)?;
+        let compression = Compression::try_from(compression)?;
 
-		let (buffer, compressed_len) = be_u32(buffer)?;
-		let compressed_len = compressed_len as usize;
-		let (decompressed_len, version, buffer) = match compression {
-			Compression::None => decompress_none(buffer, compressed_len)?,
-			Compression::Bzip2 => decompress_bzip2(buffer, compressed_len)?,
-			Compression::Gzip => decompress_gzip(buffer, compressed_len)?,
-			Compression::Lzma => decompress_lzma(buffer, compressed_len)?
-		};
+        let (buffer, compressed_len) = be_u32(buffer)?;
+        let compressed_len = compressed_len as usize;
+        let (decompressed_len, version, buffer) = match compression {
+            Compression::None => decompress_none(buffer, compressed_len)?,
+            Compression::Bzip2 => decompress_bzip2(buffer, compressed_len)?,
+            Compression::Gzip => decompress_gzip(buffer, compressed_len)?,
+            Compression::Lzma => decompress_lzma(buffer, compressed_len)?
+        };
 
-		Ok(Self{ 
-			compression,
-			len: decompressed_len,
-			version,
-			buffer
-		})
-	}
+        Ok(Self{ 
+            compression,
+            len: decompressed_len,
+            version,
+            buffer
+        })
+    }
 }
