@@ -1,6 +1,7 @@
 //! Main cache implementation and traits.
 
 use std::path::Path;
+use std::io::Write;
 
 use nom::{
     combinator::cond,
@@ -10,7 +11,7 @@ use nom::{
 };
 
 use crate::{ 
-    store::Store, 
+    store::{ Store, ReadIntoWriter, },
     cksm::{ Checksum, Entry },
     idx::Indices,
     arc::{ Archive, ArchiveRef },
@@ -38,6 +39,11 @@ pub trait CacheRead {
     fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
         self.read(archive.index_id, archive.id)
     }
+}
+
+pub trait CacheReadIntoWriter {
+    fn read_into_writer<W: Write>(&self, index_id: u8, archive_id: u32, writer: &mut W)
+        -> crate::Result<()>;
 }
 
 /// Main cache struct providing basic utilities.
@@ -101,6 +107,7 @@ impl<S: Store> Cache<S> {
         CacheRead::read(self, index_id, archive_id)
     }
 
+    /// Reads from the internal store but from an `ArchiveRef`.
     #[inline]
     pub fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
         CacheRead::read_archive(self, archive)
@@ -289,5 +296,23 @@ impl<S: Store> CacheRead for Cache<S> {
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
 
         self.store.read(archive)
+    }
+}
+
+impl<S: Store + ReadIntoWriter> CacheReadIntoWriter for Cache<S> {
+    #[inline]
+    fn read_into_writer<W: Write>(
+        &self, 
+        index_id: u8,
+        archive_id: u32, 
+        writer: &mut W
+    ) -> crate::Result<()> {
+        let index = self.indices.get(&index_id)
+            .ok_or(ReadError::IndexNotFound(index_id))?;
+
+        let archive = index.archives.get(&archive_id)
+            .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
+            
+        self.store.read_into_writer(archive, writer)
     }
 }

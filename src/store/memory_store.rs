@@ -1,4 +1,4 @@
-use std::{ io::Read, fs::File };
+use std::{ io::{ Write, Read, }, fs::File };
 
 use crate::{
     arc::ArchiveRef,
@@ -11,7 +11,7 @@ use crate::{
     },
 };
 
-use super::Store;
+use super::{ Store, ReadIntoWriter };
 
 /// Cache inner reading from memory.
 #[derive(Debug)]
@@ -19,21 +19,11 @@ pub struct MemoryStore {
     data: Vec<u8>
 }
 
-impl Store for MemoryStore {
+impl MemoryStore {
     #[inline]
-    fn new(mut main_file: File) -> crate::Result<Self> {
-        let mut buffer = Vec::new();
-        main_file.read_to_end(&mut buffer)?;
-        
-        Ok(Self { data: buffer })
-    }
-
-    #[inline]
-    fn read(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
+    fn read_internal<W: Write>(&self, archive: &ArchiveRef, writer: &mut W) -> crate::Result<()> {
         let mut current_sector = archive.sector;
-        let mut data = vec![0; archive.length];
         let mut remaining = archive.length;
-        let mut current = 0;
         let mut chunk = 0;
 
         loop {
@@ -45,15 +35,13 @@ impl Store for MemoryStore {
                 match Sector::from_normal_header(data_block) {
                     Ok(sector) => {
                         sector.header.validate(archive.id, chunk, archive.index_id)?;
-
                         current_sector = sector.header.next;
-                        data[current..current + SECTOR_DATA_SIZE].copy_from_slice(sector.data_block);
+                        writer.write_all(sector.data_block)?;
                     },
                     Err(_) => return Err(ParseError::Sector(archive.sector).into())
                 };
                 
                 remaining -= SECTOR_DATA_SIZE;
-                current += SECTOR_DATA_SIZE;
             } else {
                 if remaining == 0 { break; }
                 
@@ -62,8 +50,7 @@ impl Store for MemoryStore {
                 match Sector::from_normal_header(data_block) {
                     Ok(sector) => {
                         sector.header.validate(archive.id, chunk, archive.index_id)?;
-                        data[current..current + remaining].copy_from_slice(sector.data_block);
-
+                        writer.write_all(sector.data_block)?;
                         break;
                     },
                     Err(_) => return Err(ParseError::Sector(archive.sector).into())
@@ -73,6 +60,36 @@ impl Store for MemoryStore {
             chunk += 1;
         }
 
+        Ok(())
+    }
+}
+
+impl Store for MemoryStore {
+    #[inline]
+    fn new(mut main_file: File) -> crate::Result<Self> {
+        let mut buffer = Vec::with_capacity(main_file.metadata()?.len() as usize);
+        main_file.read_to_end(&mut buffer)?;
+        
+        Ok(Self { data: buffer })
+    }
+
+    #[inline]
+    fn read(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
+        let mut data = Vec::with_capacity(archive.length);
+
+        self.read_internal(archive, &mut data)?;
+
         Ok(data)
+    }
+}
+
+impl ReadIntoWriter for MemoryStore {
+    #[inline]
+    fn read_into_writer<W: Write>(
+        &self, 
+        archive: &ArchiveRef, 
+        writer: &mut W
+    ) -> crate::Result<()> {
+        self.read_internal(archive, writer)
     }
 }

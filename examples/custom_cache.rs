@@ -70,7 +70,7 @@ impl Store for CustomStore {
     fn read(&self, archive: &ArchiveRef) -> rscache::Result<Vec<u8>> {
         // Implement your own read here.
 
-        println!("{:?}", archive);
+        println!("reading: {:?}", archive);
 
         // For the sake of this example: only return the first
         // 25 bytes of the internal buffer.
