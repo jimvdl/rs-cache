@@ -6,8 +6,7 @@ use rscache::{
     OsrsCache,
     Loader,
     Definition,
-    Store,
-    Cache,
+    CacheCore,
     util::osrs::parse_defs_from_archive,
     ext::ReadExt,
 };
@@ -78,7 +77,7 @@ fn decode_buffer(id: u32, reader: &mut BufReader<&[u8]>) -> io::Result<CustomDef
 impl Loader for CustomLoader {
     type Definition = CustomDefinition;
 
-    fn new<S: Store>(cache: &Cache<S>) -> rscache::Result<Self> {
+    fn new<C: CacheCore>(cache: &C) -> rscache::Result<Self> {
         // Some definitions are all contained within one archive.
         // Other times one archive only contains one definition, but in most cases
         // for OSRS they are stored as multiple definitions per archive.
@@ -87,7 +86,7 @@ impl Loader for CustomLoader {
         let archive_id = 10; // Contains all ItemDefinitions.
 
         // Use this convenience function to get all the definitions from a certain archive:
-        let map = parse_defs_from_archive(&cache, index_id, archive_id)?;
+        let map = parse_defs_from_archive(cache, index_id, archive_id)?;
 
         Ok(Self(map))
     }

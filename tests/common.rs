@@ -23,15 +23,15 @@ pub mod osrs {
     }
 
     pub fn load_items(cache: &Cache<MemoryStore>) -> rscache::Result<ItemLoader> {
-        ItemLoader::new(&cache)
+        ItemLoader::new(cache)
     }
 
     pub fn load_npcs(cache: &Cache<MemoryStore>) -> rscache::Result<NpcLoader> {
-        NpcLoader::new(&cache)
+        NpcLoader::new(cache)
     }
     
     pub fn load_objects(cache: &Cache<MemoryStore>) -> rscache::Result<ObjectLoader> {
-        ObjectLoader::new(&cache)
+        ObjectLoader::new(cache)
     }
 }
 
@@ -48,6 +48,6 @@ pub mod rs3 {
     }
 
     pub fn load_items(cache: &Cache<FileStore>) -> rscache::Result<ItemLoader> {
-        ItemLoader::new(&cache)
+        ItemLoader::new(cache)
     }
 }

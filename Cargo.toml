@@ -19,7 +19,7 @@ path = "src/lib.rs"
 [dependencies]
 crc = "1.8"
 bzip2 = "0.4"
-nom = "6.2"
+nom = "7.0"
 itertools = "0.9"
 whirlpool = "0.9"
 num-bigint = "0.4"

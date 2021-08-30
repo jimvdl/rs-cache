@@ -25,7 +25,7 @@ use std::collections::{ hash_map, HashMap };
 
 use serde::{ Serialize, Deserialize };
 
-use crate::{ Store, Loader, Cache };
+use crate::{ Loader, CacheCore };
 use crate::def::osrs::{
     ItemDefinition,
     NpcDefinition,

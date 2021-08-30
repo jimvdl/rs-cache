@@ -18,13 +18,14 @@ use crate::{
     Cache,
     Definition,
     arc::{ Archive, ArchiveFileGroup },
+    CacheCore,
 };
 
 macro_rules! impl_osrs_loader {
    ($ldr:ident, $def:ty, index_id: $idx_id:expr $(, archive_id: $arc_id:expr)?) => {
         impl $ldr {
             #[inline]
-            pub fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {
+            pub fn new<C: CacheCore>(cache: &C) -> crate::Result<Self> {
                 Loader::new(cache)
             }
 
@@ -39,7 +40,7 @@ macro_rules! impl_osrs_loader {
 
             #[allow(unreachable_code)]
             #[inline]
-            fn new<S: Store>(cache: &Cache<S>) -> crate::Result<Self> {            
+            fn new<C: CacheCore>(cache: &C) -> crate::Result<Self> {            
                 $(
                     let map = crate::util::osrs::parse_defs_from_archive(cache, $idx_id, $arc_id)?;
 
@@ -99,7 +100,7 @@ pub fn load_map_def<S: Store>(cache: &Cache<S>, region_id: u32) -> crate::Result
 /// # }
 /// ```
 #[inline]
-pub fn parse_defs_from_archive<D: Definition, S: Store>(cache: &Cache<S>, index_id: u8, archive_id: u32) -> crate::Result<HashMap<u32, D>> {
+pub fn parse_defs_from_archive<D: Definition, C: CacheCore>(cache: &C, index_id: u8, archive_id: u32) -> crate::Result<HashMap<u32, D>> {
     let buffer = cache.read(REFERENCE_TABLE, index_id as u32)?;
     let buffer = codec::decode(&buffer)?;
     
@@ -123,7 +124,7 @@ pub fn parse_defs_from_archive<D: Definition, S: Store>(cache: &Cache<S>, index_
 // every archive is 1 def, not like the one above where one archive contains many defs
 // TODO: remove (crate) when ready
 #[inline]
-pub(crate) fn parse_defs<D: Definition, S: Store>(cache: &Cache<S>, index_id: u8) -> crate::Result<HashMap<u32, D>> {
+pub(crate) fn parse_defs<D: Definition, C: CacheCore>(cache: &C, index_id: u8) -> crate::Result<HashMap<u32, D>> {
     let buffer = cache.read(REFERENCE_TABLE, index_id as u32)?;
     let buffer = codec::decode(&buffer)?;
     
