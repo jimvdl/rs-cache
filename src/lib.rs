@@ -26,9 +26,9 @@
 //! - RS3 Loaders
 //!   - [`ItemLoader`](ldr/rs3/struct.ItemLoader.html)
 //! - Utilities
-//!   - Huffman decompressor.
-//!   - Isaac randomizer.
-//!   - Xtea decipher.
+//!   - [`Huffman`](util/osrs/struct.Huffman.html) decompressor.
+//!   - [`Isaac`](util/osrs/struct.IsaacRand.html) randomizer.
+//!   - [Xtea](util/osrs/xtea/fn.decipher.html) decipher.
 //! 
 //! Feature to be implemented in the future: 
 //! - Writing data to the cache.
@@ -111,7 +111,13 @@ pub mod sec;
 #[doc(inline)]
 pub use error::Result;
 #[doc(inline)]
-pub use cache::{ Cache, CacheCore, CacheRead, OsrsHuffmanTable };
+pub use cache::{ 
+    Cache, 
+    CacheCore, 
+    CacheRead, 
+    OsrsHuffmanTable,
+    ReadIntoWriter,
+};
 #[doc(inline)]
 pub use cksm::Checksum;
 #[doc(inline)]

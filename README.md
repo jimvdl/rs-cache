@@ -16,14 +16,14 @@ Useful links:\
 
 ## Quick Start
 
-The quickest and easiest way to get started is by using 
-[`OsrsCache`]([type.OsrsCache.html](https://docs.rs/rs-cache/0.6.3/rscache/type.OsrsCache.html)) or [`Rs3Cache`]([type.Rs3Cache.html](https://docs.rs/rs-cache/0.6.3/rscache/type.Rs3Cache.html)).
+The quickest and easiest way to get started is by using the 
+[`Cache`]([type.Cache.html](https://docs.rs/rs-cache/0.7/rscache/type.Cache.html)) struct.
 
 ```rust
-use rscache::OsrsCache;
+use rscache::Cache;
 
 fn main() -> rscache::Result<()> {
-    let cache = OsrsCache::new("./data/osrs_cache")?;
+    let cache = Cache::new("./data/osrs_cache")?;
 
     let index_id = 2; // Config index.
     let archive_id = 10; // Archive containing item definitions.
@@ -53,10 +53,10 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rs-cache = "0.6"
+rs-cache = "0.7"
 ```
 
-Examples can be found in the [examples](examples/) directory. These examples include setting up your own custom cache or store and how the update protocol could be handled.
+Examples can be found in the [examples](examples/) directory. These examples include setting up your own custom cache and how the update protocol could be handled.
 
 ## Acknowledgements
 

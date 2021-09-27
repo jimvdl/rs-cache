@@ -142,7 +142,7 @@ impl Cache {
         CacheRead::read(self, index_id, archive_id)
     }
 
-    /// Reads from the internal store but from an `ArchiveRef`.
+    /// Reads from the internal data with a `ArchiveRef`.
     #[inline]
     pub fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
         CacheRead::read_archive(self, archive)
