@@ -2,8 +2,12 @@ mod common;
 
 mod osrs {
     use super::common;
-    use rscache::{ Cache, cksm::OsrsEncode };
-    use rscache::util::osrs::Huffman;
+    use rscache::{ 
+        Cache, 
+        cksm::OsrsEncode,
+        util::osrs::Huffman,
+        cache::OsrsHuffman,
+    };
 
     #[test]
     fn setup_cache() -> rscache::Result<()> {

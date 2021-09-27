@@ -54,6 +54,31 @@ pub trait ReadIntoWriter {
         -> crate::Result<()>;
 }
 
+/// Constructs a buffer which contains the huffman table.
+/// 
+/// # Errors
+/// 
+/// Returns an error if the huffman archive could not be found or 
+/// if the decode / decompression of the huffman table failed.
+/// 
+/// # Examples
+/// ```
+/// # use rscache::{ Cache, store::MemoryStore };
+/// # struct Huffman;
+/// # impl Huffman {
+/// #   pub fn new(buffer: Vec<u8>) -> Self { Self {} }
+/// # }
+/// # fn main() -> rscache::Result<()> {
+/// # let cache: Cache<MemoryStore> = Cache::new("./data/osrs_cache")?;
+/// let huffman_table = cache.huffman_table()?;
+/// let huffman = Huffman::new(huffman_table);
+/// # Ok(())
+/// # }
+/// ```
+pub trait OsrsHuffman {
+    fn huffman_table(&self) -> crate::Result<Vec<u8>>;
+}
+
 /// Main cache struct providing basic utilities.
 #[derive(Debug)]
 pub struct Cache {
@@ -222,39 +247,6 @@ impl Cache {
         Ok(checksum)
     }
 
-    /// Constructs a buffer which contains the huffman table.
-    /// 
-    /// # Errors
-    /// 
-    /// Returns an error if the huffman archive could not be found or 
-    /// if the decode / decompression of the huffman table failed.
-    /// 
-    /// # Examples
-    /// ```
-    /// # use rscache::{ Cache, store::MemoryStore };
-    /// # struct Huffman;
-    /// # impl Huffman {
-    /// #   pub fn new(buffer: Vec<u8>) -> Self { Self {} }
-    /// # }
-    /// # fn main() -> rscache::Result<()> {
-    /// # let cache: Cache<MemoryStore> = Cache::new("./data/osrs_cache")?;
-    /// let huffman_table = cache.huffman_table()?;
-    /// let huffman = Huffman::new(huffman_table);
-    /// # Ok(())
-    /// # }
-    /// ```
-    #[inline]
-    pub fn huffman_table(&self) -> crate::Result<Vec<u8>> {
-        let index_id = 10;
-
-        let archive = self.archive_by_name(index_id, "huffman")?;
-
-        let mut buffer = Vec::with_capacity(archive.length);
-        self.read_internal(archive, &mut buffer)?;
-        
-        codec::decode(&buffer)
-    }
-
     /// Searches for the archive which contains the given name hash in the given
     /// index_id.
     /// 
@@ -373,5 +365,19 @@ impl ReadIntoWriter for Cache {
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
             
         self.read_internal(archive, writer)
+    }
+}
+
+impl OsrsHuffman for Cache {
+    #[inline]
+    fn huffman_table(&self) -> crate::Result<Vec<u8>> {
+        let index_id = 10;
+
+        let archive = self.archive_by_name(index_id, "huffman")?;
+
+        let mut buffer = Vec::with_capacity(archive.length);
+        self.read_internal(archive, &mut buffer)?;
+        
+        codec::decode(&buffer)
     }
 }
