@@ -1,4 +1,4 @@
-use rscache::Cache;
+use rscache::{ Cache, cksm::Rs3Encode };
 
 pub const EXPONENT: &'static [u8] = b"5206580307236375668350588432916871591810765290737810323990754121164270399789630501436083337726278206128394461017374810549461689174118305784406140446740993";
 pub const MODULUS: &'static [u8] = b"6950273013450460376345707589939362735767433035117300645755821424559380572176824658371246045200577956729474374073582306250298535718024104420271215590565201";
@@ -17,7 +17,7 @@ fn main() -> rscache::Result<()> {
     let packet = IncomingUpdatePacket{ index_id: 255, archive_id: 10, priority: 0 };
 
     let buf = if packet.index_id == 255 && packet.archive_id == 255 {
-        cache.create_checksum()?.encode_rs3(EXPONENT, MODULUS)?
+        cache.create_checksum()?.encode(EXPONENT, MODULUS)?
     } else {
         let buf = cache.read(packet.index_id, packet.archive_id)?;
         format_buffer(buf, packet.index_id)

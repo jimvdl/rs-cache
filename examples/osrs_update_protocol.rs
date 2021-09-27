@@ -1,4 +1,4 @@
-use rscache::Cache;
+use rscache::{ Cache, cksm::OsrsEncode };
 
 struct IncomingUpdatePacket {
     pub index_id: u8,
@@ -12,7 +12,7 @@ fn main() -> rscache::Result<()> {
     let packet = IncomingUpdatePacket{ index_id: 255, archive_id: 10 };
 
     let mut buffer = if packet.index_id == 255 && packet.archive_id == 255 {
-        cache.create_checksum()?.encode_osrs()?
+        cache.create_checksum()?.encode()?
     } else {
         let buf = cache.read(packet.index_id, packet.archive_id)?;
         format_buffer(buf, packet.index_id)

@@ -2,7 +2,7 @@ mod common;
 
 mod osrs {
     use super::common;
-    use rscache::Cache;
+    use rscache::{ Cache, cksm::OsrsEncode };
     use rscache::util::osrs::Huffman;
 
     #[test]
@@ -38,7 +38,7 @@ mod osrs {
         let cache = common::osrs::setup()?;
 
         let checksum = cache.create_checksum()?;
-        let buffer = checksum.encode_osrs()?;
+        let buffer = checksum.encode()?;
 
         let hash = common::hash(&buffer);
         assert_eq!(&hash, "0cb64350dc138e91bb83bc9c84b454631711f5de");
@@ -97,7 +97,7 @@ mod osrs {
 
 mod rs3 {
     use super::common;
-    use rscache::Cache;
+    use rscache::{ Cache, cksm::Rs3Encode };
 
     #[test]
     fn setup_cache() -> rscache::Result<()> {
@@ -132,7 +132,7 @@ mod rs3 {
         let cache = common::rs3::setup()?;
 
         let checksum = cache.create_checksum()?;
-        let buffer = checksum.encode_rs3(common::rs3::EXPONENT, common::rs3::MODULUS)?;
+        let buffer = checksum.encode(common::rs3::EXPONENT, common::rs3::MODULUS)?;
 
         let hash = common::hash(&buffer);
         assert_eq!(&hash, "118e0146af6cf288630357eec6298c34a2430065");

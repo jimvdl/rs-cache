@@ -8,6 +8,65 @@ use serde::{ Serialize, Deserialize };
 use num_bigint::{ BigInt, Sign };
 use whirlpool::{ Whirlpool, Digest };
 
+/// Consumes the `Checksum` and encodes it into a byte buffer
+/// for OSRS clients.
+/// 
+/// After encoding the checksum it can be sent to the client.
+/// 
+/// # Errors
+/// 
+/// Returns a `CacheError` if the encoding fails.
+/// 
+/// # Examples
+/// 
+/// ```
+/// # use rscache::Checksum;
+/// # use std::net::TcpStream;
+/// # use std::io::Write;
+/// fn encode_checksum(checksum: Checksum, stream: &mut TcpStream) -> rscache::Result<()> {
+///     let buffer = checksum.encode_osrs()?;
+/// 
+///     stream.write_all(&buffer)?;
+///     Ok(())
+/// }
+/// ```
+pub trait OsrsEncode {
+    fn encode(self) -> crate::Result<Vec<u8>>;
+}
+
+/// Consumes the `Checksum` and encodes it into a byte buffer
+/// for RS3 clients.
+/// 
+/// Note: RS3 clients use RSA. The encoding process requires an exponent
+/// and a modulus to encode the buffer properly.
+/// 
+/// After encoding the checksum it can be sent to the client.
+/// 
+/// # Errors
+/// 
+/// Returns a `CacheError` if the encoding fails.
+/// 
+/// # Examples
+/// 
+/// ```
+/// # use rscache::Checksum;
+/// # use std::net::TcpStream;
+/// # use std::io::Write;
+/// # mod env {
+/// # pub const EXPONENT: &'static [u8] = b"5206580307236375668350588432916871591810765290737810323990754121164270399789630501436083337726278206128394461017374810549461689174118305784406140446740993";
+/// # pub const MODULUS: &'static [u8] = b"6950273013450460376345707589939362735767433035117300645755821424559380572176824658371246045200577956729474374073582306250298535718024104420271215590565201";
+/// # }
+/// fn encode_checksum(checksum: Checksum, stream: &mut TcpStream) -> rscache::Result<()> {
+///     let buffer = checksum.encode_rs3(env::EXPONENT, env::MODULUS)?;
+/// 
+///     stream.write_all(&buffer)?;
+///     Ok(())
+/// }
+/// ```
+pub trait Rs3Encode {
+    fn encode(self, exponent: &[u8], modulus: &[u8]) -> crate::Result<Vec<u8>>;
+}
+
 /// Contains validation data for a specific index.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Entry {
@@ -69,30 +128,25 @@ impl Checksum {
         internal == crcs
     }
 
-    /// Consumes the `Checksum` and encodes it into a byte buffer
-    /// for OSRS clients.
-    /// 
-    /// After encoding the checksum it can be sent to the client.
-    /// 
-    /// # Errors
-    /// 
-    /// Returns a `CacheError` if the encoding fails.
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// # use rscache::Checksum;
-    /// # use std::net::TcpStream;
-    /// # use std::io::Write;
-    /// fn encode_checksum(checksum: Checksum, stream: &mut TcpStream) -> rscache::Result<()> {
-    ///     let buffer = checksum.encode_osrs()?;
-    /// 
-    ///     stream.write_all(&buffer)?;
-    ///     Ok(())
-    /// }
-    /// ```
     #[inline]
-    pub fn encode_osrs(self) -> crate::Result<Vec<u8>> {
+    pub const fn index_count(&self) -> usize {
+        self.index_count
+    }
+
+    #[inline]
+    pub fn iter(&self) -> Iter<'_, Entry> {
+        self.entries.iter()
+    }
+
+    #[inline]
+    pub fn iter_mut(&mut self) -> IterMut<'_, Entry> {
+        self.entries.iter_mut()
+    }
+}
+
+impl OsrsEncode for Checksum {
+    #[inline]
+    fn encode(self) -> crate::Result<Vec<u8>> {
         let mut buffer = Vec::with_capacity(self.entries.len() * 8);
 
         for entry in self.entries {
@@ -102,38 +156,11 @@ impl Checksum {
 
         codec::encode(Compression::None, &buffer, None)
     }
+}
 
-    /// Consumes the `Checksum` and encodes it into a byte buffer
-    /// for RS3 clients.
-    /// 
-    /// Note: RS3 clients use RSA. The encoding process requires an exponent
-    /// and a modulus to encode the buffer properly.
-    /// 
-    /// After encoding the checksum it can be sent to the client.
-    /// 
-    /// # Errors
-    /// 
-    /// Returns a `CacheError` if the encoding fails.
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// # use rscache::Checksum;
-    /// # use std::net::TcpStream;
-    /// # use std::io::Write;
-    /// # mod env {
-    /// # pub const EXPONENT: &'static [u8] = b"5206580307236375668350588432916871591810765290737810323990754121164270399789630501436083337726278206128394461017374810549461689174118305784406140446740993";
-    /// # pub const MODULUS: &'static [u8] = b"6950273013450460376345707589939362735767433035117300645755821424559380572176824658371246045200577956729474374073582306250298535718024104420271215590565201";
-    /// # }
-    /// fn encode_checksum(checksum: Checksum, stream: &mut TcpStream) -> rscache::Result<()> {
-    ///     let buffer = checksum.encode_rs3(env::EXPONENT, env::MODULUS)?;
-    /// 
-    ///     stream.write_all(&buffer)?;
-    ///     Ok(())
-    /// }
-    /// ```
+impl Rs3Encode for Checksum {
     #[inline]
-    pub fn encode_rs3(self, exponent: &[u8], modulus: &[u8]) -> crate::Result<Vec<u8>> {
+    fn encode(self, exponent: &[u8], modulus: &[u8]) -> crate::Result<Vec<u8>> {
         let index_count = self.index_count - 1;
         let mut buffer = vec![0; 81 * index_count];
 
@@ -162,21 +189,6 @@ impl Checksum {
         buffer.extend(rsa);
 
         Ok(buffer)
-    }
-
-    #[inline]
-    pub const fn index_count(&self) -> usize {
-        self.index_count
-    }
-
-    #[inline]
-    pub fn iter(&self) -> Iter<'_, Entry> {
-        self.entries.iter()
-    }
-
-    #[inline]
-    pub fn iter_mut(&mut self) -> IterMut<'_, Entry> {
-        self.entries.iter_mut()
     }
 }
 
