@@ -15,8 +15,7 @@ use std::{
 };
 
 use crate::{
-    store::Store,
-    cache::{ MAIN_DATA, REFERENCE_TABLE },
+    cache::REFERENCE_TABLE,
     idx::{ Index, IDX_PREFIX },
     ext::ReadExt,
     error::ReadError,
@@ -95,49 +94,6 @@ pub mod djd2 {
         
         hash
     }
-}
-
-/// Loads the given store.
-/// 
-/// This will load the main cache file and open the chosen store
-/// with it.
-/// 
-/// # Errors
-/// 
-/// Returns an `std::io::Error` if the path is incorrect.
-/// 
-/// # Examples 
-/// 
-/// ```
-/// # use std::{ fs::File, path::Path, collections::HashMap };
-/// # use rscache::arc::ArchiveRef;
-/// use rscache::{ Store, util };
-/// 
-/// # fn main() -> rscache::Result<()> {
-/// let store: CustomStore = util::load_store("./data/osrs_cache")?;
-/// # Ok(())
-/// # }
-/// 
-/// 
-/// struct CustomStore;
-/// 
-/// impl Store for CustomStore {
-///     fn new(mut main_file: File) -> rscache::Result<Self> {
-///         // snip
-/// 
-///         Ok(Self {  })
-///     }
-/// # fn read(&self, archive: &ArchiveRef) -> rscache::Result<Vec<u8>> {
-/// # unimplemented!()
-/// # }
-/// }
-/// ```
-#[inline]
-pub fn load_store<S: Store, P: AsRef<Path>>(path: P) -> crate::Result<S> {
-    let path = path.as_ref();
-    let main_file = File::open(path.join(MAIN_DATA))?;
-    
-    S::new(main_file)
 }
 
 /// Loads all indices present in the cache folder.

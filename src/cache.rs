@@ -1,7 +1,10 @@
 //! Main cache implementation and traits.
 
-use std::path::Path;
-use std::io::Write;
+use std::{
+    path::Path,
+    io::Write,
+    fs::File,
+};
 
 use nom::{
     combinator::cond,
@@ -11,15 +14,20 @@ use nom::{
 };
 
 use crate::{ 
-    store::{ Store, ReadIntoWriter, },
     cksm::{ Checksum, Entry },
     idx::Indices,
     arc::{ Archive, ArchiveRef },
-    error::ReadError, 
+    error::{ ReadError, ParseError }, 
     util,
     codec,
+    sec::{
+        Sector,
+        SectorHeaderSize,
+        SECTOR_SIZE,
+    },
 };
 
+use memmap::Mmap;
 use crc::crc32;
 use whirlpool::{ Whirlpool, Digest };
 
@@ -41,19 +49,19 @@ pub trait CacheRead {
     }
 }
 
-pub trait CacheReadIntoWriter {
+pub trait ReadIntoWriter {
     fn read_into_writer<W: Write>(&self, index_id: u8, archive_id: u32, writer: &mut W)
         -> crate::Result<()>;
 }
 
 /// Main cache struct providing basic utilities.
-#[derive(Clone, Debug)]
-pub struct Cache<S: Store> {
-    store: S,
+#[derive(Debug)]
+pub struct Cache {
+    data: Mmap,
     indices: Indices,
 }
 
-impl<S: Store> Cache<S> {
+impl Cache {
     /// Constructs a new `Cache<S>` with the given store.
     ///
     /// # Errors
@@ -111,6 +119,52 @@ impl<S: Store> Cache<S> {
     #[inline]
     pub fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
         CacheRead::read_archive(self, archive)
+    }
+
+    #[inline]
+    fn read_internal<W: Write>(&self, archive: &ArchiveRef, writer: &mut W) -> crate::Result<()> {
+        let header_size = SectorHeaderSize::from_archive(archive);
+        let (header_len, data_len) = header_size.clone().into();
+        let mut current_sector = archive.sector;
+        let mut remaining = archive.length;
+        let mut chunk = 0;
+
+        loop {
+            let offset = current_sector as usize * SECTOR_SIZE;
+            
+            if remaining >= data_len {
+                let data_block = &self.data[offset..offset + SECTOR_SIZE];
+                
+                match Sector::new(data_block, &header_size) {
+                    Ok(sector) => {
+                        sector.header.validate(archive.id, chunk, archive.index_id)?;
+                        current_sector = sector.header.next;
+                        writer.write_all(sector.data_block)?;
+                    },
+                    Err(_) => return Err(ParseError::Sector(archive.sector).into())
+                };
+
+                remaining -= data_len;
+            } else {
+                if remaining == 0 { break; }
+
+                let data_block = &self.data[offset..offset + remaining + header_len];
+
+                match Sector::new(data_block, &header_size) {
+                    Ok(sector) => {
+                        sector.header.validate(archive.id, chunk, archive.index_id)?;
+                        writer.write_all(sector.data_block)?;
+
+                        break;
+                    },
+                    Err(_) => return Err(ParseError::Sector(archive.sector).into())
+                };
+            }
+
+            chunk += 1;
+        }
+
+        Ok(())
     }
 
     /// Creates a `Checksum` which can be used to validate the cache data
@@ -194,7 +248,9 @@ impl<S: Store> Cache<S> {
         let index_id = 10;
 
         let archive = self.archive_by_name(index_id, "huffman")?;
-        let buffer = self.store.read(&archive)?;
+
+        let mut buffer = Vec::with_capacity(archive.length);
+        self.read_internal(archive, &mut buffer)?;
         
         codec::decode(&buffer)
     }
@@ -222,7 +278,7 @@ impl<S: Store> Cache<S> {
     /// # }
     /// ```
     #[inline]
-    pub fn archive_by_name<T: Into<String>>(&self, index_id: u8, name: T) -> crate::Result<ArchiveRef> {
+    pub fn archive_by_name<T: Into<String>>(&self, index_id: u8, name: T) -> crate::Result<&ArchiveRef> {
         let name = name.into();
 
         let index = self.indices.get(&index_id)
@@ -239,7 +295,7 @@ impl<S: Store> Cache<S> {
                 let archive = index.archives.get(&(archive.id as u32))
                     .ok_or(ReadError::ArchiveNotFound(index_id, archive.id as u32))?;
 
-                return Ok(*archive)
+                return Ok(archive)
             }
         }
 
@@ -269,24 +325,24 @@ impl<S: Store> Cache<S> {
     }
 
     #[inline]
-    pub fn indices(&self) -> &Indices {
+    pub const fn indices(&self) -> &Indices {
         &self.indices
     }
 }
 
-impl<S: Store> CacheCore for Cache<S> {
+impl CacheCore for Cache {
     #[inline]
     fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         let path = path.as_ref();
+        let main_file = File::open(path.join(MAIN_DATA))?;
 
-        let store = util::load_store(path)?;
         let indices = Indices::new(path)?;
 
-        Ok(Self { store, indices })
+        Ok(unsafe { Self { data: Mmap::map(&main_file)?, indices } })
     }
 }
 
-impl<S: Store> CacheRead for Cache<S> {
+impl CacheRead for Cache {
     #[inline]
     fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
         let index = self.indices.get(&index_id)
@@ -295,11 +351,14 @@ impl<S: Store> CacheRead for Cache<S> {
         let archive = index.archives.get(&archive_id)
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
 
-        self.store.read(archive)
+        let mut buffer = Vec::with_capacity(archive.length);
+        self.read_internal(archive, &mut buffer)?;
+
+        Ok(buffer)
     }
 }
 
-impl<S: Store + ReadIntoWriter> CacheReadIntoWriter for Cache<S> {
+impl ReadIntoWriter for Cache {
     #[inline]
     fn read_into_writer<W: Write>(
         &self, 
@@ -313,6 +372,6 @@ impl<S: Store + ReadIntoWriter> CacheReadIntoWriter for Cache<S> {
         let archive = index.archives.get(&archive_id)
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
             
-        self.store.read_into_writer(archive, writer)
+        self.read_internal(archive, writer)
     }
 }

@@ -131,16 +131,10 @@ pub mod idx;
 pub mod arc;
 pub mod ext;
 pub mod error;
-pub mod store;
 pub mod codec;
 pub mod def;
 pub mod ldr;
 pub mod sec;
-
-/// Type alias for `Cache<MemoryStore>`.
-pub type OsrsCache = Cache<MemoryStore>;
-/// Type alias for `Cache<FileStore>`.
-pub type Rs3Cache = Cache<FileStore>;
 
 #[doc(inline)]
 pub use error::Result;
@@ -148,8 +142,6 @@ pub use error::Result;
 pub use cache::{ Cache, CacheCore, CacheRead };
 #[doc(inline)]
 pub use cksm::Checksum;
-#[doc(inline)]
-pub use store::{ Store, FileStore, MemoryStore };
 #[doc(inline)]
 pub use ldr::Loader;
 #[doc(inline)]

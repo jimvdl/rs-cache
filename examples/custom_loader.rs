@@ -3,7 +3,7 @@ use std::{
     io::{ self, BufReader, },
 };
 use rscache::{ 
-    OsrsCache,
+    Cache,
     Loader,
     Definition,
     CacheCore,
@@ -12,7 +12,7 @@ use rscache::{
 };
 
 fn main() -> rscache::Result<()> {
-    let cache = OsrsCache::new("./data/osrs_cache")?;
+    let cache = Cache::new("./data/osrs_cache")?;
     
     let custom_ldr = CustomLoader::new(&cache)?;
 

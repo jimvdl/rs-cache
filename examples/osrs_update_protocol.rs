@@ -1,4 +1,4 @@
-use rscache::OsrsCache;
+use rscache::Cache;
 
 struct IncomingUpdatePacket {
     pub index_id: u8,
@@ -8,7 +8,7 @@ struct IncomingUpdatePacket {
 // This example illustrates the osrs update protocol.
 // You can use this to handle client requests for cache data.
 fn main() -> rscache::Result<()> {
-    let cache = OsrsCache::new("./data/osrs_cache")?;
+    let cache = Cache::new("./data/osrs_cache")?;
     let packet = IncomingUpdatePacket{ index_id: 255, archive_id: 10 };
 
     let mut buffer = if packet.index_id == 255 && packet.archive_id == 255 {

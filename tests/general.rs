@@ -2,7 +2,7 @@ mod common;
 
 mod osrs {
     use super::common;
-    use rscache::OsrsCache;
+    use rscache::Cache;
     use rscache::util::osrs::Huffman;
 
     #[test]
@@ -17,7 +17,7 @@ mod osrs {
 
     #[test]
     fn setup_cache_fails() -> rscache::Result<()> {
-        let result = OsrsCache::new("./wrong/path");
+        let result = Cache::new("./wrong/path");
 
         assert!(result.is_err());
 
@@ -97,7 +97,7 @@ mod osrs {
 
 mod rs3 {
     use super::common;
-    use rscache::Rs3Cache;
+    use rscache::Cache;
 
     #[test]
     fn setup_cache() -> rscache::Result<()> {
@@ -111,7 +111,7 @@ mod rs3 {
 
     #[test]
     fn setup_cache_fails() -> rscache::Result<()> {
-        let result = Rs3Cache::new("./wrong/path");
+        let result = Cache::new("./wrong/path");
 
         assert!(result.is_err());
 
