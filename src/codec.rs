@@ -28,6 +28,7 @@ use lzma_rs::{
 
 use crate::error::{ CacheError, CompressionError };
 
+/// Supported compression types for RuneScape.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Compression {
     None,
@@ -44,14 +45,13 @@ pub enum Compression {
 /// 
 /// `TryFrom<&[u8]> -> DecodedBuffer`:  
 /// ```
-/// # use rscache::{ Cache, store::MemoryStore };
+/// # use rscache::Cache;
 /// # use rscache::codec::Compression;
 /// use rscache::codec::DecodedBuffer;
 /// use std::convert::TryFrom;
 /// 
 /// # fn main() -> rscache::Result<()> {
-/// # let path = "./data/osrs_cache";
-/// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+/// # let cache = Cache::new("./data/osrs_cache")?;
 /// let buffer = cache.read(2, 10)?;
 /// let decoded = DecodedBuffer::try_from(buffer.as_slice())?;
 /// 
@@ -65,13 +65,12 @@ pub enum Compression {
 /// Getting the inner buffer:
 /// This conversion is free.
 /// ```
-/// # use rscache::{ Cache, store::MemoryStore };
+/// # use rscache::Cache;
 /// # use rscache::codec::Compression;
 /// # use rscache::codec::DecodedBuffer;
 /// # use std::convert::TryFrom;
 /// # fn main() -> rscache::Result<()> {
-/// # let path = "./data/osrs_cache";
-/// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+/// # let cache = Cache::new("./data/osrs_cache")?;
 /// let buffer = cache.read(2, 10)?;
 /// let decoded = DecodedBuffer::try_from(buffer.as_slice())?;
 /// 
@@ -93,13 +92,12 @@ impl DecodedBuffer {
     /// # Examples
     /// 
     /// ```
-    /// # use rscache::{ Cache, store::MemoryStore };
+    /// # use rscache::Cache;
     /// # use rscache::codec::Compression;
     /// # use rscache::codec::DecodedBuffer;
     /// # use std::convert::TryFrom;
     /// # fn main() -> rscache::Result<()> {
-    /// # let path = "./data/osrs_cache";
-    /// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+    /// # let cache = Cache::new("./data/osrs_cache")?;
     /// let buffer = cache.read(2, 10)?;
     /// let decoded = DecodedBuffer::try_from(buffer.as_slice())?;
     /// 
@@ -144,11 +142,11 @@ impl DecodedBuffer {
 /// # Examples
 /// 
 /// ```
-/// use rscache::codec::Compression;
+/// use rscache::codec::{ self, Compression };
 /// 
 /// # fn main() -> rscache::Result<()> {
 /// # let buffer = vec![0; 20];
-/// let encoded_buffer = rscache::codec::encode(Compression::Bzip2, &buffer, None)?;
+/// let encoded_buffer = codec::encode(Compression::Bzip2, &buffer, None)?;
 /// 
 /// assert_eq!(Compression::Bzip2 as u8, encoded_buffer[0]);
 /// # Ok(())
@@ -194,14 +192,13 @@ pub fn encode(compression: Compression, data: &[u8], version: Option<i16>) -> cr
 /// # Examples
 /// 
 /// ```
-/// # use rscache::{ Cache, store::MemoryStore };
-/// use rscache::codec::Compression;
+/// # use rscache::Cache;
+/// use rscache::codec::{ self, Compression };
 /// 
 /// # fn main() -> rscache::Result<()> {
-/// # let path = "./data/osrs_cache";
-/// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+/// # let cache = Cache::new("./data/osrs_cache")?;
 /// let buffer = cache.read(2, 10)?;
-/// let decoded_buffer = rscache::codec::decode(&buffer)?;
+/// let decoded_buffer = codec::decode(&buffer)?;
 /// # Ok(())
 /// # }
 /// ```

@@ -44,7 +44,7 @@ macro_rules! impl_rs3_loader {
    };
 }
 
-/// Parses all definitions read from the passed `Cache<S>` from `archive_id`.
+/// Parses all definitions read from the passed `Cache` from `archive_id`.
 /// 
 /// # Errors
 /// 
@@ -54,9 +54,9 @@ macro_rules! impl_rs3_loader {
 /// 
 /// ```
 /// # use std::collections::HashMap;
-/// # use rscache::{ Rs3Cache, util, def::rs3::ItemDefinition };
+/// # use rscache::{ Cache, util, def::rs3::ItemDefinition };
 /// # fn main() -> rscache::Result<()> {
-/// # let cache = Rs3Cache::new("./data/rs3_cache")?;
+/// # let cache = Cache::new("./data/rs3_cache")?;
 /// let archive_id = 19; // Archive containing item definitions.
 /// let item_defs: HashMap<u32, ItemDefinition> = util::rs3::parse_defs(&cache, archive_id)?;
 /// # Ok(())

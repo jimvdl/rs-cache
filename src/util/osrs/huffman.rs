@@ -14,10 +14,11 @@ impl Huffman {
     /// # Examples
     /// 
     /// ```
-    /// # use rscache::OsrsCache;
-    /// # use rscache::util::osrs::Huffman;
+    /// # use rscache::Cache;
+    /// use rscache::{ OsrsHuffmanTable, util::osrs::Huffman };
+    /// 
     /// # fn main() -> rscache::Result<()> {
-    /// # let cache = OsrsCache::new("./data/osrs_cache")?;
+    /// # let cache = Cache::new("./data/osrs_cache")?;
     /// let huffman_tbl = cache.huffman_table()?;
     /// let huffman = Huffman::new(&huffman_tbl);
     /// 

@@ -35,14 +35,14 @@
 //! 
 //! # Quick Start
 //! 
-//! The quickest and easiest way to get started is by using 
-//! [`OsrsCache`](type.OsrsCache.html) or [`Rs3Cache`](type.Rs3Cache.html).
+//! The quickest and easiest way to get started is by using the
+//! [`Cache`](type.Cache.html).
 //! 
 //! ```
-//! use rscache::OsrsCache;
+//! use rscache::Cache;
 //! 
 //! # fn main() -> rscache::Result<()> {
-//! let cache = OsrsCache::new("./data/osrs_cache")?;
+//! let cache = Cache::new("./data/osrs_cache")?;
 //! 
 //! let index_id = 2; // Config index.
 //! let archive_id = 10; // Archive containing item definitions.
@@ -52,35 +52,7 @@
 //! # Ok(())
 //! # }
 //! ```
-//! 
-//! # Cache interchangeability
-//! 
-//! The internal storage and reading functionalities can be changed
-//! by using the generic [`Cache`](struct.Cache.html) struct and chosing
-//! a store implementation that fits a specific use-case.
-//! 
-//! In the below example the [`FileStore`](struct.FileStore.html) holds a 
-//! handle to the main data file while the [`MemoryStore`](struct.MemoryStore.html) 
-//! parses the entire main data file into memory. If the main file is too large 
-//! for the `MemoryStore` you can opt into a `FileStore` to do reading through disk I/O.
-//! 
-//! The type [`OsrsCache`](type.OsrsCache.html) is a type alias for `Cache<MemoryStore>`.
-//! 
-//! ```
-//! use rscache::{ Cache, store::FileStore };
-//! 
-//! # fn main() -> rscache::Result<()> {
-//! let cache = Cache::<FileStore>::new("./data/osrs_cache")?;
-//! 
-//! let index_id = 2; // Config index.
-//! let archive_id = 10; // Archive containing item definitions.
-//! 
-//! let buffer: Vec<u8> = cache.read(index_id, archive_id)?;
-//! 
-//! # Ok(())
-//! # }
-//! ```
-//! 
+//!  
 //! # Building a custom cache
 //! 
 //! This crate supplies traits and helper functions to help implement 
@@ -139,7 +111,7 @@ pub mod sec;
 #[doc(inline)]
 pub use error::Result;
 #[doc(inline)]
-pub use cache::{ Cache, CacheCore, CacheRead };
+pub use cache::{ Cache, CacheCore, CacheRead, OsrsHuffmanTable };
 #[doc(inline)]
 pub use cksm::Checksum;
 #[doc(inline)]

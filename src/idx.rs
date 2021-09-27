@@ -16,6 +16,7 @@ use crate::{
     cache::REFERENCE_TABLE,
 };
 
+/// Index prefix name.
 pub const IDX_PREFIX: &str = "main_file_cache.idx";
 
 /// Represents all indicies loaded by the cache.

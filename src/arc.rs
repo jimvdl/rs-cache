@@ -26,6 +26,7 @@ use nom::{
 };
 use itertools::izip;
 
+/// Archive reference length to help parsing the reference table.
 pub const ARC_REF_LENGTH: usize = 6;
 
 /// Represents an archive reference to an archive within the main data file.

@@ -12,11 +12,11 @@ use std::{ error::Error, fmt, io };
 /// A convenience function that bubbles an `rscache::Result` to its caller:
 ///
 /// ```
-/// use rscache::OsrsCache;
+/// use rscache::Cache;
 /// use rscache::codec;
 /// 
 /// // Same result as Result<Vec<u8>, CacheError>
-/// fn item_def_data(cache: &OsrsCache) -> rscache::Result<Vec<u8>> {
+/// fn item_def_data(cache: &Cache) -> rscache::Result<Vec<u8>> {
 ///     let index_id = 2;
 ///     let archive_id = 10;
 /// 

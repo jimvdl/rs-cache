@@ -1,11 +1,11 @@
 //! # Example
 //! 
 //! ```
-//! use rscache::Rs3Cache;
+//! use rscache::Cache;
 //! use rscache::ldr::rs3::ItemLoader;
 //! 
 //! # fn main() -> rscache::Result<()> {
-//! let cache = Rs3Cache::new("./data/rs3_cache")?;
+//! let cache = Cache::new("./data/rs3_cache")?;
 //! let item_ldr = ItemLoader::new(&cache)?;
 //! 
 //! if let Some(def) = item_ldr.load(1042) {

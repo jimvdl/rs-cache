@@ -79,7 +79,7 @@ pub fn load_map_def(cache: &Cache, region_id: u32) -> crate::Result<Option<MapDe
     Ok(None)
 }
 
-/// Parses all definitions read from the passed `Cache<S>` from `archive_id`.
+/// Parses all definitions read from the passed `Cache` from `archive_id`.
 /// 
 /// # Errors
 /// 
@@ -89,9 +89,9 @@ pub fn load_map_def(cache: &Cache, region_id: u32) -> crate::Result<Option<MapDe
 /// 
 /// ```
 /// # use std::collections::HashMap;
-/// # use rscache::{ OsrsCache, util, def::osrs::ItemDefinition };
+/// # use rscache::{ Cache, util, def::osrs::ItemDefinition };
 /// # fn main() -> rscache::Result<()> {
-/// # let cache = OsrsCache::new("./data/osrs_cache")?;
+/// # let cache = Cache::new("./data/osrs_cache")?;
 /// let index_id = 2; // Config index.
 /// let archive_id = 10; // Archive containing item definitions.
 /// let item_defs: HashMap<u32, ItemDefinition> = util::osrs::parse_defs_from_archive(&cache, index_id, archive_id)?;

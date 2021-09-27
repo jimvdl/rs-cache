@@ -20,7 +20,9 @@ pub const SECTOR_DATA_SIZE: usize = 512;
 pub const SECTOR_EXPANDED_DATA_SIZE: usize = 510;
 pub const SECTOR_SIZE: usize = SECTOR_HEADER_SIZE + SECTOR_DATA_SIZE;
 
+/// Type alias for readability.
 pub type HeaderSize = usize;
+/// Type alias for readability.
 pub type DataSize = usize;
 
 /// Sector data for reading.

@@ -31,8 +31,11 @@ use memmap::Mmap;
 use crc::crc32;
 use whirlpool::{ Whirlpool, Digest };
 
+/// Main data name.
 pub const MAIN_DATA: &str = "main_file_cache.dat2";
+/// Main music data name.
 pub const MAIN_MUSIC_DATA: &str = "main_file_cache.dat2m";
+/// Reference table id.
 pub const REFERENCE_TABLE: u8 = 255;
 
 /// The core of a cache.
@@ -49,6 +52,7 @@ pub trait CacheRead {
     }
 }
 
+/// Reads bytes from the cache into the given writer.
 pub trait ReadIntoWriter {
     fn read_into_writer<W: Write>(&self, index_id: u8, archive_id: u32, writer: &mut W)
         -> crate::Result<()>;
@@ -63,19 +67,17 @@ pub trait ReadIntoWriter {
 /// 
 /// # Examples
 /// ```
-/// # use rscache::{ Cache, store::MemoryStore };
-/// # struct Huffman;
-/// # impl Huffman {
-/// #   pub fn new(buffer: Vec<u8>) -> Self { Self {} }
-/// # }
+/// # use rscache::Cache;
+/// use rscache::{ OsrsHuffmanTable, util::osrs::Huffman };
 /// # fn main() -> rscache::Result<()> {
-/// # let cache: Cache<MemoryStore> = Cache::new("./data/osrs_cache")?;
+/// # let cache: Cache = Cache::new("./data/osrs_cache")?;
+/// 
 /// let huffman_table = cache.huffman_table()?;
-/// let huffman = Huffman::new(huffman_table);
+/// let huffman = Huffman::new(&huffman_table);
 /// # Ok(())
 /// # }
 /// ```
-pub trait OsrsHuffman {
+pub trait OsrsHuffmanTable {
     fn huffman_table(&self) -> crate::Result<Vec<u8>>;
 }
 
@@ -87,7 +89,7 @@ pub struct Cache {
 }
 
 impl Cache {
-    /// Constructs a new `Cache<S>` with the given store.
+    /// Constructs a new `Cache`.
     ///
     /// # Errors
     /// 
@@ -97,10 +99,10 @@ impl Cache {
     /// # Examples
     ///
     /// ```
-    /// use rscache::{ Cache, store::MemoryStore };
+    /// use rscache::Cache;
     /// # fn main() -> rscache::Result<()> {
     /// 
-    /// let cache: Cache<MemoryStore> = Cache::new("./data/osrs_cache")?;
+    /// let cache = Cache::new("./data/osrs_cache")?;
     /// # Ok(())
     /// # }
     /// ```
@@ -109,7 +111,7 @@ impl Cache {
         CacheCore::new(path)
     }
 
-    /// Reads from the internal store.
+    /// Reads from the internal data.
     /// 
     /// A lookup is performed on the specified index to find the sector id and the total length
     /// of the buffer that needs to be read from the `main_file_cache.dat2`.
@@ -122,11 +124,11 @@ impl Cache {
     /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
     /// 
     /// # Examples
+    /// 
     /// ```
-    /// # use rscache::{ Cache, store::MemoryStore };
+    /// # use rscache::Cache;
     /// # fn main() -> rscache::Result<()> {
-    /// # let path = "./data/osrs_cache";
-    /// let cache: Cache<MemoryStore> = Cache::new(path)?;
+    /// let cache = Cache::new("./data/osrs_cache")?;
     /// 
     /// let index_id = 2; // Config index
     /// let archive_id = 10; // Random archive.
@@ -207,10 +209,9 @@ impl Cache {
     /// # Examples
     /// 
     /// ```
-    /// # use rscache::{ Cache, store::MemoryStore };
+    /// # use rscache::Cache;
     /// # fn main() -> rscache::Result<()> {
-    /// # let path = "./data/osrs_cache";
-    /// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+    /// # let cache = Cache::new("./data/osrs_cache")?;
     /// let checksum = cache.create_checksum()?;
     /// #    Ok(())
     /// # }
@@ -260,10 +261,9 @@ impl Cache {
     /// 
     /// # Examples
     /// ```
-    /// # use rscache::{ Cache, store::MemoryStore, codec };
+    /// # use rscache::{ Cache, codec };
     /// # fn main() -> rscache::Result<()> {
-    /// # let path = "./data/osrs_cache";
-    /// # let cache: Cache<MemoryStore> = Cache::new(path)?;
+    /// # let cache = Cache::new("./data/osrs_cache")?;
     /// let index_id = 10;
     /// let archive = cache.archive_by_name(index_id, "huffman")?;
     /// # Ok(())
@@ -300,9 +300,9 @@ impl Cache {
     /// # Examples
     /// 
     /// ```
-    /// # use rscache::{ Cache, store::MemoryStore };
+    /// # use rscache::Cache;
     /// # fn main() -> rscache::Result<()> {
-    /// # let cache: Cache<MemoryStore> = Cache::new("./data/osrs_cache")?;
+    /// # let cache = Cache::new("./data/osrs_cache")?;
     /// for index in 0..cache.index_count() {
     ///     // ...
     /// }
@@ -368,7 +368,7 @@ impl ReadIntoWriter for Cache {
     }
 }
 
-impl OsrsHuffman for Cache {
+impl OsrsHuffmanTable for Cache {
     #[inline]
     fn huffman_table(&self) -> crate::Result<Vec<u8>> {
         let index_id = 10;

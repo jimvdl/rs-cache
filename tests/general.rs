@@ -6,7 +6,7 @@ mod osrs {
         Cache, 
         cksm::OsrsEncode,
         util::osrs::Huffman,
-        cache::OsrsHuffman,
+        cache::OsrsHuffmanTable,
     };
 
     #[test]
