@@ -109,7 +109,7 @@ pub mod ldr;
 pub mod sec;
 
 #[doc(inline)]
-pub use error::Result;
+pub use error::{ Result, CacheError };
 #[doc(inline)]
 pub use cache::{ 
     Cache, 
