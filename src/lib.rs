@@ -48,7 +48,6 @@
 //! let archive_id = 10; // Archive containing item definitions.
 //! 
 //! let buffer: Vec<u8> = cache.read(index_id, archive_id)?;
-//! 
 //! # Ok(())
 //! # }
 //! ```
@@ -102,6 +101,7 @@ pub mod cksm;
 pub mod idx;
 pub mod arc;
 pub mod ext;
+pub mod parse;
 pub mod error;
 pub mod codec;
 pub mod def;

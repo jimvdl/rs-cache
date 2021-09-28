@@ -162,7 +162,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_archive() -> crate::Result<()> {
+    fn parse_archive() -> crate::Result<()> {
         let buffer = &[0, 0, 77, 0, 1, 196];
         let archive = ArchiveRef::from_buffer(10, 255, buffer)?;
 

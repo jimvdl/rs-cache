@@ -127,10 +127,6 @@ impl DecodedBuffer {
 /// 7. Add the `version` as i16 if present.
 /// 8. Encode complete.
 /// 
-/// Supported compression types:
-/// - Gzip
-/// - Bzip2
-/// 
 /// **NOTE: When compressing with gzip the header is removed 
 /// before the compressed data is returned.
 /// The encoded buffer will not contain the gzip header.**

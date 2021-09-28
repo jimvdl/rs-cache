@@ -41,8 +41,6 @@ The [osrs specifications](osrs_specifications.md) and [rs3 specifications](rs3_s
 
 Integration tests are running on Oldschool RuneScape version 180, which you can run at any time because the cache is included in the `./data/osrs_cache` directory. RS3 Integration tests are running on version 904. The RS3 cache is too large to include on GitHub.
 
-The minimum supported `rustc` version is `1.41`.
-
 This crate is passively maintained. Additional features will be implemented once they are needed for my own server.
 The public API of this crate is still evolving due to constant discoveries and overhauls to improve the overal usage.
 __If you require a certain feature feel free to open an issue.__
