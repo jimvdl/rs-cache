@@ -73,11 +73,9 @@ pub mod rs3 {
     pub fn be_u16_smart<'a, E: ParseError<&'a[u8]>>(buffer: &'a [u8]) -> IResult<&'a[u8], u16, E> {
         if buffer[0] < 128 {
             let (buffer, value) = be_u8(buffer)?;
-            println!("1");
             Ok((buffer, value.wrapping_sub(64) as u16))
         } else {
             let (buffer, value) = be_u16(buffer)?;
-            println!("2");
             Ok((buffer, value.wrapping_sub(0xC000)))
         }
     }
