@@ -36,7 +36,7 @@
 //! # Quick Start
 //! 
 //! The quickest and easiest way to get started is by using the
-//! [`Cache`](type.Cache.html).
+//! [`Cache`](struct.Cache.html).
 //! 
 //! ```
 //! use rscache::Cache;

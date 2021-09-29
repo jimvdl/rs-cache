@@ -1,5 +1,6 @@
 const ROUNDS: u32 = 32;
 
+/// Deciphers the data with the given XTEA keys. Defaults to 32 rounds.
 #[inline]
 pub fn decipher(keys: &[u32], data: &[u8], start: usize, end: usize) -> Vec<u8> {
     let blocks = (end - start) / 8;

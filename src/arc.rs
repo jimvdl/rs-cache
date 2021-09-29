@@ -27,7 +27,7 @@ use nom::{
 use itertools::izip;
 
 /// Archive reference length to help parsing the reference table.
-pub const ARC_REF_LENGTH: usize = 6;
+pub const ARCHIVE_REF_LEN: usize = 6;
 
 /// Represents an archive reference to an archive within the main data file.
 #[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
@@ -64,8 +64,42 @@ pub struct ArchiveFileData {
 pub struct ArchiveFileGroup(Vec<ArchiveFileData>);
 
 impl ArchiveRef {
+    /// Creates an `ArchiveRef` from the given buffer.
+    /// 
+    /// The buffer always contains the total length in bytes for the
+    /// given archive and the sector start ptr.
+    /// 
+    /// The constant `ARCHIVE_REF_LEN` defines the `ArchiveRef` buffer length.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// # use std::fs::File;
+    /// # use std::io::{ self, Read };
+    /// # use rscache::{ 
+    /// #   idx::Index, arc::{ ARCHIVE_REF_LEN, ArchiveRef },
+    /// #   error::ParseError,
+    /// # };
+    /// # fn main() -> rscache::Result<()> {
+    /// # let index_id = 2;
+    /// let mut index_file = File::open("./data/osrs_cache/main_file_cache.idx2")?;
+    /// let mut index_buffer = Vec::with_capacity(index_file.metadata()?.len() as usize);
+    /// 
+    /// index_file.read_to_end(&mut index_buffer)?;
+    ///     
+    /// for (archive_id, archive_data) in index_buffer.chunks_exact(ARCHIVE_REF_LEN).enumerate() {
+    ///     let archive_id = archive_id as u32;
+    ///
+    ///     let archive = match ArchiveRef::from_buffer(archive_id, index_id, archive_data) {
+    ///         Ok(archive) => archive,
+    ///         Err(_) => return Err(ParseError::Archive(archive_id).into())
+    ///      };
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
     #[inline]
-    pub(crate) fn from_buffer(id: u32, index_id: u8, buffer: &[u8]) -> crate::Result<Self> {
+    pub fn from_buffer(id: u32, index_id: u8, buffer: &[u8]) -> crate::Result<Self> {
         let (buffer, len) = be_u24(buffer)?;
         let (_, sec) = be_u24(buffer)?;
         
@@ -246,5 +280,20 @@ impl<'a> IntoIterator for &'a ArchiveFileGroup {
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parse_archive() -> crate::Result<()> {
+        let buffer = &[0, 0, 77, 0, 1, 196];
+        let archive = ArchiveRef::from_buffer(10, 255, buffer)?;
+
+        assert_eq!(archive, ArchiveRef{ id: 10, index_id: 255, sector: 452, length: 77 });
+
+        Ok(())
     }
 }

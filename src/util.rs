@@ -8,18 +8,11 @@ pub mod osrs;
 pub mod rs3;
 
 use std::{ 
-    path::Path, 
     collections::HashMap,
-    fs::File,
-    io::{ BufReader, self, Read },
+    io::{ self, BufReader },
 };
 
-use crate::{
-    cache::REFERENCE_TABLE,
-    idx::{ Index, IDX_PREFIX },
-    ext::ReadExt,
-    error::ReadError,
-};
+use crate::ext::ReadExt;
 
 macro_rules! impl_iter_for_loader {
     ($ldr:ident, $def:ty) => {
@@ -94,43 +87,6 @@ pub mod djd2 {
         
         hash
     }
-}
-
-/// Loads all indices present in the cache folder.
-/// 
-/// The `u8` in `HashMap<u8, Index>` represents the id of the index.
-/// It loops through the directory searching for the reference table and
-/// every index that is compatible.
-/// 
-/// # Errors
-/// 
-/// Can return multiple errors: 
-/// - Reference table not found.
-/// - Index failed to parse. 
-/// - Index couldn't be opened.
-#[inline]
-pub fn load_indices<P: AsRef<Path>>(path: P) -> crate::Result<HashMap<u8, Index>> {
-    let path = path.as_ref();
-    let mut indices = HashMap::new();
-
-    let ref_tbl_path = path.join(format!("{}{}", IDX_PREFIX, REFERENCE_TABLE));
-    if !ref_tbl_path.exists() {
-        return Err(ReadError::ReferenceTableNotFound.into());
-    }
-
-    for index_id in 0..=REFERENCE_TABLE {
-        let path = path.join(format!("{}{}", IDX_PREFIX, index_id));
-
-        if path.exists() {
-            let mut index_file = File::open(path)?;
-            let mut index_buffer = Vec::with_capacity(index_file.metadata()?.len() as usize);
-
-            index_file.read_to_end(&mut index_buffer)?;
-            indices.insert(index_id, Index::new(index_id, &index_buffer)?);
-        }
-    }
-
-    Ok(indices)
 }
 
 /// Useful for decoding parameters when reading from definition buffers.
