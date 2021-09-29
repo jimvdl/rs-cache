@@ -96,12 +96,18 @@ impl<'a> ops::Index<&'a u8> for Indices {
 impl Index {
     /// Creates an `Index` from a path.
     /// 
-    /// # Errors
+    /// # Panics
     /// 
     /// Panics if the file path given does not lead to valid index file with
     /// extension `.idx#` where the # must be its id.
     /// 
     /// Also panics if the given `id` does not match the id in the file extension.
+    /// 
+    /// # Errors
+    /// 
+    /// Can return multiple errors:
+    /// - Index failed to parse. 
+    /// - Index couldn't be opened.
     /// 
     /// # Examples
     /// 
