@@ -5,7 +5,6 @@ use std::{
     collections::{ hash_map, HashMap },
     fs::File,
     io::Read,
-    ops,
 };
 
 use serde::{ Serialize, Deserialize };
@@ -26,8 +25,8 @@ pub struct Indices(HashMap<u8, Index>);
 /// Represents an .idx file.
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Index {
-    pub id: u8,
-    pub archives: HashMap<u32, ArchiveRef>,
+    id: u8,
+    archives: HashMap<u32, ArchiveRef>,
 }
 
 impl Indices {
@@ -81,15 +80,6 @@ impl Indices {
     #[inline]
     pub const fn inner(&self) -> &HashMap<u8, Index> {
         &self.0
-    }
-}
-
-impl<'a> ops::Index<&'a u8> for Indices {
-    type Output = Index;
-
-    #[inline]
-    fn index(&self, key: &'a u8) -> &Self::Output {
-        &self.0[key]
     }
 }
 
@@ -182,6 +172,16 @@ impl Index {
         }
 
         Ok(Self { id, archives })
+    }
+
+    #[inline]
+    pub const fn id(&self) -> u8 {
+        self.id
+    }
+
+    #[inline]
+    pub const fn archives(&self) -> &HashMap<u32, ArchiveRef> {
+        &self.archives
     }
 }
 

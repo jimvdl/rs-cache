@@ -12,6 +12,9 @@ use nom::{
         be_u32,
     },
 };
+use memmap::Mmap;
+use crc::crc32;
+use whirlpool::{ Whirlpool, Digest };
 
 use crate::{ 
     cksm::{ Checksum, Entry },
@@ -27,10 +30,6 @@ use crate::{
     },
 };
 
-use memmap::Mmap;
-use crc::crc32;
-use whirlpool::{ Whirlpool, Digest };
-
 /// Main data name.
 pub const MAIN_DATA: &str = "main_file_cache.dat2";
 /// Main music data name.
@@ -38,21 +37,30 @@ pub const MAIN_MUSIC_DATA: &str = "main_file_cache.dat2m";
 /// Reference table id.
 pub const REFERENCE_TABLE: u8 = 255;
 
-/// The core of a cache.
-pub trait CacheCore: CacheRead + Sized {
-    fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self>;
-}
-
-/// The read functionality of a cache.
-pub trait CacheRead {
-    fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>>;
-    #[inline]
-    fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
-        self.read(archive.index_id, archive.id)
-    }
-}
-
 /// Reads bytes from the cache into the given writer.
+/// 
+/// # Errors
+/// 
+/// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
+/// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
+/// 
+/// # Examples
+/// 
+/// ```
+/// use std::io::BufWriter;
+/// 
+/// # use rscache::Cache;
+/// # fn main() -> rscache::Result<()> {
+/// let cache = Cache::new("./data/osrs_cache")?;
+/// 
+/// let index_id = 2; // Config index
+/// let archive_id = 10; // Random archive.
+/// 
+/// let mut writer = BufWriter::new(Vec::new());
+/// cache.read_into_writer(index_id, archive_id, &mut writer)?;
+/// # Ok(())
+/// # }
+/// ```
 pub trait ReadIntoWriter {
     fn read_into_writer<W: Write>(&self, index_id: u8, archive_id: u32, writer: &mut W)
         -> crate::Result<()>;
@@ -89,12 +97,13 @@ pub struct Cache {
 }
 
 impl Cache {
+    // FIXME give a full explination on how to use cache...
     /// Constructs a new `Cache`.
     ///
     /// # Errors
     /// 
     /// If this function encounters any form of I/O or other error, a `CacheError`
-    /// is returned which wrapps the underlying error.
+    /// is returned which wraps the underlying error.
     /// 
     /// # Examples
     ///
@@ -108,7 +117,12 @@ impl Cache {
     /// ```
     #[inline]
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
-        CacheCore::new(path)
+        let path = path.as_ref();
+        let main_file = File::open(path.join(MAIN_DATA))?;
+
+        let indices = Indices::new(path)?;
+
+        Ok(unsafe { Self { data: Mmap::map(&main_file)?, indices } })
     }
 
     /// Reads from the internal data.
@@ -139,13 +153,21 @@ impl Cache {
     /// ```
     #[inline]
     pub fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
-        CacheRead::read(self, index_id, archive_id)
+        let index = self.indices.get(&index_id)
+            .ok_or(ReadError::IndexNotFound(index_id))?;
+
+        let archive = index.archives().get(&archive_id)
+            .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
+
+        let mut buffer = Vec::with_capacity(archive.length);
+        self.read_internal(archive, &mut buffer)?;
+
+        Ok(buffer)
     }
 
-    /// Reads from the internal data with a `ArchiveRef`.
     #[inline]
-    pub fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
-        CacheRead::read_archive(self, archive)
+    pub(crate) fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
+        self.read(archive.index_id, archive.id)
     }
 
     #[inline]
@@ -284,7 +306,7 @@ impl Cache {
 
         for archive in archives {
             if archive.name_hash == hash {
-                let archive = index.archives.get(&(archive.id as u32))
+                let archive = index.archives().get(&(archive.id as u32))
                     .ok_or(ReadError::ArchiveNotFound(index_id, archive.id as u32))?;
 
                 return Ok(archive)
@@ -322,34 +344,6 @@ impl Cache {
     }
 }
 
-impl CacheCore for Cache {
-    #[inline]
-    fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
-        let path = path.as_ref();
-        let main_file = File::open(path.join(MAIN_DATA))?;
-
-        let indices = Indices::new(path)?;
-
-        Ok(unsafe { Self { data: Mmap::map(&main_file)?, indices } })
-    }
-}
-
-impl CacheRead for Cache {
-    #[inline]
-    fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
-        let index = self.indices.get(&index_id)
-            .ok_or(ReadError::IndexNotFound(index_id))?;
-
-        let archive = index.archives.get(&archive_id)
-            .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
-
-        let mut buffer = Vec::with_capacity(archive.length);
-        self.read_internal(archive, &mut buffer)?;
-
-        Ok(buffer)
-    }
-}
-
 impl ReadIntoWriter for Cache {
     #[inline]
     fn read_into_writer<W: Write>(
@@ -361,7 +355,7 @@ impl ReadIntoWriter for Cache {
         let index = self.indices.get(&index_id)
             .ok_or(ReadError::IndexNotFound(index_id))?;
 
-        let archive = index.archives.get(&archive_id)
+        let archive = index.archives().get(&archive_id)
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
             
         self.read_internal(archive, writer)

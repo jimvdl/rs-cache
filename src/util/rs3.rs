@@ -4,7 +4,7 @@ use crate::{
     cache::REFERENCE_TABLE,
     Definition,
     arc::{ Archive, ArchiveFileGroup },
-    CacheCore,
+    Cache,
     codec,
 };
 
@@ -14,7 +14,7 @@ macro_rules! impl_rs3_loader {
    ($ldr:ident, $def:ty, archive_id: $arc_id:expr) => {
         impl $ldr {
             #[inline]
-            pub fn new<C: CacheCore>(cache: &C) -> crate::Result<Self> {
+            pub fn new(cache: &Cache) -> crate::Result<Self> {
                 Loader::new(cache)
             }
 
@@ -28,7 +28,7 @@ macro_rules! impl_rs3_loader {
             type Definition = $def;
 
             #[inline]
-            fn new<C: CacheCore>(cache: &C) -> crate::Result<Self> {
+            fn new(cache: &Cache) -> crate::Result<Self> {
                 let map = crate::util::rs3::parse_defs(cache, $arc_id)?;
 
                 Ok(Self(map))
@@ -63,7 +63,7 @@ macro_rules! impl_rs3_loader {
 /// # }
 /// ```
 #[inline]
-pub fn parse_defs<D: Definition, C: CacheCore>(cache: &C, archive_id: u32) -> crate::Result<HashMap<u32, D>> {
+pub fn parse_defs<D: Definition>(cache: &Cache, archive_id: u32) -> crate::Result<HashMap<u32, D>> {
     let buffer = cache.read(REFERENCE_TABLE, archive_id)?;
     let buffer = codec::decode(&buffer)?;
 

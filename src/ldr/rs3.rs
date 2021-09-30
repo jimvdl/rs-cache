@@ -25,7 +25,7 @@ use std::collections::{ hash_map, HashMap };
 
 use serde::{ Serialize, Deserialize };
 
-use crate::{ Loader, CacheCore };
+use crate::{ Loader, Cache };
 use crate::def::rs3::ItemDefinition;
 
 /// Loads all item definitions from the current cache.

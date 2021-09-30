@@ -113,8 +113,6 @@ pub use error::{ Result, CacheError };
 #[doc(inline)]
 pub use cache::{ 
     Cache, 
-    CacheCore, 
-    CacheRead, 
     OsrsHuffmanTable,
     ReadIntoWriter,
 };
