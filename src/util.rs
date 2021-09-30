@@ -6,6 +6,8 @@ pub mod osrs;
 /// All RS3 specific utilities.
 #[macro_use]
 pub mod rs3;
+/// Default xtea decipher.
+pub mod xtea;
 
 use std::{ 
     collections::HashMap,

@@ -26,7 +26,10 @@ use lzma_rs::{
     decompress,
 };
 
-use crate::error::{ CacheError, CompressionError };
+use crate::{
+    error::{ CacheError, CompressionError },
+    util::xtea,
+};
 
 /// Supported compression types for RuneScape.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
@@ -150,12 +153,36 @@ impl DecodedBuffer {
 /// ```
 #[inline]
 pub fn encode(compression: Compression, data: &[u8], version: Option<i16>) -> crate::Result<Vec<u8>> {
-    let compressed_data = match compression {
+    encode_internal(compression, data, version, None)
+}
+
+// TODO
+#[inline]
+pub fn encode_with_keys(
+    compression: Compression,
+    data: &[u8],
+    version: Option<i16>,
+    keys: &[u32; 4]
+) -> crate::Result<Vec<u8>> {
+    encode_internal(compression, data, version, Some(keys))
+}
+
+fn encode_internal(
+    compression: Compression, 
+    data: &[u8],
+    version: Option<i16>,
+    keys: Option<&[u32; 4]>,
+) -> crate::Result<Vec<u8>> {
+    let mut compressed_data = match compression {
         Compression::None => data.to_owned(),
         Compression::Bzip2 => compress_bzip2(data)?,
         Compression::Gzip => compress_gzip(data)?,
         Compression::Lzma => compress_lzma(data)?,
     };
+
+    if let Some(keys) = keys {
+        compressed_data = xtea::encipher(&compressed_data, keys);
+    }
 
     let mut buffer = Vec::with_capacity(compressed_data.len() + 11);
     buffer.push(compression as u8);
@@ -201,6 +228,14 @@ pub fn encode(compression: Compression, data: &[u8], version: Option<i16>) -> cr
 #[inline]
 pub fn decode(buffer: &[u8]) -> crate::Result<Vec<u8>> {
     Ok(DecodedBuffer::try_from(buffer)?.into_vec())
+}
+
+// TODO
+#[inline]
+pub fn decode_with_keys(buffer: &[u8], keys: &[u32; 4]) -> crate::Result<Vec<u8>> {
+    let buffer = decode(buffer)?;
+
+    Ok(xtea::decipher(&buffer, keys))
 }
 
 fn compress_bzip2(data: &[u8]) -> io::Result<Vec<u8>> {
