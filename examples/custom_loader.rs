@@ -4,8 +4,8 @@ use std::{
 };
 use rscache::{ 
     Cache,
-    Loader,
-    def::{ Definition, FetchDefinition },
+    ldr::osrs::Loader,
+    def::osrs::{ Definition, FetchDefinition },
     ext::ReadExt,
 };
 
@@ -27,18 +27,18 @@ fn main() -> rscache::Result<()> {
 }
 
 // Newtype defining the loader.
-struct CustomLoader(HashMap<u32, CustomDefinition>);
+struct CustomLoader(HashMap<u16, CustomDefinition>);
 
 // Your definition with all the required fields. (in this example it's just a ItemDefinition)
 #[derive(Default)]
 struct CustomDefinition {
-    pub id: u32,
+    pub id: u16,
     pub name: String,
     // Some other fields that need to be parsed from the buffer go here.
 }
 
 impl Definition for CustomDefinition {
-    fn new(id: u32, buffer: &[u8]) -> io::Result<Self> {
+    fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
         let mut reader = BufReader::new(buffer);
         let def = decode_buffer(id, &mut reader)?;
 
@@ -46,7 +46,7 @@ impl Definition for CustomDefinition {
     }
 }
 
-fn decode_buffer(id: u32, reader: &mut BufReader<&[u8]>) -> io::Result<CustomDefinition> {
+fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<CustomDefinition> {
     // Parse the buffer into a definition.
     let mut def = CustomDefinition {
         id,
@@ -89,7 +89,7 @@ impl Loader for CustomLoader {
     }
 
     // Simple HashMap lookup.
-    fn load(&self, id: u32) -> Option<&Self::Definition> {
+    fn load(&self, id: u16) -> Option<&Self::Definition> {
         self.0.get(&id)
     }
 }

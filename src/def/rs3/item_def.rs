@@ -5,7 +5,8 @@ use std::{
 
 use serde::{ Serialize, Deserialize };
 
-use crate::{ Definition, ext::ReadExt, util };
+use super::Definition;
+use crate::{ ext::ReadExt, util };
 
 /// Contains all the information about a certain item fetched from the cache through
 /// the [ItemLoader](../../ldr/rs3/struct.ItemLoader.html).

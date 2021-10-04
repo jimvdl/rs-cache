@@ -15,7 +15,7 @@ impl Huffman {
     /// 
     /// ```
     /// # use rscache::Cache;
-    /// use rscache::{ OsrsHuffmanTable, util::osrs::Huffman };
+    /// use rscache::util::Huffman;
     /// 
     /// # fn main() -> rscache::Result<()> {
     /// # let cache = Cache::new("./data/osrs_cache")?;

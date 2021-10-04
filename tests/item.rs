@@ -4,7 +4,7 @@ mod osrs {
     use super::common;
     
     #[test]
-    fn load_blue_partyhat() -> rscache::Result<()> {
+    fn load_item_blue_partyhat() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
         let item_loader = common::osrs::load_items(&cache)?;
         
@@ -18,7 +18,7 @@ mod osrs {
     }
     
     #[test]
-    fn load_magic_logs() -> rscache::Result<()> {
+    fn load_item_magic_logs() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
         let item_loader = common::osrs::load_items(&cache)?;
         
@@ -32,7 +32,7 @@ mod osrs {
     }
     
     #[test]
-    fn load_logs_noted() -> rscache::Result<()> {
+    fn load_item_logs_noted() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
         let item_loader = common::osrs::load_items(&cache)?;
         
@@ -61,7 +61,7 @@ mod rs3 {
     use super::common;
     
     #[test]
-    fn load_blue_partyhat() -> rscache::Result<()> {
+    fn load_item_blue_partyhat() -> rscache::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
         
@@ -75,7 +75,7 @@ mod rs3 {
     }
 
     #[test]
-    fn load_master_mining_cape() -> rscache::Result<()> {
+    fn load_item_master_mining_cape() -> rscache::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
 
@@ -91,7 +91,7 @@ mod rs3 {
     }
 
     #[test]
-    fn load_luminite_stone_spirit() -> rscache::Result<()> {
+    fn load_item_luminite_stone_spirit() -> rscache::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
 
@@ -106,7 +106,7 @@ mod rs3 {
     }
 
     #[test]
-    fn load_light_animica() -> rscache::Result<()> {
+    fn load_item_light_animica() -> rscache::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
 
@@ -121,7 +121,7 @@ mod rs3 {
     }
 
     #[test]
-    fn load_elder_rune_pickaxe_5() -> rscache::Result<()> {
+    fn load_item_elder_rune_pickaxe_5() -> rscache::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
 
@@ -137,7 +137,7 @@ mod rs3 {
     }
 
     #[test]
-    fn load_wergali_incense_sticks() -> rscache::Result<()> {
+    fn load_item_wergali_incense_sticks() -> rscache::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
 

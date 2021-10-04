@@ -5,11 +5,8 @@
 //! # Features
 //! 
 //! Currently rs-cache offers limited support for OSRS & RS3 with the features listed below.
-//! This crate also contains tools to help you with implementing your own cache
-//! if the currently supplied cache is insufficient for a specific use-case.
 //! 
-//! Note: this crate is still a work in progress and might contain bugs and is still
-//! incomplete.
+//! Note: the public api of this crate is still evolving, it might contain bugs or miss features.
 //! 
 //! The following features are currently provided:
 //! - Reading from the cache.
@@ -26,9 +23,9 @@
 //! - RS3 Loaders
 //!   - [`ItemLoader`](ldr/rs3/struct.ItemLoader.html)
 //! - Utilities
-//!   - [`Huffman`](util/osrs/struct.Huffman.html) decompressor.
-//!   - [`Isaac`](util/osrs/struct.IsaacRand.html) randomizer.
-//!   - [Xtea](util/osrs/xtea/fn.decipher.html) decipher.
+//!   - [`Huffman`](util/struct.Huffman.html) decompressor.
+//!   - [`Isaac`](util/struct.IsaacRand.html) randomizer.
+//!   - Xtea cipher.
 //! 
 //! Feature to be implemented in the future: 
 //! - Writing data to the cache.
@@ -51,14 +48,6 @@
 //! # Ok(())
 //! # }
 //! ```
-//!  
-//! # Building a custom cache
-//! 
-//! This crate supplies traits and helper functions to help implement 
-//! your own cache when the default cache doesn't do exactly what you need.
-//! 
-//! See the [custom_cache](https://github.com/jimvdl/rs-cache/tree/master/examples) 
-//! example to help you get started.
 
 #![deny(clippy::all, clippy::nursery)]
 
@@ -96,29 +85,31 @@
 
 #[macro_use]
 pub mod util;
-pub mod cache;
+mod cache;
 pub mod cksm;
-pub mod idx;
-pub mod arc;
+mod idx;
+mod arc;
 pub mod ext;
 pub mod parse;
 pub mod error;
 pub mod codec;
 pub mod def;
 pub mod ldr;
-pub mod sec;
+mod sec;
 
 #[doc(inline)]
 pub use error::{ Result, CacheError };
 #[doc(inline)]
-pub use cache::{ 
-    Cache, 
-    OsrsHuffmanTable,
-    ReadIntoWriter,
-};
-#[doc(inline)]
-pub use cksm::Checksum;
-#[doc(inline)]
-pub use ldr::Loader;
-#[doc(inline)]
-pub use def::Definition;
+pub use cache::{ Cache, ReadIntoWriter };
+
+/// Core architecture.
+pub mod fs {
+    #[doc(inline)]
+    pub use crate::cache::*;
+    #[doc(inline)]
+    pub use crate::arc::*;
+    #[doc(inline)]
+    pub use crate::idx::*;
+    #[doc(inline)]
+    pub use crate::sec::*;
+}

@@ -5,8 +5,7 @@ mod osrs {
     use rscache::{ 
         Cache, 
         cksm::OsrsEncode,
-        util::osrs::Huffman,
-        cache::OsrsHuffmanTable,
+        util::Huffman,
     };
 
     #[test]
@@ -101,7 +100,11 @@ mod osrs {
 
 mod rs3 {
     use super::common;
-    use rscache::{ Cache, cksm::Rs3Encode };
+    use rscache::{ 
+        Cache, 
+        cksm::Rs3Encode,
+        util::Huffman,
+    };
 
     #[test]
     fn setup_cache() -> rscache::Result<()> {
@@ -141,6 +144,37 @@ mod rs3 {
         let hash = common::hash(&buffer);
         assert_eq!(&hash, "118e0146af6cf288630357eec6298c34a2430065");
         assert_eq!(buffer.len(), 4681);
+
+        Ok(())
+    }
+
+    #[test]
+    fn get_huffman_table() -> rscache::Result<()> {
+        let cache = common::osrs::setup()?;
+
+        let huffman_table = cache.huffman_table()?;
+
+        let hash = common::hash(&huffman_table);
+        assert_eq!(&hash, "664e89cf25a0af7da138dd0f3904ca79cd1fe767");
+        assert_eq!(huffman_table.len(), 256);
+
+        Ok(())
+    }
+
+    #[test]
+    fn huffman_decompress() -> rscache::Result<()> {
+        let cache = common::osrs::setup()?;
+
+        let huffman_table = cache.huffman_table()?;
+        let huffman = Huffman::new(&huffman_table);
+
+        let compressed_msg = &[174, 128, 35, 32, 208, 96];
+        let decompressed_len = 8;
+    
+        let decompressed_msg = huffman.decompress(compressed_msg, decompressed_len);
+     
+        let msg = String::from_utf8(decompressed_msg).unwrap_or_default();
+        assert_eq!(msg, "rs-cache");
 
         Ok(())
     }

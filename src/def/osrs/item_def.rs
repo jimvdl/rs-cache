@@ -6,16 +6,14 @@ use std::{
 
 use serde::{ Serialize, Deserialize };
 
-use crate::{ Definition, ext::ReadExt, util };
+use super::Definition;
+use crate::{ ext::ReadExt, util };
 
 /// Contains all the information about a certain item fetched from the cache through
 /// the [ItemLoader](../../ldr/osrs/struct.ItemLoader.html).
-/// 
-/// The `InventoryModelData` and the `CharacterModelData` were hidden in the documents
-/// because these are rarely accessed, they contain useless information in most use-cases. 
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
 pub struct ItemDefinition {
-    pub id: u32,
+    pub id: u16,
     pub name: String,
     pub stackable: bool,
     pub cost: i32,
@@ -74,7 +72,7 @@ pub struct CharacterModelData {
 
 impl Definition for ItemDefinition {
     #[inline]
-    fn new(id: u32, buffer: &[u8]) -> io::Result<Self> {
+    fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
         let mut reader = BufReader::new(buffer);
         let item_def = decode_buffer(id, &mut reader)?;
 
@@ -82,7 +80,7 @@ impl Definition for ItemDefinition {
     }
 }
 
-fn decode_buffer(id: u32, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefinition> {
+fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefinition> {
     let mut item_def = ItemDefinition {
         id,
         inventory_model_data: InventoryModelData {

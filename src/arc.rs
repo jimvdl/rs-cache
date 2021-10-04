@@ -76,8 +76,8 @@ impl ArchiveRef {
     /// ```
     /// # use std::fs::File;
     /// # use std::io::{ self, Read };
-    /// # use rscache::{ 
-    /// #   idx::Index, arc::{ ARCHIVE_REF_LEN, ArchiveRef },
+    /// # use rscache::{
+    /// #   fs::{ Index, ARCHIVE_REF_LEN, ArchiveRef },
     /// #   error::ParseError,
     /// # };
     /// # fn main() -> rscache::Result<()> {

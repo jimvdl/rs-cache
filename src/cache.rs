@@ -50,6 +50,8 @@ pub const REFERENCE_TABLE: u8 = 255;
 /// use std::io::BufWriter;
 /// 
 /// # use rscache::Cache;
+/// use rscache::ReadIntoWriter;
+/// 
 /// # fn main() -> rscache::Result<()> {
 /// let cache = Cache::new("./data/osrs_cache")?;
 /// 
@@ -62,31 +64,12 @@ pub const REFERENCE_TABLE: u8 = 255;
 /// # }
 /// ```
 pub trait ReadIntoWriter {
-    fn read_into_writer<W: Write>(&self, index_id: u8, archive_id: u32, writer: &mut W)
-        -> crate::Result<()>;
-}
-
-/// Constructs a buffer which contains the huffman table.
-/// 
-/// # Errors
-/// 
-/// Returns an error if the huffman archive could not be found or 
-/// if the decode / decompression of the huffman table failed.
-/// 
-/// # Examples
-/// ```
-/// # use rscache::Cache;
-/// use rscache::{ OsrsHuffmanTable, util::osrs::Huffman };
-/// # fn main() -> rscache::Result<()> {
-/// # let cache: Cache = Cache::new("./data/osrs_cache")?;
-/// 
-/// let huffman_table = cache.huffman_table()?;
-/// let huffman = Huffman::new(&huffman_table);
-/// # Ok(())
-/// # }
-/// ```
-pub trait OsrsHuffmanTable {
-    fn huffman_table(&self) -> crate::Result<Vec<u8>>;
+    fn read_into_writer<W: Write>(
+        &self, 
+        index_id: u8, 
+        archive_id: u32, 
+        writer: &mut W
+    ) -> crate::Result<()>;
 }
 
 /// Main cache struct providing basic utilities.
@@ -97,7 +80,6 @@ pub struct Cache {
 }
 
 impl Cache {
-    // FIXME give a full explination on how to use cache...
     /// Constructs a new `Cache`.
     ///
     /// # Errors
@@ -120,9 +102,10 @@ impl Cache {
         let path = path.as_ref();
         let main_file = File::open(path.join(MAIN_DATA))?;
 
+        let data = unsafe { Mmap::map(&main_file)? };
         let indices = Indices::new(path)?;
 
-        Ok(unsafe { Self { data: Mmap::map(&main_file)?, indices } })
+        Ok(Self { data, indices })
     }
 
     /// Reads from the internal data.
@@ -156,7 +139,7 @@ impl Cache {
         let index = self.indices.get(&index_id)
             .ok_or(ReadError::IndexNotFound(index_id))?;
 
-        let archive = index.archives().get(&archive_id)
+        let archive = index.archive_refs().get(&archive_id)
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
 
         let mut buffer = Vec::with_capacity(archive.length);
@@ -166,54 +149,8 @@ impl Cache {
     }
 
     #[inline]
-    pub(crate) fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
+    pub fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
         self.read(archive.index_id, archive.id)
-    }
-
-    #[inline]
-    fn read_internal<W: Write>(&self, archive: &ArchiveRef, writer: &mut W) -> crate::Result<()> {
-        let header_size = SectorHeaderSize::from_archive(archive);
-        let (header_len, data_len) = header_size.clone().into();
-        let mut current_sector = archive.sector;
-        let mut remaining = archive.length;
-        let mut chunk = 0;
-
-        loop {
-            let offset = current_sector as usize * SECTOR_SIZE;
-            
-            if remaining >= data_len {
-                let data_block = &self.data[offset..offset + SECTOR_SIZE];
-                
-                match Sector::new(data_block, &header_size) {
-                    Ok(sector) => {
-                        sector.header.validate(archive.id, chunk, archive.index_id)?;
-                        current_sector = sector.header.next;
-                        writer.write_all(sector.data_block)?;
-                    },
-                    Err(_) => return Err(ParseError::Sector(archive.sector).into())
-                };
-
-                remaining -= data_len;
-            } else {
-                if remaining == 0 { break; }
-
-                let data_block = &self.data[offset..offset + remaining + header_len];
-
-                match Sector::new(data_block, &header_size) {
-                    Ok(sector) => {
-                        sector.header.validate(archive.id, chunk, archive.index_id)?;
-                        writer.write_all(sector.data_block)?;
-
-                        break;
-                    },
-                    Err(_) => return Err(ParseError::Sector(archive.sector).into())
-                };
-            }
-
-            chunk += 1;
-        }
-
-        Ok(())
     }
 
     /// Creates a `Checksum` which can be used to validate the cache data
@@ -270,6 +207,16 @@ impl Cache {
         Ok(checksum)
     }
 
+    #[inline]
+    pub fn huffman_table(&self) -> crate::Result<Vec<u8>> {
+        let index_id = 10;
+
+        let archive = self.archive_by_name(index_id, "huffman")?;
+        let buffer = self.read_archive(archive)?;
+        
+        codec::decode(&buffer)
+    }
+
     /// Searches for the archive which contains the given name hash in the given
     /// index_id.
     /// 
@@ -292,28 +239,24 @@ impl Cache {
     /// # }
     /// ```
     #[inline]
-    pub fn archive_by_name<T: Into<String>>(&self, index_id: u8, name: T) -> crate::Result<&ArchiveRef> {
-        let name = name.into();
-
+    pub fn archive_by_name<T: AsRef<str>>(&self, index_id: u8, name: T) -> crate::Result<&ArchiveRef> {
         let index = self.indices.get(&index_id)
             .ok_or(ReadError::IndexNotFound(index_id))?;
+        
+        let buffer = codec::decode(&self.read(REFERENCE_TABLE, index_id as u32)?)?;
+        let archives = Archive::parse(&buffer)?;
+        
         let hash = util::djd2::hash(&name);
+        
+        let archive = archives.iter()
+            .find(|archive| archive.name_hash == hash)
+            .ok_or_else(|| ReadError::NameNotInArchive(hash, name.as_ref().into(), index_id))?;
 
-        let buffer = self.read(REFERENCE_TABLE, index_id as u32)?;
-        let data = codec::decode(&buffer)?;
+        let archive_ref = index.archive_refs()
+            .get(&archive.id)
+            .ok_or(ReadError::ArchiveNotFound(index_id, archive.id))?;
 
-        let archives = Archive::parse(&data)?;
-
-        for archive in archives {
-            if archive.name_hash == hash {
-                let archive = index.archives().get(&(archive.id as u32))
-                    .ok_or(ReadError::ArchiveNotFound(index_id, archive.id as u32))?;
-
-                return Ok(archive)
-            }
-        }
-
-        Err(ReadError::NameNotInArchive(hash, name, index_id).into())
+        Ok(archive_ref)
     }
 
     /// Simply returns the index count, by getting the `len()` of 
@@ -342,6 +285,52 @@ impl Cache {
     pub const fn indices(&self) -> &Indices {
         &self.indices
     }
+
+    #[inline]
+    fn read_internal<W: Write>(&self, archive: &ArchiveRef, writer: &mut W) -> crate::Result<()> {
+        let header_size = SectorHeaderSize::from_archive(archive);
+        let (header_len, data_len) = header_size.clone().into();
+        let mut current_sector = archive.sector;
+        let mut remaining = archive.length;
+        let mut chunk = 0;
+
+        loop {
+            let offset = current_sector as usize * SECTOR_SIZE;
+            
+            if remaining >= data_len {
+                let data_block = &self.data[offset..offset + SECTOR_SIZE];
+                
+                match Sector::new(data_block, &header_size) {
+                    Ok(sector) => {
+                        sector.header.validate(archive.id, chunk, archive.index_id)?;
+                        current_sector = sector.header.next;
+                        writer.write_all(sector.data_block)?;
+                    },
+                    Err(_) => return Err(ParseError::Sector(archive.sector).into())
+                };
+
+                remaining -= data_len;
+            } else {
+                if remaining == 0 { break; }
+
+                let data_block = &self.data[offset..offset + remaining + header_len];
+
+                match Sector::new(data_block, &header_size) {
+                    Ok(sector) => {
+                        sector.header.validate(archive.id, chunk, archive.index_id)?;
+                        writer.write_all(sector.data_block)?;
+
+                        break;
+                    },
+                    Err(_) => return Err(ParseError::Sector(archive.sector).into())
+                };
+            }
+
+            chunk += 1;
+        }
+
+        Ok(())
+    }
 }
 
 impl ReadIntoWriter for Cache {
@@ -355,23 +344,9 @@ impl ReadIntoWriter for Cache {
         let index = self.indices.get(&index_id)
             .ok_or(ReadError::IndexNotFound(index_id))?;
 
-        let archive = index.archives().get(&archive_id)
+        let archive = index.archive_refs().get(&archive_id)
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
             
         self.read_internal(archive, writer)
-    }
-}
-
-impl OsrsHuffmanTable for Cache {
-    #[inline]
-    fn huffman_table(&self) -> crate::Result<Vec<u8>> {
-        let index_id = 10;
-
-        let archive = self.archive_by_name(index_id, "huffman")?;
-
-        let mut buffer = Vec::with_capacity(archive.length);
-        self.read_internal(archive, &mut buffer)?;
-        
-        codec::decode(&buffer)
     }
 }

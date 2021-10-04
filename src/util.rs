@@ -1,13 +1,14 @@
 //! Helpful utility functions, macros and structs.
 
-/// All OSRS specific utilities.
-#[macro_use]
-pub mod osrs;
-/// All RS3 specific utilities.
-#[macro_use]
-pub mod rs3;
 /// Default xtea decipher.
 pub mod xtea;
+#[allow(unused_assignments)]
+mod huffman;
+#[allow(clippy::many_single_char_names, clippy::too_many_lines)]
+mod isaac_rand;
+
+pub use huffman::Huffman;
+pub use isaac_rand::IsaacRand;
 
 use std::{ 
     collections::HashMap,
@@ -16,23 +17,98 @@ use std::{
 
 use crate::ext::ReadExt;
 
+macro_rules! impl_osrs_loader {
+    ($ldr:ident, $def:ty, index_id: $idx_id:expr $(, archive_id: $arc_id:expr)?) => {
+         impl $ldr {
+             #[inline]
+             pub fn new(cache: &Cache) -> crate::Result<Self> {
+                 Loader::new(cache)
+             }
+ 
+             #[inline]
+             pub fn load(&self, id: u16) -> Option<&$def> {
+                 Loader::load(self, id)
+             }
+         }
+ 
+         impl Loader for $ldr {
+             type Definition = $def;
+ 
+             #[allow(unreachable_code)]
+             #[inline]
+             fn new(cache: &Cache) -> crate::Result<Self> {            
+                 $(
+                     let map = Self::Definition::fetch_from_archive(cache, $idx_id, $arc_id)?;
+ 
+                     return Ok(Self(map));
+                 )?
+ 
+                 let map = Self::Definition::fetch_from_index(cache, $idx_id)?;
+ 
+                 Ok(Self(map))
+             }
+ 
+             #[inline]
+             fn load(&self, id: u16) -> Option<&Self::Definition> {
+                 self.0.get(&id)
+             }
+         }
+ 
+         impl_iter_for_loader!($ldr, u16, $def);
+    };
+}
+
+macro_rules! impl_rs3_loader {
+    ($ldr:ident, $def:ty, index_id: $idx_id:expr) => {
+         impl $ldr {
+             #[inline]
+             pub fn new(cache: &Cache) -> crate::Result<Self> {
+                 Loader::new(cache)
+             }
+ 
+             #[inline]
+             pub fn load(&self, id: u32) -> Option<&$def> {
+                 Loader::load(self, id)
+             }
+         }
+ 
+         impl Loader for $ldr {
+             type Definition = $def;
+ 
+             #[inline]
+             fn new(cache: &Cache) -> crate::Result<Self> {
+                 let map = Self::Definition::fetch_from_index(cache, $idx_id)?;
+ 
+                 Ok(Self(map))
+             }
+ 
+             #[inline]
+             fn load(&self, id: u32) -> Option<&Self::Definition> {
+                 self.0.get(&id)
+             }
+         }
+ 
+         impl_iter_for_loader!($ldr, u32, $def);
+    };
+}
+
 macro_rules! impl_iter_for_loader {
-    ($ldr:ident, $def:ty) => {
+    ($ldr:ident, $id:ty, $def:ty) => {
         impl $ldr {
             #[inline]
-            pub fn iter(&self) -> hash_map::Iter<'_, u32, $def> {
+            pub fn iter(&self) -> hash_map::Iter<'_, $id, $def> {
                 self.0.iter()
             }
 
             #[inline]
-            pub fn iter_mut(&mut self) -> hash_map::IterMut<'_, u32, $def> {
+            pub fn iter_mut(&mut self) -> hash_map::IterMut<'_, $id, $def> {
                 self.0.iter_mut()
             }
         }
 
         impl IntoIterator for $ldr {
-            type Item = (u32, $def);
-            type IntoIter = hash_map::IntoIter<u32, $def>;
+            type Item = ($id, $def);
+            type IntoIter = hash_map::IntoIter<$id, $def>;
 
             #[inline]
             fn into_iter(self) -> Self::IntoIter {
@@ -41,8 +117,8 @@ macro_rules! impl_iter_for_loader {
         }
 
         impl<'a> IntoIterator for &'a $ldr {
-            type Item = (&'a u32, &'a $def);
-            type IntoIter = hash_map::Iter<'a, u32, $def>;
+            type Item = (&'a $id, &'a $def);
+            type IntoIter = hash_map::Iter<'a, $id, $def>;
         
             #[inline]
             fn into_iter(self) -> Self::IntoIter {
@@ -51,8 +127,8 @@ macro_rules! impl_iter_for_loader {
         }
 
         impl<'a> IntoIterator for &'a mut $ldr {
-            type Item = (&'a u32, &'a mut $def);
-            type IntoIter = hash_map::IterMut<'a, u32, $def>;
+            type Item = (&'a $id, &'a mut $def);
+            type IntoIter = hash_map::IterMut<'a, $id, $def>;
 
             #[inline]
             fn into_iter(self) -> Self::IntoIter {
@@ -78,8 +154,8 @@ pub mod djd2 {
     /// assert_eq!(hash, 1258058669);
     /// ``` 
     #[inline]
-    pub fn hash<T: Into<String>>(string: T) -> i32 {
-        let string = string.into();
+    pub fn hash<T: AsRef<str>>(string: T) -> i32 {
+        let string = string.as_ref();
         let mut hash = 0;
 
         for index in 0..string.len() {

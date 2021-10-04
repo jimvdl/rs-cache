@@ -25,34 +25,42 @@ use std::collections::{ hash_map, HashMap };
 
 use serde::{ Serialize, Deserialize };
 
-use crate::{ Loader, Cache };
-// use crate::codec;
-use crate::def::{
-    // Definition,
-    FetchDefinition,
-    osrs::{
+use crate::{
+    Cache,
+    codec,
+    def::osrs::{
+        Definition,
+        FetchDefinition,
         ItemDefinition,
         NpcDefinition,
         ObjectDefinition,
         MapDefinition,
-    }
+    },
 };
+
+/// The core of each Loader tasked with loading certain definitions.
+pub trait Loader: Sized {
+    type Definition: Definition;
+
+    fn new(cache: &Cache) -> crate::Result<Self>;
+    fn load(&self, id: u16) -> Option<&Self::Definition>;
+}
 
 /// Loads all item definitions from the current cache.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
-pub struct ItemLoader(HashMap<u32, ItemDefinition>);
+pub struct ItemLoader(HashMap<u16, ItemDefinition>);
 
 /// Loads all npc definitions from the current cache.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
-pub struct NpcLoader(HashMap<u32, NpcDefinition>);
+pub struct NpcLoader(HashMap<u16, NpcDefinition>);
 
 /// Loads all object definitions from the current cache.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
-pub struct ObjectLoader(HashMap<u32, ObjectDefinition>);
+pub struct ObjectLoader(HashMap<u16, ObjectDefinition>);
 
 // /// Loads all object definitions from the current cache.
 // #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
-// pub struct MapLoader(HashMap<u32, MapDefinition>);
+// pub struct MapLoader(pub HashMap<u32, MapDefinition>);
 
 impl_osrs_loader!(ItemLoader, ItemDefinition, index_id: 2, archive_id: 10);
 impl_osrs_loader!(NpcLoader, NpcDefinition, index_id: 2, archive_id: 9);
@@ -60,39 +68,15 @@ impl_osrs_loader!(ObjectLoader, ObjectDefinition, index_id: 2, archive_id: 6);
 
 // impl MapLoader {
 //     #[inline]
-//     pub fn new(cache: &Cache) -> crate::Result<Self> {
-//         Loader::new(cache)
+//     pub fn new() -> Self {
+//         Self(HashMap::new())
 //     }
 
 //     #[inline]
-//     pub fn load(&self, id: u32) -> Option<&MapDefinition> {
-//         Loader::load(self, id)
-//     }
-// }
+//     pub fn load(&mut self, cache: &Cache, id: u32) -> crate::Result<&MapDefinition> {
+//         let map_def = self.0.entry(id).or_insert(MapDefinition::load_internal(cache, id)?);
 
-// impl Loader for MapLoader {
-//     type Definition = MapDefinition;
-
-//     #[inline]
-//     fn new(cache: &Cache) -> crate::Result<Self> {
-//         for region_id in 0..32768 {
-//             let x = region_id >> 8;
-//             let y = region_id & 0xFF;
-
-//             if let Ok(map_archive) = cache.archive_by_name(5, format!("m{}_{}", x, y)) {
-//                 let buffer = cache.read_archive(map_archive)?;
-//                 let buffer = codec::decode(&buffer)?;
-                
-//                 let map_def = Self::Definition::new(region_id, &buffer)?;
-//             }
-//         }
-        
-//         todo!()
-//     }
-
-//     #[inline]
-//     fn load(&self, id: u32) -> Option<&Self::Definition> {
-//         self.0.get(&id)
+//         Ok(map_def)
 //     }
 // }
 

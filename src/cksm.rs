@@ -1,4 +1,20 @@
 //! Validator for the cache.
+//! 
+//! # Example
+//! 
+//! ```
+//! # use rscache::Cache;
+//! use rscache::cksm::{ Checksum, OsrsEncode };
+//! 
+//! # fn main() -> rscache::Result<()> {
+//! # let cache = Cache::new("./data/osrs_cache")?;
+//! let checksum = cache.create_checksum()?;
+//! 
+//! // Encode the checksum with the OSRS protocol.
+//! let buffer = checksum.encode()?;
+//! # Ok(())
+//! # }
+//! ```
 
 use std::slice::{ Iter, IterMut };
 
@@ -20,10 +36,9 @@ use whirlpool::{ Whirlpool, Digest };
 /// # Examples
 /// 
 /// ```
-/// # use rscache::Checksum;
 /// # use std::net::TcpStream;
 /// # use std::io::Write;
-/// use rscache::cksm::OsrsEncode;
+/// use rscache::cksm::{ Checksum, OsrsEncode };
 /// 
 /// fn encode_checksum(checksum: Checksum, stream: &mut TcpStream) -> rscache::Result<()> {
 ///     let buffer = checksum.encode()?;
@@ -51,14 +66,13 @@ pub trait OsrsEncode {
 /// # Examples
 /// 
 /// ```
-/// # use rscache::Checksum;
 /// # use std::net::TcpStream;
 /// # use std::io::Write;
 /// # mod env {
 /// # pub const EXPONENT: &'static [u8] = b"5206580307236375668350588432916871591810765290737810323990754121164270399789630501436083337726278206128394461017374810549461689174118305784406140446740993";
 /// # pub const MODULUS: &'static [u8] = b"6950273013450460376345707589939362735767433035117300645755821424559380572176824658371246045200577956729474374073582306250298535718024104420271215590565201";
 /// # }
-/// use rscache::cksm::Rs3Encode;
+/// use rscache::cksm::{ Checksum, Rs3Encode };
 /// 
 /// fn encode_checksum(checksum: Checksum, stream: &mut TcpStream) -> rscache::Result<()> {
 ///     let buffer = checksum.encode(env::EXPONENT, env::MODULUS)?;
@@ -71,7 +85,7 @@ pub trait Rs3Encode {
     fn encode(self, exponent: &[u8], modulus: &[u8]) -> crate::Result<Vec<u8>>;
 }
 
-/// Contains validation data for a specific index.
+/// Contains index validation data.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Entry {
     pub crc: u32,
@@ -81,11 +95,10 @@ pub struct Entry {
 
 /// Validator for the `Cache`.
 /// 
-/// The `Checksum` is used to validate if every file used by the cache
-/// is still valid. It contains a list of entries, one entry for each index file.
+/// Used to validate cache index files. It contains a list of entries, one entry for each index file.
 /// 
 /// In order to create the `Checksum` the 
-/// [create_checksum()](struct.Cache.html#method.create_checksum) function has to be 
+/// [create_checksum()](../struct.Cache.html#method.create_checksum) function has to be 
 /// called on `Cache`. 
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Checksum {
@@ -102,7 +115,7 @@ impl Checksum {
         self.entries.push(entry);
     }
 
-    /// Validates the given crcs with internal crcs of the `Checksum`.
+    /// Validates crcs with internal crcs.
     /// 
     /// # Examples
     /// 

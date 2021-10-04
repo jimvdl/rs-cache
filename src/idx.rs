@@ -10,7 +10,7 @@ use std::{
 use serde::{ Serialize, Deserialize };
 
 use crate::{ 
-    arc::{ ArchiveRef, ARCHIVE_REF_LEN }, 
+    arc::{ ArchiveRef, Archive, ARCHIVE_REF_LEN }, 
     error::{ ReadError, ParseError },
     cache::REFERENCE_TABLE,
 };
@@ -26,7 +26,8 @@ pub struct Indices(HashMap<u8, Index>);
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct Index {
     id: u8,
-    archives: HashMap<u32, ArchiveRef>,
+    archive_refs: HashMap<u32, ArchiveRef>,
+    archives: HashMap<u32, Archive>,
 }
 
 impl Indices {
@@ -103,7 +104,7 @@ impl Index {
     /// 
     /// ```
     /// # use std::io::{ self, Read };
-    /// # use rscache::idx::Index;
+    /// # use rscache::fs::Index;
     /// # fn main() -> rscache::Result<()> {
     /// # let index_id = 2;
     /// let index = Index::from_path(index_id, "./data/osrs_cache/main_file_cache.idx2")?;
@@ -145,7 +146,7 @@ impl Index {
     /// ```
     /// # use std::fs::File;
     /// # use std::io::{ self, Read };
-    /// # use rscache::idx::Index;
+    /// # use rscache::fs::Index;
     /// # fn main() -> rscache::Result<()> {
     /// # let index_id = 2;
     /// let mut index_file = File::open("./data/osrs_cache/main_file_cache.idx2")?;
@@ -158,20 +159,20 @@ impl Index {
     /// ```
     #[inline]
     pub fn from_buffer(id: u8, buffer: &[u8]) -> crate::Result<Self> {
-        let mut archives = HashMap::new();
+        let mut archive_refs = HashMap::new();
 
         for (archive_id, archive_data) in buffer.chunks_exact(ARCHIVE_REF_LEN).enumerate() {
             let archive_id = archive_id as u32;
 
-            let archive = match ArchiveRef::from_buffer(archive_id, id, archive_data) {
+            let archive_ref = match ArchiveRef::from_buffer(archive_id, id, archive_data) {
                 Ok(archive) => archive,
                 Err(_) => return Err(ParseError::Archive(archive_id).into())
             };
             
-            archives.insert(archive_id, archive);
+            archive_refs.insert(archive_id, archive_ref);
         }
 
-        Ok(Self { id, archives })
+        Ok(Self { id, archive_refs, archives: HashMap::new() })
     }
 
     #[inline]
@@ -180,8 +181,8 @@ impl Index {
     }
 
     #[inline]
-    pub const fn archives(&self) -> &HashMap<u32, ArchiveRef> {
-        &self.archives
+    pub(crate) const fn archive_refs(&self) -> &HashMap<u32, ArchiveRef> {
+        &self.archive_refs
     }
 }
 

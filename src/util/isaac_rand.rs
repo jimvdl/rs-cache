@@ -22,7 +22,7 @@ const MASK: u32 = (SIZE as u32 - 1) << 2;
 /// # Examples
 /// 
 /// ```
-/// # use rscache::util::osrs::IsaacRand;
+/// # use rscache::util::IsaacRand;
 /// # struct ExamplePacket { pub id: u32 }
 /// # fn main() -> std::io::Result<()> {
 /// # let encoder_keys = Vec::new();

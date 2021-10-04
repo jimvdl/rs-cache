@@ -11,8 +11,10 @@ use nom::{
     },
 };
 
-use crate::error::ReadError;
-use crate::arc::ArchiveRef;
+use crate::{
+    error::ReadError,
+    arc::ArchiveRef,
+};
 
 pub const SECTOR_HEADER_SIZE: usize = 8;
 pub const SECTOR_EXPANDED_HEADER_SIZE: usize = 10;
@@ -61,6 +63,7 @@ impl<'a> Sector<'a> {
         Ok(Self { header, data_block })
     }
 
+    // TODO change to with_normal_header, same for expanded
     /// Convenience function to create a `Sector` with a `Normal` header size.
     #[inline]
     pub fn from_normal_header(buffer: &'a [u8]) -> crate::Result<Self> {

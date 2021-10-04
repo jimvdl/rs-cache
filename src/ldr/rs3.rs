@@ -25,11 +25,25 @@ use std::collections::{ hash_map, HashMap };
 
 use serde::{ Serialize, Deserialize };
 
-use crate::{ Loader, Cache };
-use crate::def::rs3::ItemDefinition;
+use crate::{
+    Cache,
+    def::rs3::{
+        Definition,
+        FetchDefinition,
+        ItemDefinition,
+    },
+};
+
+/// The core of each Loader tasked with loading certain definitions.
+pub trait Loader: Sized {
+    type Definition: Definition;
+
+    fn new(cache: &Cache) -> crate::Result<Self>;
+    fn load(&self, id: u32) -> Option<&Self::Definition>;
+}
 
 /// Loads all item definitions from the current cache.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
 pub struct ItemLoader(HashMap<u32, ItemDefinition>);
 
-impl_rs3_loader!(ItemLoader, ItemDefinition, archive_id: 19);
+impl_rs3_loader!(ItemLoader, ItemDefinition, index_id: 19);
