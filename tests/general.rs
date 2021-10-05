@@ -150,7 +150,7 @@ mod rs3 {
 
     #[test]
     fn get_huffman_table() -> rscache::Result<()> {
-        let cache = common::osrs::setup()?;
+        let cache = common::rs3::setup()?;
 
         let huffman_table = cache.huffman_table()?;
 
@@ -163,7 +163,7 @@ mod rs3 {
 
     #[test]
     fn huffman_decompress() -> rscache::Result<()> {
-        let cache = common::osrs::setup()?;
+        let cache = common::rs3::setup()?;
 
         let huffman_table = cache.huffman_table()?;
         let huffman = Huffman::new(&huffman_table);

@@ -20,11 +20,12 @@ use nom::{
         be_u16,
         be_u24,
         be_u32,
-        be_i16,
         be_i32
     },
 };
 use itertools::izip;
+
+use crate::parse::rs3::be_u32_smart;
 
 /// Archive reference length to help parsing the reference table.
 pub const ARCHIVE_REF_LEN: usize = 6;
@@ -49,7 +50,7 @@ pub struct Archive {
     pub whirlpool: [u8; 64],
     pub version: u32,
     pub entry_count: usize,
-    pub valid_ids: Vec<u16>
+    pub valid_ids: Vec<u32>
 }
 
 /// Represents one file inside an `ArchiveGroup`, contains only its id and a byte buffer.
@@ -113,8 +114,8 @@ impl Archive {
         let (buffer, protocol) = be_u8(buffer)?;
         let (buffer, _) = cond(protocol >= 6, be_u32)(buffer)?;
         let (buffer, identified, whirlpool, codec, hash) = parse_identified(buffer)?;
-        let (buffer, archive_count) = parse_archive_count(buffer)?;
-        let (buffer, ids) = many_m_n(0, archive_count, be_i16)(buffer)?;
+        let (buffer, archive_count) = parse_archive_count(buffer, protocol)?;
+        let (buffer, ids) = parse_ids(buffer, protocol, archive_count)?;
         let (buffer, name_hashes) = parse_hashes(buffer, identified, archive_count)?;
         let (buffer, crcs) = many_m_n(0, archive_count, be_u32)(buffer)?;
         let (buffer, hashes) = parse_hashes(buffer, hash, archive_count)?;
@@ -123,9 +124,8 @@ impl Archive {
         //let (buffer, compressed, decompressed) = parse_codec(buffer, codec, archive_count)?;
         let (buffer, _) = cond(codec, many_m_n(0, archive_count * 8, be_u8))(buffer)?;
         let (buffer, versions) = many_m_n(0, archive_count, be_u32)(buffer)?;
-        let (buffer, entry_counts) = many_m_n(0, archive_count, be_u16)(buffer)?;
-        let entry_counts: Vec<usize> = entry_counts.iter().map(|&entry_count| entry_count as usize).collect();
-        let (_, valid_ids) = parse_valid_ids(buffer, &entry_counts)?;
+        let (buffer, entry_counts) = parse_entry_counts(buffer, protocol, archive_count)?;
+        let (_, valid_ids) = parse_valid_ids(buffer, protocol, &entry_counts)?;
     
         let mut archives = Vec::with_capacity(archive_count);
         let mut last_archive_id = 0;
@@ -235,19 +235,26 @@ fn parse_whirlpools(buffer: &[u8], whirlpool: bool, archive_count: usize) -> cra
 //     todo!()
 // }
 
-fn parse_valid_ids<'a>(buffer: &'a [u8], entry_counts: &[usize]) -> crate::Result<(&'a [u8], Vec<Vec<u16>>)> {
+fn parse_valid_ids<'a>(mut buffer: &'a [u8], protocol: u8, entry_counts: &[usize]) -> crate::Result<(&'a [u8], Vec<Vec<u32>>)> {
     let mut result = Vec::with_capacity(entry_counts.len());
-    let count: usize = entry_counts.iter().sum();
-    let (buffer, mut taken) = take(count * 2)(buffer)?;
 
     for entry_count in entry_counts {
-        let (buf, id_modifiers) = many_m_n(0, *entry_count as usize, be_u16)(taken)?;
-        taken = buf;
+        let (buf, id_modifiers) = if protocol >= 7 {
+            many_m_n(0, *entry_count as usize, be_u32_smart)(buffer)?
+        } else {
+            let (buf, result) = many_m_n(0, *entry_count as usize, be_u16)(buffer)?;
+            let result = result.iter()
+                .map(|&id_mod| id_mod as u32)
+                .collect();
+
+            (buf, result)
+        };
+        buffer = buf;
 
         let mut ids = Vec::with_capacity(id_modifiers.len());
-        let mut id = 0;
+        let mut id = 0_u32;
         for current_id in id_modifiers {
-            id += current_id;
+            id += current_id as u32;
             ids.push(id);
         }
 
@@ -257,10 +264,46 @@ fn parse_valid_ids<'a>(buffer: &'a [u8], entry_counts: &[usize]) -> crate::Resul
     Ok((buffer, result))
 }
 
-fn parse_archive_count(buffer: &[u8]) -> crate::Result<(&[u8], usize)> {
-    let (buffer, value) = be_u16(buffer)?;
+fn parse_archive_count(buffer: &[u8], protocol: u8) -> crate::Result<(&[u8], usize)> {
+    let (buffer, value) = if protocol >= 7 {
+        be_u32_smart(buffer)?
+    } else {
+        let (buf, res) = be_u16(buffer)?;
+        (buf, res as u32)
+    };
 
     Ok((buffer, value as usize))
+}
+
+fn parse_ids(buffer: &[u8], protocol: u8, archive_count: usize) -> crate::Result<(&[u8], Vec<u32>)> {
+    let (buffer, ids) = if protocol >= 7 {
+        many_m_n(0, archive_count, be_u32_smart)(buffer)?
+    } else {
+        let (buf, res) = many_m_n(0, archive_count, be_u16)(buffer)?;
+        let res = res.iter().map(|&ec| ec as u32).collect();
+        (buf, res)
+    };
+
+    Ok((buffer, ids))
+}
+
+fn parse_entry_counts(buffer: &[u8], protocol: u8, archive_count: usize) -> crate::Result<(&[u8], Vec<usize>)> {
+    let (buffer, entry_counts) = if protocol >= 7 {
+        many_m_n(0, archive_count, be_u32_smart)(buffer)?
+    } else {
+        let (buf, res) = many_m_n(0, archive_count, be_u16)(buffer)?;
+        let res = res.iter()
+            .map(|&ec| ec as u32)
+            .collect();
+
+        (buf, res)
+    };
+
+    let entry_counts: Vec<usize> = entry_counts.iter()
+        .map(|&entry_count| entry_count as usize)
+        .collect();
+
+    Ok((buffer, entry_counts))
 }
 
 impl IntoIterator for ArchiveFileGroup {

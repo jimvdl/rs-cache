@@ -57,9 +57,7 @@ impl_from!(ParseError, Parse);
 
 impl From<nom::Err<()>> for CacheError {
     #[inline]
-    fn from(err: nom::Err<()>) -> Self {
-        dbg!(err);
-
+    fn from(_: nom::Err<()>) -> Self {
         Self::Parse(ParseError::Unknown)
     }
 }

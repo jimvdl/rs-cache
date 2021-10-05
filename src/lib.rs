@@ -83,18 +83,20 @@
     clippy::used_underscore_binding
 )]
 
+// TODO: determine what belongs in public api
+
 #[macro_use]
 pub mod util;
-mod cache;
 pub mod cksm;
-mod idx;
-mod arc;
 pub mod ext;
 pub mod parse;
 pub mod error;
 pub mod codec;
 pub mod def;
 pub mod ldr;
+mod cache;
+mod idx;
+mod arc;
 mod sec;
 
 #[doc(inline)]

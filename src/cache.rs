@@ -19,7 +19,7 @@ use whirlpool::{ Whirlpool, Digest };
 use crate::{ 
     cksm::{ Checksum, Entry },
     idx::Indices,
-    arc::{ Archive, ArchiveRef },
+    arc::ArchiveRef,
     error::{ ReadError, ParseError }, 
     util,
     codec,
@@ -103,7 +103,7 @@ impl Cache {
         let main_file = File::open(path.join(MAIN_DATA))?;
 
         let data = unsafe { Mmap::map(&main_file)? };
-        let indices = Indices::new(path)?;
+        let indices = Indices::new(path, &data)?;
 
         Ok(Self { data, indices })
     }
@@ -243,12 +243,9 @@ impl Cache {
         let index = self.indices.get(&index_id)
             .ok_or(ReadError::IndexNotFound(index_id))?;
         
-        let buffer = codec::decode(&self.read(REFERENCE_TABLE, index_id as u32)?)?;
-        let archives = Archive::parse(&buffer)?;
-        
         let hash = util::djd2::hash(&name);
         
-        let archive = archives.iter()
+        let archive = index.archives().iter()
             .find(|archive| archive.name_hash == hash)
             .ok_or_else(|| ReadError::NameNotInArchive(hash, name.as_ref().into(), index_id))?;
 
@@ -348,5 +345,66 @@ impl ReadIntoWriter for Cache {
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
             
         self.read_internal(archive, writer)
+    }
+}
+
+pub trait ReadInternal {
+    fn read_internal<W: Write>(
+        &self, 
+        archive: 
+        &ArchiveRef, 
+        writer: &mut W
+    ) -> crate::Result<()>;
+}
+
+impl ReadInternal for Mmap {
+    #[inline]
+    fn read_internal<W: Write>(
+        &self, 
+        archive: &ArchiveRef, 
+        writer: &mut W
+    ) -> crate::Result<()> {
+        let header_size = SectorHeaderSize::from_archive(archive);
+        let (header_len, data_len) = header_size.clone().into();
+        let mut current_sector = archive.sector;
+        let mut remaining = archive.length;
+        let mut chunk = 0;
+
+        loop {
+            let offset = current_sector as usize * SECTOR_SIZE;
+            
+            if remaining >= data_len {
+                let data_block = &self[offset..offset + SECTOR_SIZE];
+                
+                match Sector::new(data_block, &header_size) {
+                    Ok(sector) => {
+                        sector.header.validate(archive.id, chunk, archive.index_id)?;
+                        current_sector = sector.header.next;
+                        writer.write_all(sector.data_block)?;
+                    },
+                    Err(_) => return Err(ParseError::Sector(archive.sector).into())
+                };
+
+                remaining -= data_len;
+            } else {
+                if remaining == 0 { break; }
+
+                let data_block = &self[offset..offset + remaining + header_len];
+
+                match Sector::new(data_block, &header_size) {
+                    Ok(sector) => {
+                        sector.header.validate(archive.id, chunk, archive.index_id)?;
+                        writer.write_all(sector.data_block)?;
+
+                        break;
+                    },
+                    Err(_) => return Err(ParseError::Sector(archive.sector).into())
+                };
+            }
+
+            chunk += 1;
+        }
+
+        Ok(())
     }
 }

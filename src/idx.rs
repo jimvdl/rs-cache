@@ -7,12 +7,14 @@ use std::{
     io::Read,
 };
 
+use memmap::Mmap;
 use serde::{ Serialize, Deserialize };
 
 use crate::{ 
+    codec,
     arc::{ ArchiveRef, Archive, ARCHIVE_REF_LEN }, 
     error::{ ReadError, ParseError },
-    cache::REFERENCE_TABLE,
+    cache::{ REFERENCE_TABLE, ReadInternal },
 };
 
 /// Index prefix name.
@@ -27,7 +29,7 @@ pub struct Indices(HashMap<u8, Index>);
 pub struct Index {
     id: u8,
     archive_refs: HashMap<u32, ArchiveRef>,
-    archives: HashMap<u32, Archive>,
+    archives: Vec<Archive>,
 }
 
 impl Indices {
@@ -43,22 +45,38 @@ impl Indices {
     /// - Index failed to parse. 
     /// - Index couldn't be opened.
     #[inline]
-    pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
+    pub fn new<P: AsRef<Path>>(path: P, data: &Mmap) -> crate::Result<Self> {
         let path = path.as_ref();
         let mut indices = HashMap::new();
 
         let ref_tbl_path = path.join(format!("{}{}", IDX_PREFIX, REFERENCE_TABLE));
-        if !ref_tbl_path.exists() {
+        let ref_index = if ref_tbl_path.exists() {
+            Index::from_path(REFERENCE_TABLE, ref_tbl_path)?
+        } else {
             return Err(ReadError::ReferenceTableNotFound.into());
-        }
-
-        for index_id in 0..=REFERENCE_TABLE {
+        };
+        
+        for index_id in 0..REFERENCE_TABLE {
             let path = path.join(format!("{}{}", IDX_PREFIX, index_id));
-
+            
             if path.exists() {
-                indices.insert(index_id, Index::from_path(index_id, path)?);
+                let mut index = Index::from_path(index_id, path)?;
+
+                let archive_ref = ref_index.archive_refs().get(&(index_id as u32))
+                    .ok_or(ReadError::ArchiveNotFound(REFERENCE_TABLE, index_id as u32))?;
+                
+                if archive_ref.length != 0 {
+                    let mut buffer = Vec::with_capacity(archive_ref.length);
+                    data.read_internal(archive_ref, &mut buffer)?;
+                    let buffer = codec::decode(&buffer)?;
+                    index.archives = Archive::parse(&buffer)?;
+                }
+                
+                indices.insert(index_id, index);
             }
         }
+
+        indices.insert(REFERENCE_TABLE, ref_index);
 
         Ok(Self(indices))
     }
@@ -172,7 +190,7 @@ impl Index {
             archive_refs.insert(archive_id, archive_ref);
         }
 
-        Ok(Self { id, archive_refs, archives: HashMap::new() })
+        Ok(Self { id, archive_refs, archives: Vec::new() })
     }
 
     #[inline]
@@ -183,6 +201,11 @@ impl Index {
     #[inline]
     pub(crate) const fn archive_refs(&self) -> &HashMap<u32, ArchiveRef> {
         &self.archive_refs
+    }
+
+    #[inline]
+    pub(crate) const fn archives(&self) -> &Vec<Archive> {
+        &self.archives
     }
 }
 
