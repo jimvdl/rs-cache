@@ -143,7 +143,7 @@ impl Cache {
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
 
         let mut buffer = Vec::with_capacity(archive.length);
-        self.read_internal(archive, &mut buffer)?;
+        self.data.read_internal(archive, &mut buffer)?;
 
         Ok(buffer)
     }
@@ -282,52 +282,6 @@ impl Cache {
     pub const fn indices(&self) -> &Indices {
         &self.indices
     }
-
-    #[inline]
-    fn read_internal<W: Write>(&self, archive: &ArchiveRef, writer: &mut W) -> crate::Result<()> {
-        let header_size = SectorHeaderSize::from_archive(archive);
-        let (header_len, data_len) = header_size.clone().into();
-        let mut current_sector = archive.sector;
-        let mut remaining = archive.length;
-        let mut chunk = 0;
-
-        loop {
-            let offset = current_sector as usize * SECTOR_SIZE;
-            
-            if remaining >= data_len {
-                let data_block = &self.data[offset..offset + SECTOR_SIZE];
-                
-                match Sector::new(data_block, &header_size) {
-                    Ok(sector) => {
-                        sector.header.validate(archive.id, chunk, archive.index_id)?;
-                        current_sector = sector.header.next;
-                        writer.write_all(sector.data_block)?;
-                    },
-                    Err(_) => return Err(ParseError::Sector(archive.sector).into())
-                };
-
-                remaining -= data_len;
-            } else {
-                if remaining == 0 { break; }
-
-                let data_block = &self.data[offset..offset + remaining + header_len];
-
-                match Sector::new(data_block, &header_size) {
-                    Ok(sector) => {
-                        sector.header.validate(archive.id, chunk, archive.index_id)?;
-                        writer.write_all(sector.data_block)?;
-
-                        break;
-                    },
-                    Err(_) => return Err(ParseError::Sector(archive.sector).into())
-                };
-            }
-
-            chunk += 1;
-        }
-
-        Ok(())
-    }
 }
 
 impl ReadIntoWriter for Cache {
@@ -344,7 +298,7 @@ impl ReadIntoWriter for Cache {
         let archive = index.archive_refs().get(&archive_id)
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
             
-        self.read_internal(archive, writer)
+        self.data.read_internal(archive, writer)
     }
 }
 

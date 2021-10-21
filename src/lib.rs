@@ -83,7 +83,9 @@
     clippy::used_underscore_binding
 )]
 
+// TODO: maybe make Cache::new() panic because can't run without proper setup.
 // TODO: determine what belongs in public api
+// TODO: make serde a feature
 
 #[macro_use]
 pub mod util;

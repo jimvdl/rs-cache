@@ -56,6 +56,30 @@ impl Indices {
             return Err(ReadError::ReferenceTableNotFound.into());
         };
         
+        // let mut indices: HashMap<u8, Index> = (0..REFERENCE_TABLE)
+        //     .map(|index_id| (index_id, path.join(format!("{}{}", IDX_PREFIX, index_id))))
+        //     .filter(|(_, path)| path.exists())
+        //     .map(|(index_id, path)| Index::from_path(index_id, path))
+        //     .take_while(|index| index.is_ok())
+        //     .map(|index| index.unwrap())
+        //     .map(|index| (index.id, index))
+        //     .collect();
+
+        // indices.iter_mut()
+        //     .map(|(index_id, index)| -> crate::Result<()> {
+        //         let archive_ref = ref_index.archive_refs().get(&(*index_id as u32))
+        //             .ok_or(ReadError::ArchiveNotFound(REFERENCE_TABLE, *index_id as u32))?;
+            
+        //         if archive_ref.length != 0 {
+        //             let mut buffer = Vec::with_capacity(archive_ref.length);
+        //             data.read_internal(archive_ref, &mut buffer)?;
+        //             let buffer = codec::decode(&buffer)?;
+        //             index.archives = Archive::parse(&buffer)?;
+        //         }
+
+        //         Ok(())
+        //     });
+
         for index_id in 0..REFERENCE_TABLE {
             let path = path.join(format!("{}{}", IDX_PREFIX, index_id));
             
@@ -124,7 +148,7 @@ impl Index {
     /// # use std::io::{ self, Read };
     /// # use rscache::fs::Index;
     /// # fn main() -> rscache::Result<()> {
-    /// # let index_id = 2;
+    /// let index_id = 2;
     /// let index = Index::from_path(index_id, "./data/osrs_cache/main_file_cache.idx2")?;
     /// # Ok(())
     /// # }

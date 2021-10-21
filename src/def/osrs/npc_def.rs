@@ -60,7 +60,7 @@ pub struct NpcAnimationData {
 
 impl Definition for NpcDefinition {
     #[inline]
-    fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
+    fn new(id: u16, buffer: &[u8]) -> crate::Result<Self> {
         let mut reader = BufReader::new(buffer);
         let npc_def = decode_buffer(id, &mut reader)?;
 

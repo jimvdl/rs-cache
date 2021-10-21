@@ -3,7 +3,7 @@ mod item_def;
 
 pub use item_def::*;
 
-use std::{ io, collections::HashMap };
+use std::collections::HashMap;
 
 use crate::{
     Cache,
@@ -16,7 +16,7 @@ pub const ID_BLOCK_SIZE: usize = 256;
 
 /// Marker trait for definitions.
 pub trait Definition: Sized {
-    fn new(id: u32, buffer: &[u8]) -> io::Result<Self>;
+    fn new(id: u32, buffer: &[u8]) -> crate::Result<Self>;
 }
 
 pub trait FetchDefinition: Definition {

@@ -36,7 +36,7 @@ pub struct MapData {
 
 impl Definition for MapDefinition {
     #[inline]
-    fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
+    fn new(id: u16, buffer: &[u8]) -> crate::Result<Self> {
         let x = id as u32 >> 8;
         let y = id as u32 & 0xFF;
 

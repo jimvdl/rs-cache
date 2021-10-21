@@ -38,7 +38,7 @@ struct CustomDefinition {
 }
 
 impl Definition for CustomDefinition {
-    fn new(id: u16, buffer: &[u8]) -> io::Result<Self> {
+    fn new(id: u16, buffer: &[u8]) -> rscache::Result<Self> {
         let mut reader = BufReader::new(buffer);
         let def = decode_buffer(id, &mut reader)?;
 

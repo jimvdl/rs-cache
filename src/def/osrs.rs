@@ -4,13 +4,15 @@ mod npc_def;
 #[allow(clippy::too_many_lines)]
 mod obj_def;
 mod map_def;
+mod loc_def;
 
 pub use item_def::*;
 pub use npc_def::*;
 pub use obj_def::*;
 pub use map_def::*;
+pub use loc_def::*;
 
-use std::{ io, collections::HashMap };
+use std::collections::HashMap;
 
 use crate::{
     Cache,
@@ -21,7 +23,7 @@ use crate::{
 
 /// Marker trait for definitions.
 pub trait Definition: Sized {
-    fn new(id: u16, buffer: &[u8]) -> io::Result<Self>;
+    fn new(id: u16, buffer: &[u8]) -> crate::Result<Self>;
 }
 
 /// Adds definition fetching from the cache to every struct that implements `Definition`.

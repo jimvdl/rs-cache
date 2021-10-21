@@ -25,7 +25,7 @@ use nom::{
 };
 use itertools::izip;
 
-use crate::parse::rs3::be_u32_smart;
+use crate::parse::be_u32_smart;
 
 /// Archive reference length to help parsing the reference table.
 pub const ARCHIVE_REF_LEN: usize = 6;

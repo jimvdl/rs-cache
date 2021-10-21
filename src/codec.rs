@@ -247,9 +247,35 @@ pub fn decode(buffer: &[u8]) -> crate::Result<Vec<u8>> {
 // TODO
 #[inline]
 pub fn decode_with_keys(buffer: &[u8], keys: &[u32; 4]) -> crate::Result<Vec<u8>> {
-    let buffer = decode(buffer)?;
+    Ok(decode_internal(buffer, Some(keys))?.into_vec())
+}
 
-    Ok(xtea::decipher(&buffer, keys))
+fn decode_internal(buffer: &[u8], keys: Option<&[u32; 4]>) -> crate::Result<DecodedBuffer> {
+    let (buffer, compression) = be_u8(buffer)?;
+    let compression = Compression::try_from(compression)?;
+
+    let (buffer, compressed_len) = be_u32(buffer)?;
+    let compressed_len = compressed_len as usize;
+
+    let buffer = if let Some(keys) = keys {
+        xtea::decipher(buffer, keys)
+    } else {
+        buffer.to_vec()
+    };
+
+    let (decompressed_len, version, buffer) = match compression {
+        Compression::None => decompress_none(&buffer, compressed_len)?,
+        Compression::Bzip2 => decompress_bzip2(&buffer, compressed_len)?,
+        Compression::Gzip => decompress_gzip(&buffer, compressed_len)?,
+        Compression::Lzma => decompress_lzma(&buffer, compressed_len)?
+    };
+
+    Ok(DecodedBuffer{ 
+        compression,
+        len: decompressed_len,
+        version,
+        buffer
+    })
 }
 
 fn compress_bzip2(data: &[u8]) -> io::Result<Vec<u8>> {
@@ -377,23 +403,25 @@ impl TryFrom<&[u8]> for DecodedBuffer {
 
     #[inline]
     fn try_from(buffer: &[u8]) -> Result<Self, Self::Error> {
-        let (buffer, compression) = be_u8(buffer)?;
-        let compression = Compression::try_from(compression)?;
+        // let (buffer, compression) = be_u8(buffer)?;
+        // let compression = Compression::try_from(compression)?;
 
-        let (buffer, compressed_len) = be_u32(buffer)?;
-        let compressed_len = compressed_len as usize;
-        let (decompressed_len, version, buffer) = match compression {
-            Compression::None => decompress_none(buffer, compressed_len)?,
-            Compression::Bzip2 => decompress_bzip2(buffer, compressed_len)?,
-            Compression::Gzip => decompress_gzip(buffer, compressed_len)?,
-            Compression::Lzma => decompress_lzma(buffer, compressed_len)?
-        };
+        // let (buffer, compressed_len) = be_u32(buffer)?;
+        // let compressed_len = compressed_len as usize;
+        // let (decompressed_len, version, buffer) = match compression {
+        //     Compression::None => decompress_none(buffer, compressed_len)?,
+        //     Compression::Bzip2 => decompress_bzip2(buffer, compressed_len)?,
+        //     Compression::Gzip => decompress_gzip(buffer, compressed_len)?,
+        //     Compression::Lzma => decompress_lzma(buffer, compressed_len)?
+        // };
 
-        Ok(Self{ 
-            compression,
-            len: decompressed_len,
-            version,
-            buffer
-        })
+        // Ok(Self{ 
+        //     compression,
+        //     len: decompressed_len,
+        //     version,
+        //     buffer
+        // })
+
+        decode_internal(buffer, None)
     }
 }
