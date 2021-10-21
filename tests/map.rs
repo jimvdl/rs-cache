@@ -20,6 +20,7 @@ mod osrs {
     }
     
     #[test]
+    #[ignore]
     fn load_lumbridge_map_data() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
 

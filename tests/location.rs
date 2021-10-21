@@ -23,6 +23,7 @@ mod osrs {
     }
     
     #[test]
+    #[ignore]
     fn load_locations() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
 

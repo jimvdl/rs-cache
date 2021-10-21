@@ -70,29 +70,6 @@ pub fn be_u32_smart_compat<'a, E: ParseError<&'a[u8]>>(buffer: &'a [u8]) -> IRes
     Ok((buffer, var1))
 }
 
-/// Reads 1 byte if the first byte < 128, reads 2 bytes otherwise.
-///
-/// # Errors
-/// 
-/// Parser can reach EOF early if not enough bytes are supplied.
-/// 
-/// # Example
-/// 
-/// ```
-/// use rscache::parse::rs3::be_u16_smart;
-/// 
-/// # fn main() -> rscache::Result<()> {
-/// let buffer = &[17, 142, 64, 4, 24, 254];
-/// 
-/// let (buffer, value1) = be_u16_smart(buffer)?;
-/// let (buffer, value2) = be_u16_smart(buffer)?;
-/// 
-/// assert_eq!(value1, 209);
-/// assert_eq!(value2, 52800);
-/// assert_eq!(buffer, &[4, 24, 254]);
-/// # Ok(())
-/// # }
-/// ```
 #[inline]
 pub fn be_i16_smart<'a, E: ParseError<&'a[u8]>>(buffer: &'a [u8]) -> IResult<&'a[u8], u16, E> {
     if buffer[0] < 128 {
@@ -104,6 +81,29 @@ pub fn be_i16_smart<'a, E: ParseError<&'a[u8]>>(buffer: &'a [u8]) -> IResult<&'a
     }
 }
 
+/// Reads 1 byte if the first byte < 128, reads 2 bytes otherwise.
+///
+/// # Errors
+/// 
+/// Parser can reach EOF early if not enough bytes are supplied.
+/// 
+/// # Example
+/// 
+/// ```
+/// use rscache::parse::be_u16_smart;
+/// 
+/// # fn main() -> rscache::Result<()> {
+/// let buffer = &[17, 142, 64, 4, 24, 254];
+/// 
+/// let (buffer, value1) = be_u16_smart(buffer)?;
+/// let (buffer, value2) = be_u16_smart(buffer)?;
+/// 
+/// assert_eq!(value1, 17);
+/// assert_eq!(value2, 3648);
+/// assert_eq!(buffer, &[4, 24, 254]);
+/// # Ok(())
+/// # }
+/// ```
 #[inline]
 pub fn be_u16_smart<'a, E: ParseError<&'a[u8]>>(buffer: &'a [u8]) -> IResult<&'a[u8], u16, E> {
     if buffer[0] < 128 {
@@ -124,7 +124,7 @@ pub fn be_u16_smart<'a, E: ParseError<&'a[u8]>>(buffer: &'a [u8]) -> IResult<&'a
 /// # Example
 /// 
 /// ```
-/// use rscache::parse::rs3::be_u32_smart;
+/// use rscache::parse::be_u32_smart;
 /// 
 /// # fn main() -> rscache::Result<()> {
 /// let buffer = &[255, 54, 2, 0, 62, 1, 42, 233];
@@ -172,8 +172,8 @@ mod tests {
         let (buffer, value1) = be_u16_smart(buffer)?;
         let (buffer, value2) = be_u16_smart(buffer)?;
         
-        assert_eq!(value1, 209);
-        assert_eq!(value2, 52800);
+        assert_eq!(value1, 17);
+        assert_eq!(value2, 3648);
         assert_eq!(buffer, &[4, 24, 254]);
 
         Ok(())
