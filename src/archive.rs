@@ -7,8 +7,11 @@ use std::{
     slice::{ Iter, IterMut },
 };
 
+#[cfg(feature = "serde-derive")]
 use serde::{ Serialize, Deserialize };
+#[cfg(feature = "serde-derive")]
 use serde_big_array::big_array;
+#[cfg(feature = "serde-derive")]
 big_array! { BigArray; }
 
 use nom::{
@@ -31,7 +34,8 @@ use crate::parse::be_u32_smart;
 pub const ARCHIVE_REF_LEN: usize = 6;
 
 /// Represents an archive reference to an archive within the main data file.
-#[derive(Serialize, Deserialize, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ArchiveRef {
     pub id: u32,
     pub index_id: u8,
@@ -40,13 +44,14 @@ pub struct ArchiveRef {
 }
 
 /// Represents an archive.
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Archive {
     pub id: u32,
     pub name_hash: i32,
     pub crc: u32,
     pub hash: i32,
-    #[serde(with = "BigArray")]
+    #[cfg_attr(feature = "serde-derive", serde(with = "BigArray"))]
     pub whirlpool: [u8; 64],
     pub version: u32,
     pub entry_count: usize,
@@ -54,14 +59,16 @@ pub struct Archive {
 }
 
 /// Represents one file inside an `ArchiveGroup`, contains only its id and a byte buffer.
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ArchiveFileData {
     pub id: u32,
     pub data: Vec<u8>
 }
 
 /// Represents a group of `ArchiveFileData`.
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ArchiveFileGroup(Vec<ArchiveFileData>);
 
 impl ArchiveRef {

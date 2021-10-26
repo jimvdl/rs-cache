@@ -4,6 +4,7 @@ use std::{
     collections::HashMap,
 };
 
+#[cfg(feature = "serde-derive")]
 use serde::{ Serialize, Deserialize };
 
 use super::Definition;
@@ -11,7 +12,8 @@ use crate::{ extension::ReadExt, util };
 
 /// Contains all the information about a certain npc fetched from the cache through
 /// the [NpcLoader](struct.NpcLoader.html).
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct NpcDefinition {
     pub id: u16,
     pub name: String,
@@ -29,7 +31,8 @@ pub struct NpcDefinition {
     pub animation_data: NpcAnimationData,
 }
 
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct NpcModelData {
     pub models: Vec<u16>,
     pub chat_head_models: Vec<u16>,
@@ -47,7 +50,8 @@ pub struct NpcModelData {
     pub rotate_flag: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct NpcAnimationData {
     pub standing: Option<u16>,
     pub walking: Option<u16>,

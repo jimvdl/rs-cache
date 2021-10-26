@@ -20,6 +20,7 @@ use std::slice::{ Iter, IterMut };
 
 use crate::{ codec::Compression, codec };
 
+#[cfg(feature = "serde-derive")]
 use serde::{ Serialize, Deserialize };
 use num_bigint::{ BigInt, Sign };
 use whirlpool::{ Whirlpool, Digest };
@@ -86,7 +87,8 @@ pub trait Rs3Encode {
 }
 
 /// Contains index validation data.
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Entry {
     pub crc: u32,
     pub version: u32,
@@ -100,7 +102,8 @@ pub struct Entry {
 /// In order to create the `Checksum` the 
 /// [create_checksum()](../struct.Cache.html#method.create_checksum) function has to be 
 /// called on `Cache`. 
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Checksum {
     index_count: usize,
     entries: Vec<Entry>

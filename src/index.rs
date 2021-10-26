@@ -8,6 +8,8 @@ use std::{
 };
 
 use memmap::Mmap;
+
+#[cfg(feature = "serde-derive")]
 use serde::{ Serialize, Deserialize };
 
 use crate::{ 
@@ -21,11 +23,13 @@ use crate::{
 pub const IDX_PREFIX: &str = "main_file_cache.idx";
 
 /// Represents all indicies loaded by the cache.
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Indices(HashMap<u8, Index>);
 
 /// Represents an .idx file.
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Index {
     id: u8,
     archive_refs: HashMap<u32, ArchiveRef>,

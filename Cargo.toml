@@ -12,6 +12,13 @@ keywords = ["runescape", "osrs", "rs3"]
 exclude = [".gitignore", "data/*"]
 categories = ["development-tools", "filesystem"]
 
+[badges]
+maintenance = { status = "experimental" }
+
+[features]
+default = []
+serde-derive = ["serde", "serde-big-array"]
+
 [lib]
 name = "rscache"
 path = "src/lib.rs"
@@ -23,8 +30,8 @@ nom = "7.0"
 itertools = "0.9"
 whirlpool = "0.9"
 num-bigint = "0.4"
-serde = { version = "1.0", features = ["derive"] }
-serde-big-array = "0.3"
+serde = { version = "1.0", features = ["derive"], optional = true }
+serde-big-array = { version = "0.3", optional = true }
 lzma-rs = "0.2"
 flate2 = "1.0"
 memmap = "0.7"

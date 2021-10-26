@@ -3,6 +3,7 @@ use std::{
     io::BufReader,
 };
 
+#[cfg(feature = "serde-derive")]
 use serde::{ Serialize, Deserialize };
 
 use super::Definition;
@@ -10,7 +11,8 @@ use crate::{ extension::ReadExt, util };
 
 /// Contains all the information about a certain item fetched from the cache through
 /// the [ItemLoader](../../ldr/rs3/struct.ItemLoader.html).
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ItemDefinition {
     pub id: u32,
     pub model_data: ModelData,
@@ -37,7 +39,8 @@ pub struct ItemDefinition {
     pub bind_tempalte: Option<u16>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ModelData {
     pub id: u32,
     pub zoom: u16,

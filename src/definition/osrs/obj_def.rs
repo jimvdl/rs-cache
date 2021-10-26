@@ -4,6 +4,7 @@ use std::{
     collections::HashMap,
 };
 
+#[cfg(feature = "serde-derive")]
 use serde::{ Serialize, Deserialize };
 
 use super::Definition;
@@ -11,7 +12,8 @@ use crate::{ extension::ReadExt, util };
 
 /// Contains all the information about a certain object fetched from the cache through
 /// the [ObjectLoader](struct.ObjectLoader.html).
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ObjectDefinition {
     pub id: u16,
     pub name: String,
@@ -35,7 +37,8 @@ pub struct ObjectDefinition {
     pub model_data: ObjectModelData,
 }
 
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ObjectModelData {
     pub models: Vec<u16>,
     pub types: Vec<u8>,

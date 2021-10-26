@@ -3,6 +3,7 @@ use std::{
     io::BufReader,
 };
 
+#[cfg(feature = "serde-derive")]
 use serde::{ Serialize, Deserialize };
 
 use super::Definition;
@@ -12,14 +13,16 @@ const X: usize = 64;
 const Y: usize = 64;
 const Z: usize = 4;
 
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct MapDefinition {
     pub region_x: u16,
     pub region_y: u16,
     pub data: Vec<Vec<Vec<MapData>>>,
 }
 
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct MapData {
     pub height: u8,
     pub attr_opcode: u8,

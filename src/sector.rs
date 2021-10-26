@@ -1,5 +1,6 @@
 //! Represents linked sectors in the main data file.
 
+#[cfg(feature = "serde-derive")]
 use serde::{ Serialize, Deserialize };
 use nom::{
     combinator::rest,
@@ -28,14 +29,16 @@ pub type HeaderSize = usize;
 pub type DataSize = usize;
 
 /// Sector data for reading.
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Sector<'a> {
     pub header: SectorHeader,
     pub data_block: &'a [u8]
 }
 
 /// Conveys the size of the header.
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub enum SectorHeaderSize {
     /// Header consisting of 8 bytes.
     Normal,
@@ -45,7 +48,8 @@ pub enum SectorHeaderSize {
 
 /// Contains the sector header for reading the next sector
 /// and validating the current sector.
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct SectorHeader {
     pub archive_id: u32,
     pub chunk: usize,

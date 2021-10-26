@@ -23,6 +23,7 @@
 
 use std::collections::{ hash_map, HashMap };
 
+#[cfg(feature = "serde-derive")]
 use serde::{ Serialize, Deserialize };
 
 use crate::{
@@ -34,7 +35,8 @@ use crate::{
 };
 
 /// Loads all item definitions from the current cache.
-#[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ItemLoader(HashMap<u32, ItemDefinition>);
 
 impl_rs3_loader!(ItemLoader, ItemDefinition, index_id: 19);
