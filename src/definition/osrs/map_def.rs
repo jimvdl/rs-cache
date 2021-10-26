@@ -1,10 +1,7 @@
-use std::{
-    io,
-    io::BufReader,
-};
+use std::{io, io::BufReader};
 
 #[cfg(feature = "serde-derive")]
-use serde::{ Serialize, Deserialize };
+use serde::{Deserialize, Serialize};
 
 use super::Definition;
 use crate::extension::ReadExt;
@@ -70,10 +67,10 @@ impl MapDefinition {
 
                     if map_data.settings & 1 == 1 {
                         blocked_tiles.push((
-                            region_base_x + x as u16, 
-                            region_base_y + y as u16, 
-                            z as u16)
-                        );
+                            region_base_x + x as u16,
+                            region_base_y + y as u16,
+                            z as u16,
+                        ));
                     }
                 }
             }
@@ -101,17 +98,18 @@ fn decode_buffer(x: u16, y: u16, reader: &mut BufReader<&[u8]>) -> io::Result<Ma
                     match attribute {
                         0 => break,
                         1 => {
-                            map_data.height = reader.read_u8()?; break
-                        },
+                            map_data.height = reader.read_u8()?;
+                            break;
+                        }
                         2..=49 => {
                             map_data.attr_opcode = attribute;
                             map_data.overlay_id = reader.read_i8()?;
                             map_data.overlay_path = (attribute - 2) / 4;
                             map_data.overlay_rotation = (attribute - 2) & 3;
-                        },
+                        }
                         50..=81 => {
                             map_data.settings = attribute - 49;
-                        },
+                        }
                         _ => map_data.underlay_id = attribute - 81,
                     }
                 }

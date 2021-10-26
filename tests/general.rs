@@ -3,11 +3,7 @@ mod common;
 #[cfg(not(feature = "rs3"))]
 mod osrs {
     use super::common;
-    use rscache::{ 
-        Cache, 
-        checksum::OsrsEncode,
-        util::Huffman,
-    };
+    use rscache::{checksum::OsrsEncode, util::Huffman, Cache};
 
     #[test]
     fn setup_cache() -> rscache::Result<()> {
@@ -54,12 +50,13 @@ mod osrs {
     #[test]
     fn validate_checksum() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
-        
         let checksum = cache.create_checksum()?;
 
-        let crcs = vec![1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 686540367, 
-                        4262755489, 2208636505, 3047082366, 586413816, 2890424900, 3411535427, 3178880569, 
-                        153718440, 3849392898, 3628627685, 2813112885, 1461700456, 2751169400, 2927815226];
+        let crcs = vec![
+            1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 686540367,
+            4262755489, 2208636505, 3047082366, 586413816, 2890424900, 3411535427, 3178880569,
+            153718440, 3849392898, 3628627685, 2813112885, 1461700456, 2751169400, 2927815226,
+        ];
         let valid = checksum.validate(&crcs);
 
         assert!(valid);
@@ -89,9 +86,7 @@ mod osrs {
 
         let compressed_msg = &[174, 128, 35, 32, 208, 96];
         let decompressed_len = 8;
-    
         let decompressed_msg = huffman.decompress(compressed_msg, decompressed_len);
-     
         let msg = String::from_utf8(decompressed_msg).unwrap_or_default();
         assert_eq!(msg, "rs-cache");
 
@@ -102,11 +97,7 @@ mod osrs {
 #[cfg(feature = "rs3")]
 mod rs3 {
     use super::common;
-    use rscache::{ 
-        Cache, 
-        checksum::Rs3Encode,
-        util::Huffman,
-    };
+    use rscache::{checksum::Rs3Encode, util::Huffman, Cache};
 
     #[test]
     fn setup_cache() -> rscache::Result<()> {
@@ -172,9 +163,7 @@ mod rs3 {
 
         let compressed_msg = &[174, 128, 35, 32, 208, 96];
         let decompressed_len = 8;
-    
         let decompressed_msg = huffman.decompress(compressed_msg, decompressed_len);
-     
         let msg = String::from_utf8(decompressed_msg).unwrap_or_default();
         assert_eq!(msg, "rs-cache");
 

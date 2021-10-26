@@ -1,14 +1,10 @@
-use std::{
-    io,
-    io::BufReader,
-    collections::HashMap,
-};
+use std::{collections::HashMap, io, io::BufReader};
 
 #[cfg(feature = "serde-derive")]
-use serde::{ Serialize, Deserialize };
+use serde::{Deserialize, Serialize};
 
 use super::Definition;
-use crate::{ extension::ReadExt, util };
+use crate::{extension::ReadExt, util};
 
 /// Contains all the information about a certain object fetched from the cache through
 /// the [ObjectLoader](struct.ObjectLoader.html).
@@ -86,9 +82,9 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ObjectDef
             model_size_x: 128,
             model_size_y: 128,
             model_size_z: 128,
-            .. ObjectModelData::default()
+            ..ObjectModelData::default()
         },
-        .. ObjectDefinition::default()
+        ..ObjectDefinition::default()
     };
 
     loop {
@@ -96,97 +92,171 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ObjectDef
 
         match opcode {
             0 => break,
-            1 => { 
+            1 => {
                 let len = reader.read_u8()?;
                 for _ in 0..len {
                     obj_def.model_data.models.push(reader.read_u16()?);
                     obj_def.model_data.types.push(reader.read_u8()?);
                 }
-            },
-            2 => { obj_def.name = reader.read_string()?; },
+            }
+            2 => {
+                obj_def.name = reader.read_string()?;
+            }
             5 => {
                 let len = reader.read_u8()?;
                 obj_def.model_data.types.clear();
                 for _ in 0..len {
                     obj_def.model_data.models.push(reader.read_u16()?);
                 }
-            },
-            14 => { obj_def.model_data.size_x = reader.read_u8()?; },
-            15 => { obj_def.model_data.size_y = reader.read_u8()?; },
-            17 => { obj_def.interact_type = 0; obj_def.blocks_projectile = false; },
-            18 => { obj_def.blocks_projectile = false; },
-            19 => { obj_def.wall_or_door = Some(reader.read_u8()?); },
-            21 => { obj_def.contoured_ground = Some(0); },
-            22 => { obj_def.model_data.merge_normals = true; },
-            24 => { obj_def.animation_id = reader.read_u16()?; },
-            27 => { obj_def.interact_type = 1; },
-            28 => { obj_def.model_data.decord_displacement = reader.read_u8()?; }
-            29 => { obj_def.model_data.ambient = reader.read_u8()?; },
-            30..=34 => { obj_def.actions[opcode as usize - 30] = reader.read_string()?; },
-            39 => { obj_def.model_data.contrast = reader.read_u8()?; },
+            }
+            14 => {
+                obj_def.model_data.size_x = reader.read_u8()?;
+            }
+            15 => {
+                obj_def.model_data.size_y = reader.read_u8()?;
+            }
+            17 => {
+                obj_def.interact_type = 0;
+                obj_def.blocks_projectile = false;
+            }
+            18 => {
+                obj_def.blocks_projectile = false;
+            }
+            19 => {
+                obj_def.wall_or_door = Some(reader.read_u8()?);
+            }
+            21 => {
+                obj_def.contoured_ground = Some(0);
+            }
+            22 => {
+                obj_def.model_data.merge_normals = true;
+            }
+            24 => {
+                obj_def.animation_id = reader.read_u16()?;
+            }
+            27 => {
+                obj_def.interact_type = 1;
+            }
+            28 => {
+                obj_def.model_data.decord_displacement = reader.read_u8()?;
+            }
+            29 => {
+                obj_def.model_data.ambient = reader.read_u8()?;
+            }
+            30..=34 => {
+                obj_def.actions[opcode as usize - 30] = reader.read_string()?;
+            }
+            39 => {
+                obj_def.model_data.contrast = reader.read_u8()?;
+            }
             40 => {
                 let len = reader.read_u8()?;
                 for _ in 0..len {
                     obj_def.model_data.recolor_find.push(reader.read_u16()?);
                     obj_def.model_data.recolor_replace.push(reader.read_u16()?);
                 }
-            },
+            }
             41 => {
                 let len = reader.read_u8()?;
                 for _ in 0..len {
                     obj_def.model_data.retexture_find.push(reader.read_u16()?);
-                    obj_def.model_data.retexture_replace.push(reader.read_u16()?);
+                    obj_def
+                        .model_data
+                        .retexture_replace
+                        .push(reader.read_u16()?);
                 }
-            },
-            62 => { obj_def.rotated = true; },
-            64 => { obj_def.shadow = true; },
-            65 => { obj_def.model_data.model_size_x = reader.read_u16()?; },
-            66 => { obj_def.model_data.model_size_z = reader.read_u16()?; },
-            67 => { obj_def.model_data.model_size_y = reader.read_u16()?; },
-            68 => { obj_def.map_scene_id = reader.read_u16()?; },
-            69 => { obj_def.model_data.blocking_mask = reader.read_u8()?; }
-            70 => { obj_def.model_data.offset_x = reader.read_u16()?; },
-            71 => { obj_def.model_data.offset_z = reader.read_u16()?; },
-            72 => { obj_def.model_data.offset_y = reader.read_u16()?; },
-            73 => { obj_def.obstruct_ground = true; },
-            74 => { obj_def.solid = false; },
-            75 => { obj_def.supports_items = Some(reader.read_u8()?); },
+            }
+            62 => {
+                obj_def.rotated = true;
+            }
+            64 => {
+                obj_def.shadow = true;
+            }
+            65 => {
+                obj_def.model_data.model_size_x = reader.read_u16()?;
+            }
+            66 => {
+                obj_def.model_data.model_size_z = reader.read_u16()?;
+            }
+            67 => {
+                obj_def.model_data.model_size_y = reader.read_u16()?;
+            }
+            68 => {
+                obj_def.map_scene_id = reader.read_u16()?;
+            }
+            69 => {
+                obj_def.model_data.blocking_mask = reader.read_u8()?;
+            }
+            70 => {
+                obj_def.model_data.offset_x = reader.read_u16()?;
+            }
+            71 => {
+                obj_def.model_data.offset_z = reader.read_u16()?;
+            }
+            72 => {
+                obj_def.model_data.offset_y = reader.read_u16()?;
+            }
+            73 => {
+                obj_def.obstruct_ground = true;
+            }
+            74 => {
+                obj_def.solid = false;
+            }
+            75 => {
+                obj_def.supports_items = Some(reader.read_u8()?);
+            }
             77 => {
                 let varp_id = reader.read_u16()?;
-                obj_def.model_data.varp_id = if varp_id == std::u16::MAX { None } else { Some(varp_id) };
-                
+                obj_def.model_data.varp_id = if varp_id == std::u16::MAX {
+                    None
+                } else {
+                    Some(varp_id)
+                };
                 let config_id = reader.read_u16()?;
-                obj_def.config_id = if config_id == std::u16::MAX { None } else { Some(config_id) };
-                
+                obj_def.config_id = if config_id == std::u16::MAX {
+                    None
+                } else {
+                    Some(config_id)
+                };
                 let len = reader.read_u8()?;
                 obj_def.config_change_dest = Vec::new();
                 for _ in 0..=len {
                     obj_def.config_change_dest.push(reader.read_u16()?);
                 }
-            },
-            78 => { 
-                obj_def.ambient_sound_id = reader.read_u16()?; 
-                reader.read_u8()?; 
-            },
+            }
+            78 => {
+                obj_def.ambient_sound_id = reader.read_u16()?;
+                reader.read_u8()?;
+            }
             79 => {
                 reader.read_u16()?;
                 reader.read_u16()?;
                 reader.read_u8()?;
-                
                 let len = reader.read_u8()?;
                 for _ in 0..len {
                     reader.read_u16()?;
                 }
-            },
-            81 => { obj_def.contoured_ground = Some(reader.read_u8()?); },
-            82 => { obj_def.map_area_id = Some(reader.read_u16()?); },
+            }
+            81 => {
+                obj_def.contoured_ground = Some(reader.read_u8()?);
+            }
+            82 => {
+                obj_def.map_area_id = Some(reader.read_u16()?);
+            }
             92 => {
                 let varp_id = reader.read_u16()?;
-                obj_def.model_data.varp_id = if varp_id == std::u16::MAX { None } else { Some(varp_id) };
+                obj_def.model_data.varp_id = if varp_id == std::u16::MAX {
+                    None
+                } else {
+                    Some(varp_id)
+                };
 
                 let config_id = reader.read_u16()?;
-                obj_def.config_id = if config_id == std::u16::MAX { None } else { Some(config_id) };
-                
+                obj_def.config_id = if config_id == std::u16::MAX {
+                    None
+                } else {
+                    Some(config_id)
+                };
                 // should append var at end
                 let _var = reader.read_u16()?;
 
@@ -195,10 +265,12 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ObjectDef
                 for _ in 0..=len {
                     obj_def.config_change_dest.push(reader.read_u16()?);
                 }
-            },
-            249 => { obj_def.params = util::read_parameters(reader)?; },
-            23 => { /* skip */ },
-            _ => unreachable!()
+            }
+            249 => {
+                obj_def.params = util::read_parameters(reader)?;
+            }
+            23 => { /* skip */ }
+            _ => unreachable!(),
         }
     }
 
@@ -208,7 +280,9 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ObjectDef
 fn post(obj_def: &mut ObjectDefinition) {
     if obj_def.wall_or_door.is_none() {
         obj_def.wall_or_door = Some(0);
-        if !obj_def.model_data.models.is_empty() && (obj_def.model_data.types.is_empty() || obj_def.model_data.types[0] == 10) {
+        if !obj_def.model_data.models.is_empty()
+            && (obj_def.model_data.types.is_empty() || obj_def.model_data.types[0] == 10)
+        {
             obj_def.wall_or_door = Some(1);
         }
 

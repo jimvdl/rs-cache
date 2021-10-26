@@ -1,13 +1,10 @@
-use std::{
-    io,
-    io::BufReader,
-};
+use std::{io, io::BufReader};
 
 #[cfg(feature = "serde-derive")]
-use serde::{ Serialize, Deserialize };
+use serde::{Deserialize, Serialize};
 
 use super::Definition;
-use crate::{ extension::ReadExt, util };
+use crate::{extension::ReadExt, util};
 
 /// Contains all the information about a certain item fetched from the cache through
 /// the [ItemLoader](../../ldr/rs3/struct.ItemLoader.html).
@@ -74,20 +71,20 @@ fn decode_buffer(id: u32, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefin
     let mut item_def = ItemDefinition {
         id,
         options: [
-            "".to_string(), 
-            "".to_string(), 
-            "Take".to_string(), 
-            "".to_string(), 
-            "".to_string()
+            "".to_string(),
+            "".to_string(),
+            "Take".to_string(),
+            "".to_string(),
+            "".to_string(),
         ],
         interface_options: [
-            "".to_string(), 
-            "".to_string(), 
-            "".to_string(), 
-            "".to_string(), 
-            "Drop".to_string()
+            "".to_string(),
+            "".to_string(),
+            "".to_string(),
+            "".to_string(),
+            "Drop".to_string(),
         ],
-        .. ItemDefinition::default()
+        ..ItemDefinition::default()
     };
 
     loop {
@@ -95,25 +92,59 @@ fn decode_buffer(id: u32, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefin
 
         match opcode {
             0 => break,
-            1 => { item_def.model_data.id = reader.read_smart()?; },
-            2 => { item_def.name = reader.read_string()?; },
-            4 => { item_def.model_data.zoom = reader.read_u16()?; },
-            5 => { item_def.model_data.rotation1 = reader.read_u16()?; },
-            6 => { item_def.model_data.rotation2 = reader.read_u16()?; },
-            7 => { item_def.model_data.offset1 = reader.read_u16()?; },
-            8 => { item_def.model_data.offset2 = reader.read_u16()?; },
+            1 => {
+                item_def.model_data.id = reader.read_smart()?;
+            }
+            2 => {
+                item_def.name = reader.read_string()?;
+            }
+            4 => {
+                item_def.model_data.zoom = reader.read_u16()?;
+            }
+            5 => {
+                item_def.model_data.rotation1 = reader.read_u16()?;
+            }
+            6 => {
+                item_def.model_data.rotation2 = reader.read_u16()?;
+            }
+            7 => {
+                item_def.model_data.offset1 = reader.read_u16()?;
+            }
+            8 => {
+                item_def.model_data.offset2 = reader.read_u16()?;
+            }
             11 => item_def.stackable = true,
-            12 => { item_def.cost = reader.read_i32()?; },
-            13 => { item_def.equip_slot = reader.read_u8()?; },
-            14 => { item_def.equip_hide_slot1 = reader.read_u8()?; },
+            12 => {
+                item_def.cost = reader.read_i32()?;
+            }
+            13 => {
+                item_def.equip_slot = reader.read_u8()?;
+            }
+            14 => {
+                item_def.equip_hide_slot1 = reader.read_u8()?;
+            }
             16 => item_def.members_only = true,
-            23 => { item_def.model_data.male_equip1 = reader.read_smart()?; },
-            24 => { item_def.model_data.male_equip2 = reader.read_smart()?; },
-            25 => { item_def.model_data.female_equip1 = reader.read_smart()?; },
-            26 => { item_def.model_data.female_equip2 = reader.read_smart()?; },
-            27 => { item_def.equip_hide_slot2 = reader.read_u8()?; },
-            30..=34 => { item_def.options[opcode as usize - 30] = reader.read_string()?; },
-            35..=39 => { item_def.interface_options[opcode as usize - 35] = reader.read_string()?; },
+            23 => {
+                item_def.model_data.male_equip1 = reader.read_smart()?;
+            }
+            24 => {
+                item_def.model_data.male_equip2 = reader.read_smart()?;
+            }
+            25 => {
+                item_def.model_data.female_equip1 = reader.read_smart()?;
+            }
+            26 => {
+                item_def.model_data.female_equip2 = reader.read_smart()?;
+            }
+            27 => {
+                item_def.equip_hide_slot2 = reader.read_u8()?;
+            }
+            30..=34 => {
+                item_def.options[opcode as usize - 30] = reader.read_string()?;
+            }
+            35..=39 => {
+                item_def.interface_options[opcode as usize - 35] = reader.read_string()?;
+            }
             40 => {
                 let len = reader.read_u8()? as usize;
                 item_def.model_data.original_colors = Vec::with_capacity(len);
@@ -122,85 +153,120 @@ fn decode_buffer(id: u32, reader: &mut BufReader<&[u8]>) -> io::Result<ItemDefin
                     item_def.model_data.original_colors.push(reader.read_u16()?);
                     item_def.model_data.modified_colors.push(reader.read_u16()?);
                 }
-            },
+            }
             41 => {
                 let len = reader.read_u8()? as usize;
                 item_def.model_data.original_texture_colors = Vec::with_capacity(len);
                 item_def.model_data.original_texture_colors = Vec::with_capacity(len);
                 for _ in 0..len {
-                    item_def.model_data.original_texture_colors.push(reader.read_u16()?);
-                    item_def.model_data.original_texture_colors.push(reader.read_u16()?);
+                    item_def
+                        .model_data
+                        .original_texture_colors
+                        .push(reader.read_u16()?);
+                    item_def
+                        .model_data
+                        .original_texture_colors
+                        .push(reader.read_u16()?);
                 }
-            },
-            42 => { 
+            }
+            42 => {
                 let len = reader.read_u8()?;
                 for _ in 0..len {
                     reader.read_u8()?;
                 }
-            },
-            65 => { item_def.unnoted = true; },
-            78 => { item_def.model_data.male_equip_id = reader.read_smart()?; },
-            79 => { item_def.model_data.female_equip_id = reader.read_smart()?; },
-            97 => { item_def.noted_id = Some(reader.read_u16()?); },
-            98 => { item_def.noted_template = Some(reader.read_u16()?); item_def.stackable = true; },
+            }
+            65 => {
+                item_def.unnoted = true;
+            }
+            78 => {
+                item_def.model_data.male_equip_id = reader.read_smart()?;
+            }
+            79 => {
+                item_def.model_data.female_equip_id = reader.read_smart()?;
+            }
+            97 => {
+                item_def.noted_id = Some(reader.read_u16()?);
+            }
+            98 => {
+                item_def.noted_template = Some(reader.read_u16()?);
+                item_def.stackable = true;
+            }
             100..=109 => {
                 item_def.stack_ids = Some([0; 10]);
                 item_def.stack_count = Some([0; 10]);
-                
                 match item_def.stack_ids {
                     Some(mut stack_ids) => {
                         stack_ids[opcode as usize - 100] = reader.read_u16()?;
-                    },
-                    _ => unreachable!()
+                    }
+                    _ => unreachable!(),
                 }
                 match item_def.stack_count {
                     Some(mut stack_count) => {
                         stack_count[opcode as usize - 100] = reader.read_u16()?;
-                    },
-                    _ => unreachable!()
+                    }
+                    _ => unreachable!(),
                 }
-            },
-            115 => { item_def.team = reader.read_u8()?; },
-            121 => { 
-                item_def.lend_id = Some(reader.read_u16()?); 
+            }
+            115 => {
+                item_def.team = reader.read_u8()?;
+            }
+            121 => {
+                item_def.lend_id = Some(reader.read_u16()?);
                 item_def.interface_options[4] = "Discard".to_owned();
                 item_def.lent = true;
-            },
-            122 => { item_def.lend_tempalte = Some(reader.read_u16()?); },
-            125 | 126 => { 
+            }
+            122 => {
+                item_def.lend_tempalte = Some(reader.read_u16()?);
+            }
+            125 | 126 => {
                 reader.read_u8()?;
                 reader.read_u8()?;
                 reader.read_u8()?;
-            },
+            }
             127..=130 => {
                 reader.read_u8()?;
                 reader.read_u16()?;
-            },
+            }
             132 => {
                 let len = reader.read_u8()?;
                 for _ in 0..len {
                     reader.read_u16()?;
                 }
-            },
-            139 => { 
-                item_def.bind_link = Some(reader.read_u16()?); 
+            }
+            139 => {
+                item_def.bind_link = Some(reader.read_u16()?);
                 item_def.interface_options[4] = "Destroy".to_owned();
-            },
-            140 => { item_def.bind_tempalte = Some(reader.read_u16()?); },
-            164 => { reader.read_string()?; },
+            }
+            140 => {
+                item_def.bind_tempalte = Some(reader.read_u16()?);
+            }
+            164 => {
+                reader.read_string()?;
+            }
             251 | 252 => {
                 let len = reader.read_u8()?;
                 for _ in 0..len {
                     reader.read_u16()?;
                     reader.read_u16()?;
                 }
-            },
-            249 => { util::read_parameters(reader)?; },
-            15 | 156 | 157 | 165 | 167 => {},
-            96 | 113 | 114 | 134 => { reader.read_u8()?; },
-            18 | 44 | 45 | 94 | 95 | 110..=112 | 142..=146 | 150..=154 | 161..=163 => { reader.read_u16()?; },
-            90..=93 | 242..=248 => { reader.read_smart()?; },
-            _ => { println!("{} {}", id, opcode); unreachable!() }
+            }
+            249 => {
+                util::read_parameters(reader)?;
+            }
+            15 | 156 | 157 | 165 | 167 => {}
+            96 | 113 | 114 | 134 => {
+                reader.read_u8()?;
+            }
+            18 | 44 | 45 | 94 | 95 | 110..=112 | 142..=146 | 150..=154 | 161..=163 => {
+                reader.read_u16()?;
+            }
+            90..=93 | 242..=248 => {
+                reader.read_smart()?;
+            }
+            _ => {
+                println!("{} {}", id, opcode);
+                unreachable!()
+            }
         }
     }
 

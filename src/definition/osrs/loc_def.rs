@@ -83,7 +83,11 @@ fn decode_buffer(id: u16, mut buffer: &[u8]) -> crate::Result<LocationDefinition
                 id: id as u32,
                 loc_type: attr >> 2,
                 orientation: attr & 0x3,
-                pos: (loc_def.region_x + local_x, loc_def.region_y + local_y, local_z),
+                pos: (
+                    loc_def.region_x + local_x,
+                    loc_def.region_y + local_y,
+                    local_z,
+                ),
             });
 
             if buffer.is_empty() {

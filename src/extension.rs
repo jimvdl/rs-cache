@@ -1,9 +1,9 @@
 //! Extension traits.
 
-use std::io::{ self, Read };
+use std::io::{self, Read};
 
 /// Adds easy byte reading onto a [`Read`] instance.
-/// 
+///
 /// [`Read`]: https://doc.rust-lang.org/std/io/trait.Read.html
 pub trait ReadExt: Read {
     fn read_u8(&mut self) -> io::Result<u8>;
@@ -31,7 +31,7 @@ impl<T: Read> ReadExt for T {
 
         Ok(u8::from_be_bytes(buffer))
     }
-    
+
     #[inline]
     fn read_i8(&mut self) -> io::Result<i8> {
         Ok(self.read_u8()? as i8)
@@ -55,7 +55,7 @@ impl<T: Read> ReadExt for T {
         let byte = self.read_u8()?;
 
         if byte < 128 {
-           Ok(byte.wrapping_sub(64) as u16)
+            Ok(byte.wrapping_sub(64) as u16)
         } else {
             let value = self.read_u8()?;
             let mut arr = [0; 2];
@@ -66,7 +66,6 @@ impl<T: Read> ReadExt for T {
             Ok(value - 0xC000)
         }
     }
-    
     #[inline]
     fn read_u24(&mut self) -> io::Result<u32> {
         let mut buffer = [0; 3];
@@ -120,8 +119,8 @@ impl<T: Read> ReadExt for T {
     }
 
     // clean this up.
-    // can't find a way to peek the first byte, even 
-    // an iterator reads the first byte... 
+    // can't find a way to peek the first byte, even
+    // an iterator reads the first byte...
     #[inline]
     fn read_smart(&mut self) -> io::Result<u32> {
         let byte = self.read_u8()?;
@@ -132,7 +131,7 @@ impl<T: Read> ReadExt for T {
             arr[0] = byte;
             arr[1] = value;
 
-            return Ok(u16::from_be_bytes(arr) as u32)
+            return Ok(u16::from_be_bytes(arr) as u32);
         }
 
         let mut buffer = [0; 3];
@@ -149,7 +148,6 @@ impl<T: Read> ReadExt for T {
     #[inline]
     fn read_string(&mut self) -> io::Result<String> {
         let mut bytes = Vec::new();
-    
         loop {
             let byte = self.read_u8()?;
             if byte != 0 {
@@ -158,7 +156,6 @@ impl<T: Read> ReadExt for T {
                 break;
             }
         }
-    
         Ok(String::from_utf8_lossy(&bytes[..]).to_string())
     }
 }

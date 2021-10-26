@@ -12,13 +12,8 @@ pub fn hash(buffer: &[u8]) -> String {
 #[cfg(not(feature = "rs3"))]
 pub mod osrs {
     use rscache::Cache;
-    
-    use rscache::loader::osrs::{
-        ItemLoader,
-        NpcLoader,
-        ObjectLoader,
-    };
 
+    use rscache::loader::osrs::{ItemLoader, NpcLoader, ObjectLoader};
     pub fn setup() -> rscache::Result<Cache> {
         Cache::new("./data/osrs_cache")
     }
@@ -30,7 +25,6 @@ pub mod osrs {
     pub fn load_npcs(cache: &Cache) -> rscache::Result<NpcLoader> {
         NpcLoader::new(cache)
     }
-    
     pub fn load_objects(cache: &Cache) -> rscache::Result<ObjectLoader> {
         ObjectLoader::new(cache)
     }

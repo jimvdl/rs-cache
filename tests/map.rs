@@ -4,7 +4,6 @@ mod common;
 mod osrs {
     use super::common;
     use rscache::loader::osrs::MapLoader;
-    
     #[test]
     fn load_lumbridge_map_data() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;

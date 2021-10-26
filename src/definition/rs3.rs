@@ -6,10 +6,8 @@ pub use item_def::*;
 use std::collections::HashMap;
 
 use crate::{
-    Cache,
-    codec,
-    REFERENCE_TABLE,
-    archive::{ Archive, ArchiveFileGroup },
+    archive::{Archive, ArchiveFileGroup},
+    codec, Cache, REFERENCE_TABLE,
 };
 
 pub const ID_BLOCK_SIZE: usize = 256;
@@ -22,7 +20,7 @@ pub trait Definition: Sized {
 pub trait FetchDefinition: Definition {
     // FIXME
     #[inline]
-    fn fetch_from_index<D>(cache: &Cache, index_id: u8) -> crate::Result<HashMap<u32, D>> 
+    fn fetch_from_index<D>(cache: &Cache, index_id: u8) -> crate::Result<HashMap<u32, D>>
     where
         D: Definition,
     {

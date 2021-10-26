@@ -1,4 +1,4 @@
-use rscache::{ Cache, checksum::OsrsEncode };
+use rscache::{checksum::OsrsEncode, Cache};
 
 struct IncomingUpdatePacket {
     pub index_id: u8,
@@ -9,7 +9,10 @@ struct IncomingUpdatePacket {
 // You can use this to handle client requests for cache data.
 fn main() -> rscache::Result<()> {
     let cache = Cache::new("./data/osrs_cache")?;
-    let packet = IncomingUpdatePacket{ index_id: 255, archive_id: 10 };
+    let packet = IncomingUpdatePacket {
+        index_id: 255,
+        archive_id: 10,
+    };
 
     let mut buffer = if packet.index_id == 255 && packet.archive_id == 255 {
         cache.create_checksum()?.encode()?
@@ -44,7 +47,6 @@ fn main() -> rscache::Result<()> {
     // stream.write_all(&data)?;
 
     println!("{:?}", data);
-    
     Ok(())
 }
 

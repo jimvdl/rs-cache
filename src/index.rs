@@ -1,20 +1,20 @@
 use std::{
-    path::Path,
-    collections::{ hash_map, HashMap },
+    collections::{hash_map, HashMap},
     fs::File,
     io::Read,
+    path::Path,
 };
 
 use memmap::Mmap;
 
 #[cfg(feature = "serde-derive")]
-use serde::{ Serialize, Deserialize };
+use serde::{Deserialize, Serialize};
 
-use crate::{ 
+use crate::{
+    archive::{Archive, ArchiveRef, ARCHIVE_REF_LEN},
     codec,
-    archive::{ ArchiveRef, Archive, ARCHIVE_REF_LEN }, 
-    error::{ ReadError, ParseError },
-    REFERENCE_TABLE, ReadInternal,
+    error::{ParseError, ReadError},
+    ReadInternal, REFERENCE_TABLE,
 };
 
 pub const IDX_PREFIX: &str = "main_file_cache.idx";
@@ -42,7 +42,6 @@ impl Indices {
         } else {
             return Err(ReadError::ReferenceTableNotFound.into());
         };
-        
         // let mut indices: HashMap<u8, Index> = (0..REFERENCE_TABLE)
         //     .map(|index_id| (index_id, path.join(format!("{}{}", IDX_PREFIX, index_id))))
         //     .filter(|(_, path)| path.exists())
@@ -56,7 +55,6 @@ impl Indices {
         //     .map(|(index_id, index)| -> crate::Result<()> {
         //         let archive_ref = ref_index.archive_refs().get(&(*index_id as u32))
         //             .ok_or(ReadError::ArchiveNotFound(REFERENCE_TABLE, *index_id as u32))?;
-            
         //         if archive_ref.length != 0 {
         //             let mut buffer = Vec::with_capacity(archive_ref.length);
         //             data.read_internal(archive_ref, &mut buffer)?;
@@ -69,20 +67,19 @@ impl Indices {
 
         for index_id in 0..REFERENCE_TABLE {
             let path = path.join(format!("{}{}", IDX_PREFIX, index_id));
-            
             if path.exists() {
                 let mut index = Index::from_path(index_id, path)?;
 
-                let archive_ref = ref_index.archive_refs.get(&(index_id as u32))
+                let archive_ref = ref_index
+                    .archive_refs
+                    .get(&(index_id as u32))
                     .ok_or(ReadError::ArchiveNotFound(REFERENCE_TABLE, index_id as u32))?;
-                
                 if archive_ref.length != 0 {
                     let mut buffer = Vec::with_capacity(archive_ref.length);
                     data.read_internal(archive_ref, &mut buffer)?;
                     let buffer = codec::decode(&buffer)?;
                     index.archives = Archive::parse(&buffer)?;
                 }
-                
                 indices.insert(index_id, index);
             }
         }
@@ -104,14 +101,17 @@ impl Indices {
 impl Index {
     pub fn from_path<P: AsRef<Path>>(id: u8, path: P) -> crate::Result<Self> {
         let path = path.as_ref();
-        
         let index_extension = format!("idx{}", id);
-        let extension = path.extension()
+        let extension = path
+            .extension()
             .and_then(std::ffi::OsStr::to_str)
             .unwrap_or("");
 
         if extension != index_extension {
-            panic!("Invalid index file. Expected file with extension {} but found {}.", index_extension, extension);
+            panic!(
+                "Invalid index file. Expected file with extension {} but found {}.",
+                index_extension, extension
+            );
         }
 
         let mut file = File::open(path)?;
@@ -129,13 +129,16 @@ impl Index {
 
             let archive_ref = match ArchiveRef::from_buffer(archive_id, id, archive_data) {
                 Ok(archive) => archive,
-                Err(_) => return Err(ParseError::Archive(archive_id).into())
+                Err(_) => return Err(ParseError::Archive(archive_id).into()),
             };
-            
             archive_refs.insert(archive_id, archive_ref);
         }
 
-        Ok(Self { id, archive_refs, archives: Vec::new() })
+        Ok(Self {
+            id,
+            archive_refs,
+            archives: Vec::new(),
+        })
     }
 }
 

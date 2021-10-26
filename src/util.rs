@@ -1,18 +1,18 @@
 //! Helpful utility functions, macros and structs.
 
-/// Default xtea decipher.
-pub mod xtea;
 #[allow(unused_assignments)]
 mod huffman;
 #[allow(clippy::many_single_char_names, clippy::too_many_lines)]
 mod isaac_rand;
+/// Default xtea decipher.
+pub mod xtea;
 
 pub use huffman::Huffman;
 pub use isaac_rand::IsaacRand;
 
-use std::{ 
+use std::{
     collections::HashMap,
-    io::{ self, BufReader },
+    io::{self, BufReader},
 };
 
 use crate::extension::ReadExt;
@@ -93,7 +93,6 @@ macro_rules! impl_iter_for_loader {
         impl<'a> IntoIterator for &'a $ldr {
             type Item = (&'a $id, &'a $def);
             type IntoIter = hash_map::Iter<'a, $id, $def>;
-        
             #[inline]
             fn into_iter(self) -> Self::IntoIter {
                 self.0.iter()
@@ -116,35 +115,37 @@ macro_rules! impl_iter_for_loader {
 pub mod djd2 {
 
     /// Hashes the string
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Can panic if `nth(n)` returns `None` if n >= strings iter length.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// let hash = rscache::util::djd2::hash("huffman");
     /// assert_eq!(hash, 1258058669);
-    /// ``` 
+    /// ```
     #[inline]
     pub fn hash<T: AsRef<str>>(string: T) -> i32 {
         let string = string.as_ref();
         let mut hash = 0;
 
         for index in 0..string.len() {
-            hash = string.chars()
-                .nth(index).unwrap_or_else(|| panic!("index {} not valid in str len {}", index, string.len())) as i32 + ((hash << 5) - hash);
+            hash =
+                string.chars().nth(index).unwrap_or_else(|| {
+                    panic!("index {} not valid in str len {}", index, string.len())
+                }) as i32
+                    + ((hash << 5) - hash);
         }
-        
         hash
     }
 }
 
 /// Useful for decoding parameters when reading from definition buffers.
-/// 
+///
 /// # Errors
-/// 
+///
 /// Can return `std::io::Error` if reading from the `BufReader<&[u8]>` fails.
 #[inline]
 pub fn read_parameters(reader: &mut BufReader<&[u8]>) -> io::Result<HashMap<u32, String>> {
@@ -154,7 +155,6 @@ pub fn read_parameters(reader: &mut BufReader<&[u8]>) -> io::Result<HashMap<u32,
     for _ in 0..len {
         let is_string = reader.read_u8()? == 1;
         let key = reader.read_u24()?;
-        
         let value = if is_string {
             reader.read_string()?
         } else {

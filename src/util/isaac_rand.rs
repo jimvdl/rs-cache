@@ -4,9 +4,9 @@ const SIZE: usize = 1 << LOG_SIZE;
 const MASK: u32 = (SIZE as u32 - 1) << 2;
 
 /// Default Isaac random implementation
-/// 
+///
 /// Can be used to encode and decode packet ids.
-/// 
+///
 /// **NOTE: The client will only send one set of keys, the decoder keys.
 /// To get the encoder keys, simply add 50 to every decoder key.**
 /// ```
@@ -18,9 +18,9 @@ const MASK: u32 = (SIZE as u32 - 1) << 2;
 ///     isaac_encoder_keys.push(key + 50);
 /// }
 /// ```
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// # use rscache::util::IsaacRand;
 /// # struct ExamplePacket { pub id: u32 }
@@ -31,11 +31,11 @@ const MASK: u32 = (SIZE as u32 - 1) << 2;
 /// # let packet = ExamplePacket { id: 0 };
 /// let mut packet_id_encoder = IsaacRand::new(&encoder_keys);
 /// let mut packet_id_decoder = IsaacRand::new(&decoder_keys);
-/// 
+///
 /// // decoding packet id that was sent in the client packet buffer.
-/// let packet_id = 
+/// let packet_id =
 ///     (packet_buffer[0] as u32).overflowing_sub(packet_id_decoder.next().unwrap());
-/// 
+///
 /// // encoding packet id that will be sent in a packet to the client.
 /// let packet_id = packet.id + packet_id_encoder.next().unwrap();
 /// # Ok(())
@@ -57,15 +57,19 @@ impl IsaacRand {
     pub fn new(seed: &[u32]) -> Self {
         let mem = vec![0; SIZE];
         let mut rsl = vec![0; SIZE];
-        
         rsl[..seed.len()].clone_from_slice(seed);
 
-        let mut isaac = Self { a: 0, b: 0, c: 0, count: 0, mem, rsl };
+        let mut isaac = Self {
+            a: 0,
+            b: 0,
+            c: 0,
+            count: 0,
+            mem,
+            rsl,
+        };
         isaac.init();
-        
         isaac
     }
-    
     fn init(&mut self) {
         let mut h = GOLDEN_RATIO;
         let mut g = h;
@@ -213,7 +217,9 @@ impl IsaacRand {
             self.a = self.a ^ (self.a << 13);
             self.a = self.a.wrapping_add(self.mem[j]);
             j += 1;
-            y = self.mem[((x & MASK) >> 2) as usize].wrapping_add(self.a).wrapping_add(self.b);
+            y = self.mem[((x & MASK) >> 2) as usize]
+                .wrapping_add(self.a)
+                .wrapping_add(self.b);
             self.mem[i] = y;
             self.b = self.mem[(((y >> LOG_SIZE) & MASK) >> 2) as usize].wrapping_add(x);
             self.rsl[i] = self.b;
@@ -223,7 +229,9 @@ impl IsaacRand {
             self.a = self.a ^ self.a >> 6;
             self.a = self.a.wrapping_add(self.mem[j]);
             j += 1;
-            y = self.mem[((x & MASK) >> 2) as usize].wrapping_add(self.a).wrapping_add(self.b);
+            y = self.mem[((x & MASK) >> 2) as usize]
+                .wrapping_add(self.a)
+                .wrapping_add(self.b);
             self.mem[i] = y;
             self.b = self.mem[(((y >> LOG_SIZE) & MASK) >> 2) as usize].wrapping_add(x);
             self.rsl[i] = self.b;
@@ -233,7 +241,9 @@ impl IsaacRand {
             self.a = self.a ^ (self.a << 2);
             self.a = self.a.wrapping_add(self.mem[j]);
             j += 1;
-            y = self.mem[((x & MASK) >> 2) as usize].wrapping_add(self.a).wrapping_add(self.b);
+            y = self.mem[((x & MASK) >> 2) as usize]
+                .wrapping_add(self.a)
+                .wrapping_add(self.b);
             self.mem[i] = y;
             self.b = self.mem[(((y >> LOG_SIZE) & MASK) >> 2) as usize].wrapping_add(x);
             self.rsl[i] = self.b;
@@ -243,7 +253,9 @@ impl IsaacRand {
             self.a = self.a ^ self.a >> 16;
             self.a = self.a.wrapping_add(self.mem[j]);
             j += 1;
-            y = self.mem[((x & MASK) >> 2) as usize].wrapping_add(self.a).wrapping_add(self.b);
+            y = self.mem[((x & MASK) >> 2) as usize]
+                .wrapping_add(self.a)
+                .wrapping_add(self.b);
             self.mem[i] = y;
             self.b = self.mem[(((y >> LOG_SIZE) & MASK) >> 2) as usize].wrapping_add(x);
             self.rsl[i] = self.b;
@@ -256,7 +268,9 @@ impl IsaacRand {
             self.a = self.a ^ (self.a << 13);
             self.a = self.a.wrapping_add(self.mem[j]);
             j += 1;
-            y = self.mem[((x & MASK) >> 2) as usize].wrapping_add(self.a).wrapping_add(self.b);
+            y = self.mem[((x & MASK) >> 2) as usize]
+                .wrapping_add(self.a)
+                .wrapping_add(self.b);
             self.mem[i] = y;
             self.b = self.mem[(((y >> LOG_SIZE) & MASK) >> 2) as usize].wrapping_add(x);
             self.rsl[i] = self.b;
@@ -266,7 +280,9 @@ impl IsaacRand {
             self.a = self.a ^ self.a >> 6;
             self.a = self.a.wrapping_add(self.mem[j]);
             j += 1;
-            y = self.mem[((x & MASK) >> 2) as usize].wrapping_add(self.a).wrapping_add(self.b);
+            y = self.mem[((x & MASK) >> 2) as usize]
+                .wrapping_add(self.a)
+                .wrapping_add(self.b);
             self.mem[i] = y;
             self.b = self.mem[(((y >> LOG_SIZE) & MASK) >> 2) as usize].wrapping_add(x);
             self.rsl[i] = self.b;
@@ -276,7 +292,9 @@ impl IsaacRand {
             self.a = self.a ^ (self.a << 2);
             self.a = self.a.wrapping_add(self.mem[j]);
             j += 1;
-            y = self.mem[((x & MASK) >> 2) as usize].wrapping_add(self.a).wrapping_add(self.b);
+            y = self.mem[((x & MASK) >> 2) as usize]
+                .wrapping_add(self.a)
+                .wrapping_add(self.b);
             self.mem[i] = y;
             self.b = self.mem[(((y >> LOG_SIZE) & MASK) >> 2) as usize].wrapping_add(x);
             self.rsl[i] = self.b;
@@ -286,7 +304,9 @@ impl IsaacRand {
             self.a = self.a ^ self.a >> 16;
             self.a = self.a.wrapping_add(self.mem[j]);
             j += 1;
-            y = self.mem[((x & MASK) >> 2) as usize].wrapping_add(self.a).wrapping_add(self.b);
+            y = self.mem[((x & MASK) >> 2) as usize]
+                .wrapping_add(self.a)
+                .wrapping_add(self.b);
             self.mem[i] = y;
             self.b = self.mem[(((y >> LOG_SIZE) & MASK) >> 2) as usize].wrapping_add(x);
             self.rsl[i] = self.b;

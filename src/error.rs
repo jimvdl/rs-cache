@@ -1,12 +1,12 @@
 //! Error management.
 
-use std::{ error::Error, fmt, io };
+use std::{error::Error, fmt, io};
 
 /// A specialized result type for cache operations.
-/// 
-/// This type is broadly used across rscache for any operation which may produce a 
+///
+/// This type is broadly used across rscache for any operation which may produce a
 /// [CacheError](enum.CacheError.html).
-/// 
+///
 /// # Examples
 ///
 /// A convenience function that bubbles an `rscache::Result` to its caller:
@@ -14,15 +14,15 @@ use std::{ error::Error, fmt, io };
 /// ```
 /// use rscache::Cache;
 /// use rscache::codec;
-/// 
+///
 /// // Same result as Result<Vec<u8>, CacheError>
 /// fn item_def_data(cache: &Cache) -> rscache::Result<Vec<u8>> {
 ///     let index_id = 2;
 ///     let archive_id = 10;
-/// 
+///
 ///     let buffer = cache.read(index_id, archive_id)?;
 ///     let buffer = codec::decode(&buffer)?;
-/// 
+///
 ///     Ok(buffer)
 /// }
 /// ```
@@ -36,7 +36,7 @@ pub enum CacheError {
     Read(ReadError),
     Compression(CompressionError),
     /// Clarification error for failed parsers.
-    Parse(ParseError)
+    Parse(ParseError),
 }
 
 macro_rules! impl_from {
@@ -105,13 +105,35 @@ impl fmt::Display for ReadError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::IndexNotFound(id) => write!(f, "Index {} not found.", id),
-            Self::ArchiveNotFound(index_id, archive_id) => write!(f, "Index {} does not contain archive group {}.", index_id, archive_id),
+            Self::ArchiveNotFound(index_id, archive_id) => write!(
+                f,
+                "Index {} does not contain archive group {}.",
+                index_id, archive_id
+            ),
             Self::ReferenceTableNotFound => write!(f, "Reference table (index 255) not found."),
-            Self::NameNotInArchive(hash, name, index_id) => write!(f, "Identifier hash {} for name {} not found in index {}.", hash, name, index_id),
-            Self::SectorArchiveMismatch(received, expected) => write!(f, "Sector archive id was {} but expected {}.", received, expected),
-            Self::SectorChunkMismatch(received, expected) => write!(f, "Sector chunk was {} but expected {}.", received, expected),
-            Self::SectorNextMismatch(received, expected) => write!(f, "Sector next was {} but expected {}.", received, expected),
-            Self::SectorIndexMismatch(received, expected) => write!(f, "Sector parent index id was {} but expected {}.", received, expected),
+            Self::NameNotInArchive(hash, name, index_id) => write!(
+                f,
+                "Identifier hash {} for name {} not found in index {}.",
+                hash, name, index_id
+            ),
+            Self::SectorArchiveMismatch(received, expected) => write!(
+                f,
+                "Sector archive id was {} but expected {}.",
+                received, expected
+            ),
+            Self::SectorChunkMismatch(received, expected) => write!(
+                f,
+                "Sector chunk was {} but expected {}.",
+                received, expected
+            ),
+            Self::SectorNextMismatch(received, expected) => {
+                write!(f, "Sector next was {} but expected {}.", received, expected)
+            }
+            Self::SectorIndexMismatch(received, expected) => write!(
+                f,
+                "Sector parent index id was {} but expected {}.",
+                received, expected
+            ),
         }
     }
 }
@@ -127,7 +149,9 @@ impl fmt::Display for CompressionError {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Self::Unsupported(compression) => write!(f, "Invalid compression: {} is unsupported.", compression),
+            Self::Unsupported(compression) => {
+                write!(f, "Invalid compression: {} is unsupported.", compression)
+            }
         }
     }
 }
@@ -147,7 +171,11 @@ impl fmt::Display for ParseError {
         match self {
             Self::Unknown => write!(f, "Unknown parser error."),
             Self::Archive(id) => write!(f, "Unable to parse archive {}, unexpected eof.", id),
-            Self::Sector(id) => write!(f, "Unable to parse child sector of parent {}, unexpected eof.", id),
+            Self::Sector(id) => write!(
+                f,
+                "Unable to parse child sector of parent {}, unexpected eof.",
+                id
+            ),
         }
     }
 }

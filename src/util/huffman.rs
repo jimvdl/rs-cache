@@ -6,27 +6,27 @@ pub struct Huffman {
 
 impl Huffman {
     /// Initializes the Huffman struct with the given sizes.
-    /// 
-    /// The sizes can be found in the cache. 
+    ///
+    /// The sizes can be found in the cache.
     /// Call the `huffman_table()` function to get the huffman table which
     /// contains the sizes needed to initialize this struct.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use rscache::Cache;
     /// use rscache::util::Huffman;
-    /// 
+    ///
     /// # fn main() -> rscache::Result<()> {
     /// # let cache = Cache::new("./data/osrs_cache")?;
     /// let huffman_tbl = cache.huffman_table()?;
     /// let huffman = Huffman::new(&huffman_tbl);
-    /// 
+    ///
     /// let compressed_msg = &[174, 128, 35, 32, 208, 96];
     /// let decompressed_len = 8; // client will include this in the chat packet.
-    /// 
+    ///
     /// let decompressed_msg = huffman.decompress(compressed_msg, decompressed_len);
-    /// 
+    ///
     /// if let Ok(msg) = String::from_utf8(decompressed_msg) {
     ///     assert_eq!(msg, "rs-cache");
     /// }
@@ -121,12 +121,12 @@ impl Huffman {
     }
 
     /// Decompresses the given buffer.
-    /// 
+    ///
     /// The buffer is normally an encoded chat message which will be decoded into
     /// the original message. This helps limit chat packet sizes.
-    /// 
+    ///
     /// # Panics
-    /// 
+    ///
     /// Panics if the decompressed length == 0
     #[inline]
     pub fn decompress(&self, compressed: &[u8], decompressed_len: usize) -> Vec<u8> {
@@ -136,8 +136,7 @@ impl Huffman {
         let mut i_4 = 0;
         if decompressed_len == 0 {
             panic!("Huffman decompressed message length can't be 0.");
-        } 
-        
+        }
         let mut i_7 = 0;
         let mut i_8 = i_2;
 
@@ -219,7 +218,13 @@ impl Huffman {
     }
 }
 
-fn i_10_keys(i_10: &mut i32, keys: &[i32], i_7: &mut i32, i_4: &mut usize, decompressed: &mut [u8]) {
+fn i_10_keys(
+    i_10: &mut i32,
+    keys: &[i32],
+    i_7: &mut i32,
+    i_4: &mut usize,
+    decompressed: &mut [u8],
+) {
     *i_10 = keys[*i_7 as usize];
     if *i_10 < 0 {
         decompressed[*i_4] = (!*i_10) as u8;

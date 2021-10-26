@@ -1,51 +1,51 @@
 //! Validator for the cache.
-//! 
+//!
 //! # Example
-//! 
+//!
 //! ```
 //! # use rscache::Cache;
 //! use rscache::cksm::{ Checksum, OsrsEncode };
-//! 
+//!
 //! # fn main() -> rscache::Result<()> {
 //! # let cache = Cache::new("./data/osrs_cache")?;
 //! let checksum = cache.create_checksum()?;
-//! 
+//!
 //! // Encode the checksum with the OSRS protocol.
 //! let buffer = checksum.encode()?;
 //! # Ok(())
 //! # }
 //! ```
 
-use std::slice::{ Iter, IterMut };
+use std::slice::{Iter, IterMut};
 
-use crate::{ codec::Compression, codec };
+use crate::{codec, codec::Compression};
 
+#[cfg(feature = "rs3")]
+use num_bigint::{BigInt, Sign};
 #[cfg(feature = "serde-derive")]
-use serde::{ Serialize, Deserialize };
+use serde::{Deserialize, Serialize};
 #[cfg(feature = "rs3")]
-use num_bigint::{ BigInt, Sign };
-#[cfg(feature = "rs3")]
-use whirlpool::{ Whirlpool, Digest };
+use whirlpool::{Digest, Whirlpool};
 
 /// Consumes the `Checksum` and encodes it into a byte buffer
 /// using the OSRS protocol.
-/// 
+///
 /// After encoding the checksum it can be sent to the client.
-/// 
+///
 /// # Errors
-/// 
+///
 /// Returns a `CacheError` if the encoding fails.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// # use std::net::TcpStream;
 /// # use std::io::Write;
 /// use rscache::cksm::{ Checksum, OsrsEncode };
-/// 
+///
 /// fn encode_checksum(checksum: Checksum, stream: &mut TcpStream) -> rscache::Result<()> {
 ///     let buffer = checksum.encode()?;
-/// 
+///
 ///     stream.write_all(&buffer)?;
 ///     Ok(())
 /// }
@@ -56,18 +56,18 @@ pub trait OsrsEncode {
 
 /// Consumes the `Checksum` and encodes it into a byte buffer
 /// using the RS3 protocol.
-/// 
+///
 /// Note: RS3 clients use RSA. The encoding process requires an exponent
 /// and a modulus to encode the buffer properly.
-/// 
+///
 /// After encoding the checksum it can be sent to the client.
-/// 
+///
 /// # Errors
-/// 
+///
 /// Returns a `CacheError` if the encoding fails.
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```
 /// # use std::net::TcpStream;
 /// # use std::io::Write;
@@ -76,10 +76,10 @@ pub trait OsrsEncode {
 /// # pub const MODULUS: &'static [u8] = b"6950273013450460376345707589939362735767433035117300645755821424559380572176824658371246045200577956729474374073582306250298535718024104420271215590565201";
 /// # }
 /// use rscache::cksm::{ Checksum, Rs3Encode };
-/// 
+///
 /// fn encode_checksum(checksum: Checksum, stream: &mut TcpStream) -> rscache::Result<()> {
 ///     let buffer = checksum.encode(env::EXPONENT, env::MODULUS)?;
-/// 
+///
 ///     stream.write_all(&buffer)?;
 ///     Ok(())
 /// }
@@ -100,22 +100,25 @@ pub struct Entry {
 }
 
 /// Validator for the `Cache`.
-/// 
+///
 /// Used to validate cache index files. It contains a list of entries, one entry for each index file.
-/// 
-/// In order to create the `Checksum` the 
-/// [create_checksum()](../struct.Cache.html#method.create_checksum) function has to be 
-/// called on `Cache`. 
+///
+/// In order to create the `Checksum` the
+/// [create_checksum()](../struct.Cache.html#method.create_checksum) function has to be
+/// called on `Cache`.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Checksum {
     index_count: usize,
-    entries: Vec<Entry>
+    entries: Vec<Entry>,
 }
 
 impl Checksum {
     pub(crate) fn new(index_count: usize) -> Self {
-        Self { index_count, entries: Vec::with_capacity(index_count) }
+        Self {
+            index_count,
+            entries: Vec::with_capacity(index_count),
+        }
     }
 
     pub(crate) fn push(&mut self, entry: Entry) {
@@ -123,31 +126,28 @@ impl Checksum {
     }
 
     /// Validates crcs with internal crcs.
-    /// 
+    ///
     /// # Examples
-    /// 
+    ///
     /// ```
     /// # use rscache::Cache;
     /// # fn main() -> rscache::Result<()> {
     /// # let cache = Cache::new("./data/osrs_cache")?;
     /// # let checksum = cache.create_checksum()?;
     /// // client crcs:
-    /// let crcs = vec![1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 686540367, 
-    ///                 4262755489, 2208636505, 3047082366, 586413816, 2890424900, 3411535427, 3178880569, 
+    /// let crcs = vec![1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 686540367,
+    ///                 4262755489, 2208636505, 3047082366, 586413816, 2890424900, 3411535427, 3178880569,
     ///                 153718440, 3849392898, 3628627685, 2813112885, 1461700456, 2751169400, 2927815226];
-    /// 
+    ///
     /// let valid = checksum.validate(&crcs);
-    /// 
+    ///
     /// assert!(valid);
     /// # Ok(())
     /// # }
     /// ```
     #[inline]
     pub fn validate(&self, crcs: &[u32]) -> bool {
-        let internal: Vec<u32> = self.entries.iter()
-            .map(|entry| entry.crc)
-            .collect();
-            
+        let internal: Vec<u32> = self.entries.iter().map(|entry| entry.crc).collect();
         internal == crcs
     }
 
@@ -253,7 +253,7 @@ impl Default for Entry {
             crc: 0,
             version: 0,
             #[cfg(feature = "rs3")]
-            hash: vec![0; 64]
+            hash: vec![0; 64],
         }
     }
 }

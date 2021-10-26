@@ -5,7 +5,6 @@ mod osrs {
     use super::common;
 
     use rscache::loader::osrs::LocationLoader;
-    
     #[test]
     fn load_locations() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;

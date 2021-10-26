@@ -1,28 +1,22 @@
 use std::{
     io,
-    slice::{ Iter, IterMut },
+    slice::{Iter, IterMut},
 };
 
 #[cfg(feature = "serde-derive")]
-use serde::{ Serialize, Deserialize };
+use serde::{Deserialize, Serialize};
 #[cfg(feature = "serde-derive")]
 use serde_big_array::big_array;
 #[cfg(feature = "serde-derive")]
 big_array! { BigArray; }
 
-use nom::{
-    multi::{ many0, many_m_n },
-    combinator::cond,
-    bytes::complete::take,
-    number::complete::{
-        be_u8,
-        be_u16,
-        be_u24,
-        be_u32,
-        be_i32
-    },
-};
 use itertools::izip;
+use nom::{
+    bytes::complete::take,
+    combinator::cond,
+    multi::{many0, many_m_n},
+    number::complete::{be_i32, be_u16, be_u24, be_u32, be_u8},
+};
 
 use crate::parse::be_u32_smart;
 
@@ -34,7 +28,7 @@ pub struct ArchiveRef {
     pub id: u32,
     pub index_id: u8,
     pub sector: usize,
-    pub length: usize
+    pub length: usize,
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
@@ -48,14 +42,14 @@ pub struct Archive {
     pub whirlpool: [u8; 64],
     pub version: u32,
     pub entry_count: usize,
-    pub valid_ids: Vec<u32>
+    pub valid_ids: Vec<u32>,
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ArchiveFileData {
     pub id: u32,
-    pub data: Vec<u8>
+    pub data: Vec<u8>,
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
@@ -66,8 +60,13 @@ impl ArchiveRef {
     pub fn from_buffer(id: u32, index_id: u8, buffer: &[u8]) -> crate::Result<Self> {
         let (buffer, len) = be_u24(buffer)?;
         let (_, sec) = be_u24(buffer)?;
-        
-        Ok(Self { id, index_id, sector: sec as usize, length: len as usize })
+
+        Ok(Self {
+            id,
+            index_id,
+            sector: sec as usize,
+            length: len as usize,
+        })
     }
 }
 
@@ -88,25 +87,32 @@ impl Archive {
         let (buffer, versions) = many_m_n(0, archive_count, be_u32)(buffer)?;
         let (buffer, entry_counts) = parse_entry_counts(buffer, protocol, archive_count)?;
         let (_, valid_ids) = parse_valid_ids(buffer, protocol, &entry_counts)?;
-    
         let mut archives = Vec::with_capacity(archive_count);
         let mut last_archive_id = 0;
-        let archive_data = izip!(ids, name_hashes, crcs, hashes, whirlpools, versions, entry_counts, valid_ids);
+        let archive_data = izip!(
+            ids,
+            name_hashes,
+            crcs,
+            hashes,
+            whirlpools,
+            versions,
+            entry_counts,
+            valid_ids
+        );
         for (id, name_hash, crc, hash, whirlpool, version, entry_count, valid_ids) in archive_data {
             last_archive_id += id as i32;
-            
-            archives.push(Self { 
-                id: last_archive_id as u32, 
+
+            archives.push(Self {
+                id: last_archive_id as u32,
                 name_hash,
                 crc,
                 hash,
                 whirlpool,
-                version, 
+                version,
                 entry_count: entry_count as usize,
                 valid_ids,
             });
         }
-        
         Ok(archives)
     }
 }
@@ -125,19 +131,20 @@ impl ArchiveFileGroup {
                 let mut bytes = [0; 4];
                 bytes.copy_from_slice(&buffer[read_ptr..read_ptr + 4]);
                 let delta = i32::from_be_bytes(bytes);
-                
                 read_ptr += 4;
                 chunk_size += delta;
 
                 cached_chunks.push((entry_id as u32, chunk_size as usize));
             }
         }
-        
         read_ptr = 0;
         for (entry_id, chunk_size) in cached_chunks {
             let buf = buffer[read_ptr..read_ptr + chunk_size].to_vec();
 
-            data.push(ArchiveFileData{ id: entry_id, data: buf });
+            data.push(ArchiveFileData {
+                id: entry_id,
+                data: buf,
+            });
             read_ptr += chunk_size;
         }
 
@@ -164,25 +171,32 @@ fn parse_identified(buffer: &[u8]) -> crate::Result<(&[u8], bool, bool, bool, bo
     Ok((buffer, identified, whirlpool, codec, hash))
 }
 
-fn parse_hashes(buffer: &[u8], hash: bool, archive_count: usize) -> crate::Result<(&[u8], Vec<i32>)> {
+fn parse_hashes(
+    buffer: &[u8],
+    hash: bool,
+    archive_count: usize,
+) -> crate::Result<(&[u8], Vec<i32>)> {
     let (buffer, taken) = cond(hash, take(archive_count * 4))(buffer)?;
     let (_, mut hashes) = many0(be_i32)(taken.unwrap_or(&[]))?;
 
     if hashes.len() != archive_count {
-        hashes = vec![0; archive_count * 4]; 
+        hashes = vec![0; archive_count * 4];
     }
 
     Ok((buffer, hashes))
 }
 
-fn parse_whirlpools(buffer: &[u8], whirlpool: bool, archive_count: usize) -> crate::Result<(&[u8], Vec<[u8; 64]>)> {
+fn parse_whirlpools(
+    buffer: &[u8],
+    whirlpool: bool,
+    archive_count: usize,
+) -> crate::Result<(&[u8], Vec<[u8; 64]>)> {
     let (buffer, taken) = cond(whirlpool, take(archive_count * 64))(buffer)?;
     let mut whirlpools = vec![[0; 64]; archive_count];
 
     for (index, chunk) in taken.unwrap_or(&[]).chunks_exact(64).enumerate() {
         whirlpools[index].copy_from_slice(chunk);
     }
-    
     if whirlpools.len() != archive_count {
         whirlpools = vec![[0; 64]; archive_count];
     }
@@ -194,7 +208,11 @@ fn parse_whirlpools(buffer: &[u8], whirlpool: bool, archive_count: usize) -> cra
 //     todo!()
 // }
 
-fn parse_valid_ids<'a>(mut buffer: &'a [u8], protocol: u8, entry_counts: &[usize]) -> crate::Result<(&'a [u8], Vec<Vec<u32>>)> {
+fn parse_valid_ids<'a>(
+    mut buffer: &'a [u8],
+    protocol: u8,
+    entry_counts: &[usize],
+) -> crate::Result<(&'a [u8], Vec<Vec<u32>>)> {
     let mut result = Vec::with_capacity(entry_counts.len());
 
     for entry_count in entry_counts {
@@ -202,9 +220,7 @@ fn parse_valid_ids<'a>(mut buffer: &'a [u8], protocol: u8, entry_counts: &[usize
             many_m_n(0, *entry_count as usize, be_u32_smart)(buffer)?
         } else {
             let (buf, result) = many_m_n(0, *entry_count as usize, be_u16)(buffer)?;
-            let result = result.iter()
-                .map(|&id_mod| id_mod as u32)
-                .collect();
+            let result = result.iter().map(|&id_mod| id_mod as u32).collect();
 
             (buf, result)
         };
@@ -234,7 +250,11 @@ fn parse_archive_count(buffer: &[u8], protocol: u8) -> crate::Result<(&[u8], usi
     Ok((buffer, value as usize))
 }
 
-fn parse_ids(buffer: &[u8], protocol: u8, archive_count: usize) -> crate::Result<(&[u8], Vec<u32>)> {
+fn parse_ids(
+    buffer: &[u8],
+    protocol: u8,
+    archive_count: usize,
+) -> crate::Result<(&[u8], Vec<u32>)> {
     let (buffer, ids) = if protocol >= 7 {
         many_m_n(0, archive_count, be_u32_smart)(buffer)?
     } else {
@@ -246,19 +266,22 @@ fn parse_ids(buffer: &[u8], protocol: u8, archive_count: usize) -> crate::Result
     Ok((buffer, ids))
 }
 
-fn parse_entry_counts(buffer: &[u8], protocol: u8, archive_count: usize) -> crate::Result<(&[u8], Vec<usize>)> {
+fn parse_entry_counts(
+    buffer: &[u8],
+    protocol: u8,
+    archive_count: usize,
+) -> crate::Result<(&[u8], Vec<usize>)> {
     let (buffer, entry_counts) = if protocol >= 7 {
         many_m_n(0, archive_count, be_u32_smart)(buffer)?
     } else {
         let (buf, res) = many_m_n(0, archive_count, be_u16)(buffer)?;
-        let res = res.iter()
-            .map(|&ec| ec as u32)
-            .collect();
+        let res = res.iter().map(|&ec| ec as u32).collect();
 
         (buf, res)
     };
 
-    let entry_counts: Vec<usize> = entry_counts.iter()
+    let entry_counts: Vec<usize> = entry_counts
+        .iter()
         .map(|&entry_count| entry_count as usize)
         .collect();
 
@@ -294,7 +317,15 @@ mod tests {
         let buffer = &[0, 0, 77, 0, 1, 196];
         let archive = ArchiveRef::from_buffer(10, 255, buffer)?;
 
-        assert_eq!(archive, ArchiveRef{ id: 10, index_id: 255, sector: 452, length: 77 });
+        assert_eq!(
+            archive,
+            ArchiveRef {
+                id: 10,
+                index_id: 255,
+                sector: 452,
+                length: 77
+            }
+        );
 
         Ok(())
     }

@@ -1,13 +1,13 @@
 //! # Example
-//! 
+//!
 //! ```
 //! use rscache::Cache;
 //! use rscache::ldr::osrs::ItemLoader;
-//! 
+//!
 //! # fn main() -> rscache::Result<()> {
 //! let cache = Cache::new("./data/osrs_cache")?;
 //! let item_ldr = ItemLoader::new(&cache)?;
-//! 
+//!
 //! if let Some(def) = item_ldr.load(1042) {
 //!     assert_eq!("Blue partyhat", def.name);
 //!     assert!(!def.stackable);
@@ -16,28 +16,26 @@
 //! # Ok(())
 //! # }
 //! ```
-//! 
+//!
 //! # Errors
-//! 
+//!
 //! Every loader returns a `CacheError` with an inner error.
 
-use std::collections::{ hash_map::{self, Entry}, HashMap };
+use std::collections::{
+    hash_map::{self, Entry},
+    HashMap,
+};
 
 #[cfg(feature = "serde-derive")]
-use serde::{ Serialize, Deserialize };
+use serde::{Deserialize, Serialize};
 
 use crate::{
-    Cache,
     codec,
     definition::osrs::{
-        Definition,
-        FetchDefinition,
-        ItemDefinition,
-        NpcDefinition,
-        ObjectDefinition,
-        MapDefinition,
-        LocationDefinition,
+        Definition, FetchDefinition, ItemDefinition, LocationDefinition, MapDefinition,
+        NpcDefinition, ObjectDefinition,
     },
+    Cache,
 };
 
 /// Loads all item definitions from the current cache.
@@ -70,7 +68,10 @@ pub struct MapLoader<'cache> {
 impl<'cache> MapLoader<'cache> {
     #[inline]
     pub fn new(cache: &'cache Cache) -> Self {
-        Self { cache, maps: HashMap::new() }
+        Self {
+            cache,
+            maps: HashMap::new(),
+        }
     }
 
     #[inline]
