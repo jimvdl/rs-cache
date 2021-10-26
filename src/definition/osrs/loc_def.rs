@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 use super::Definition;
 use crate::parse::{be_u16_smart, be_u32_smart_compat};
 
+/// Contains all the information about a certain location fetched from the cache through
+/// the [LocationLoader](../../loader/osrs/struct.LocationLoader.html).
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct LocationDefinition {

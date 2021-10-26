@@ -10,6 +10,8 @@ const X: usize = 64;
 const Y: usize = 64;
 const Z: usize = 4;
 
+/// Contains all the information about a certain map fetched from the cache through
+/// the [MapLoader](../../loader/osrs/struct.MapLoader.html).
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct MapDefinition {

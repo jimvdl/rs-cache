@@ -2,7 +2,7 @@
 //!
 //! ```
 //! use rscache::Cache;
-//! use rscache::ldr::osrs::ItemLoader;
+//! use rscache::loader::osrs::ItemLoader;
 //!
 //! # fn main() -> rscache::Result<()> {
 //! let cache = Cache::new("./data/osrs_cache")?;
@@ -59,6 +59,7 @@ pub struct ObjectLoader(HashMap<u16, ObjectDefinition>);
 
 impl_osrs_loader!(ObjectLoader, ObjectDefinition, index_id: 2, archive_id: 6);
 
+/// Loads maps definitions lazily from the current cache.
 #[derive(Debug)]
 pub struct MapLoader<'cache> {
     cache: &'cache Cache,
@@ -66,6 +67,11 @@ pub struct MapLoader<'cache> {
 }
 
 impl<'cache> MapLoader<'cache> {
+    /// Make a new `MapLoader`.
+    /// 
+    /// This takes a `Cache` by references with a `'cache` lifetime.
+    /// All the map definitions are loaded lazily where the `&'cache Cache` is used
+    /// to cache them internally on load.
     #[inline]
     pub fn new(cache: &'cache Cache) -> Self {
         Self {
@@ -91,6 +97,7 @@ impl<'cache> MapLoader<'cache> {
     }
 }
 
+/// Loads maps definitions lazily from the current cache.
 #[derive(Debug)]
 pub struct LocationLoader<'cache> {
     cache: &'cache Cache,
@@ -98,6 +105,11 @@ pub struct LocationLoader<'cache> {
 }
 
 impl<'cache> LocationLoader<'cache> {
+    /// Make a new `LocationLoader`.
+    /// 
+    /// This takes a `Cache` by references with a `'cache` lifetime.
+    /// All the location definitions are loaded lazily where the `&'cache Cache` is used
+    /// to cache them internally on load.
     #[inline]
     pub fn new(cache: &'cache Cache) -> Self {
         Self {
@@ -106,6 +118,10 @@ impl<'cache> LocationLoader<'cache> {
         }
     }
 
+    /// Loads the location data for a particular region.
+    /// 
+    /// Also takes a `keys: [u32; 4]` because the location archive is encrypted
+    /// with XTEA. The buffer is automatically decoded with the given keys. 
     #[inline]
     pub fn load(&mut self, id: u16, keys: &[u32; 4]) -> crate::Result<&LocationDefinition> {
         if let Entry::Vacant(entry) = self.locations.entry(id) {

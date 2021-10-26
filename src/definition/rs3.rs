@@ -18,7 +18,14 @@ pub trait Definition: Sized {
 }
 
 pub trait FetchDefinition: Definition {
-    // FIXME
+    // TODO: example
+    /// Fetches multiple definitions from every archive in the index.
+    ///
+    /// Note: every archive contains only one definition. (1:1)
+    ///
+    /// # Errors
+    ///
+    /// Can return multiple errors: if reading, decoding or parsing definition buffers fail.
     #[inline]
     fn fetch_from_index<D>(cache: &Cache, index_id: u8) -> crate::Result<HashMap<u32, D>>
     where

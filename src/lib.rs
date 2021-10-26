@@ -1,15 +1,17 @@
-//! This crate wraps the [Oldschool RuneScape] & [RuneScape 3] cache and provides convenient
+//! High level abstraction over the RuneScape cache API.
+//! 
+//! This crate offers the [Oldschool RuneScape] and [RuneScape 3] cache protocols and provides convenient
 //! means of accessing the internal binary data.
 //!
 //! The library's API is mainly focussed around its main use-case which is reading bytes easily.
 //! Therefor it only offers a high level of abstraction over the binary cache. Most cache API's expose a
-//! wide veriaty of internal types to let the user tinker around with the cache in unusual ways.
-//! To avoid undefined behaviour most (if not all) internal types are kept internal and private.
+//! wide variety of internal types to let the user tinker around with the cache in unusual ways.
+//! To avoid undefined behaviour most internal types are kept private.
 //! The goal of this crate is not to be a fully customisable cache API but just a simple interface for
 //! basic reading of valuable data.
 //!
 //! Note that this crate is still evolving, both OSRS & RS3 are not fully supported/implemented and
-//! will probably contain bugs or miss vital features. If this is the case consider [opening
+//! will probably contain bugs or miss vital features. If this is the case for you then consider [opening
 //! an issue].
 //!
 //! # Features
@@ -41,7 +43,7 @@
 //!
 //! Note: Some loaders cache these definitions lazily because of either the size of the data or the
 //! performance. The map loader for example is both slow and large so caching is by default lazy.
-//! Lazy loaders require mutabilitye.
+//! Lazy loaders require mutability.
 //!
 //! [Oldschool RuneScape]: https://oldschool.runescape.com/
 //! [RuneScape 3]: https://www.runescape.com/

@@ -7,7 +7,7 @@ use super::Definition;
 use crate::{extension::ReadExt, util};
 
 /// Contains all the information about a certain object fetched from the cache through
-/// the [ObjectLoader](struct.ObjectLoader.html).
+/// the [ObjectLoader](../../loader/osrs/struct.ObjectLoader.html).
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ObjectDefinition {

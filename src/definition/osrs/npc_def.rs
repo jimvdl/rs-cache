@@ -7,7 +7,7 @@ use super::Definition;
 use crate::{extension::ReadExt, util};
 
 /// Contains all the information about a certain npc fetched from the cache through
-/// the [NpcLoader](struct.NpcLoader.html).
+/// the [NpcLoader](../../loader/osrs/struct.NpcLoader.html).
 #[derive(Clone, Eq, PartialEq, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct NpcDefinition {

@@ -7,7 +7,7 @@ use super::Definition;
 use crate::{extension::ReadExt, util};
 
 /// Contains all the information about a certain item fetched from the cache through
-/// the [ItemLoader](../../ldr/rs3/struct.ItemLoader.html).
+/// the [ItemLoader](../../loader/rs3/struct.ItemLoader.html).
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ItemDefinition {

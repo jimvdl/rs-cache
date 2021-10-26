@@ -2,7 +2,7 @@
 //!
 //! ```
 //! use rscache::Cache;
-//! use rscache::ldr::rs3::ItemLoader;
+//! use rscache::loader::rs3::ItemLoader;
 //!
 //! # fn main() -> rscache::Result<()> {
 //! let cache = Cache::new("./data/rs3_cache")?;
