@@ -24,10 +24,6 @@ rs3 = ["whirlpool", "num-bigint", "lzma-rs"]
 name = "rs3_update_protocol"
 required-features = ["rs3"]
 
-[[example]]
-name = "custom_loader"
-required-features = [""]
-
 [lib]
 name = "rscache"
 path = "src/lib.rs"
