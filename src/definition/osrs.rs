@@ -71,7 +71,7 @@ pub trait FetchDefinition: Definition {
     /// ```
     /// # use std::collections::HashMap;
     /// # use rscache::Cache;
-    /// use rscache::def::osrs::{
+    /// use rscache::definition::osrs::{
     ///     FetchDefinition,
     ///     ItemDefinition,
     /// };

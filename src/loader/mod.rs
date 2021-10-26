@@ -8,7 +8,7 @@
 //! ```
 //! use std::{collections::HashMap, io::{ self, BufReader, }};
 //! use rscache::{
-//!     Cache, ext::ReadExt,
+//!     Cache, extension::ReadExt,
 //!     definition::osrs::{ Definition, FetchDefinition },
 //! };
 //! 
@@ -36,13 +36,13 @@
 //!         let index_id = 2; // Config index.
 //!         let archive_id = 10; // Contains all ItemDefinitions.
 //!
-//!         let map = CustomDefinitionn::fetch_from_archive(cache, index_id, archive_id)?;
+//!         let map = CustomDefinition::fetch_from_archive(cache, index_id, archive_id)?;
 //!
 //!         Ok(Self(map))
 //!     }
 //!
 //!     // Simple HashMap lookup.
-//!     fn load(&self, id: u16) -> Option<&Self::Definition> {
+//!     fn load(&self, id: u16) -> Option<&CustomDefinition> {
 //!         self.0.get(&id)
 //!     }
 //! }
