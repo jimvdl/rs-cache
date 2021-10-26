@@ -14,7 +14,7 @@ use crate::{
     codec,
     arc::{ ArchiveRef, Archive, ARCHIVE_REF_LEN }, 
     error::{ ReadError, ParseError },
-    cache::{ REFERENCE_TABLE, ReadInternal },
+    REFERENCE_TABLE, ReadInternal,
 };
 
 /// Index prefix name.

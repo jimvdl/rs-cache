@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use crate::{
     Cache,
     codec,
-    cache::REFERENCE_TABLE,
+    REFERENCE_TABLE,
     arc::{ Archive, ArchiveFileGroup },
 };
 
