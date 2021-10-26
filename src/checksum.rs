@@ -35,6 +35,7 @@ use whirlpool::{Digest, Whirlpool};
 /// # Errors
 ///
 /// Returns a `CacheError` if the encoding fails.
+#[cfg(not(feature = "rs3"))]
 pub trait OsrsEncode {
     fn encode(self) -> crate::Result<Vec<u8>>;
 }

@@ -7,7 +7,21 @@
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.41%2B-yellow)](https://blog.rust-lang.org/2020/01/30/Rust-1.41.0.html)
 [![License](https://img.shields.io/crates/l/rs-cache?color=black)](https://github.com/jimvdl/rs-cache/blob/master/LICENSE)
 
-A simple-to-use basic RuneScape cache utility. RS-Cache provides utilities to interact with the RuneScape cache. 
+High level abstraction for the RuneScape cache.
+This crate provides convenient access to the binary data of the [Oldschool RuneScape](https://oldschool.runescape.com/) and [RuneScape 3](https://www.runescape.com/) cache protocols.
+
+
+The library's API is mainly focussed around its main use-case which is reading bytes easily.
+Therefor it only offers a high level of abstraction over the binary cache. Most cache API's expose a
+wide variety of internal types to let the user tinker around with the cache in unusual ways.
+To avoid undefined behaviour most internal types are kept private.
+The goal of this crate is not to be a fully customisable cache API but just a simple interface for
+basic reading of valuable data.
+
+
+Note that this crate is still evolving, both OSRS & RS3 are not fully supported/implemented and
+will probably contain bugs or miss vital features. If this is the case for you then consider [opening
+an issue](https://github.com/jimvdl/rs-cache/issues/new).
 
 Useful links:\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/5/5d/Fire_rune_detail.png/800px-Fire_rune_detail.png?07ed5" width="10"> &nbsp;[Releases](https://github.com/jimvdl/rs-cache/releases)\
@@ -15,9 +29,6 @@ Useful links:\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/e/ef/Nature_rune_detail.png/800px-Nature_rune_detail.png?a062f" width="10"> &nbsp;[Examples](examples/)
 
 ## Quick Start
-
-The quickest and easiest way to get started is by using the 
-[`Cache`]([type.Cache.html](https://docs.rs/rs-cache/0.7/rscache/type.Cache.html)) struct.
 
 ```rust
 use rscache::Cache;
@@ -34,15 +45,11 @@ fn main() -> rscache::Result<()> {
 }
 ```
 
-The public API of this crate is still evolving.
-Currently supports both OSRS & RS3, although both are still limited.
-
 The [osrs specifications](osrs_specifications.md) and [rs3 specifications](rs3_specifications.md) documents contain a detailed description of the design of the corresponding cache for educational purposes. Both documents are still a work in progress and are possibly incomplete.
 
 Integration tests are running on Oldschool RuneScape version 180, which you can run at any time because the cache is included in the `./data/osrs_cache` directory. RS3 Integration tests are running on version 904. The RS3 cache is too large to include on GitHub.
 
-This crate is passively maintained. Additional features will be implemented once they are needed for my own server.
-The public API of this crate is still evolving due to constant discoveries and overhauls to improve the overal usage.
+This crate is experimentald. I will implement Additional features once I need them for my own project.
 __If you require a certain feature feel free to open an issue.__
 
 ## Usage
@@ -54,7 +61,7 @@ Add this to your `Cargo.toml`:
 rs-cache = "0.7"
 ```
 
-Examples can be found in the [examples](examples/) directory. These examples include setting up your own custom cache and how the update protocol could be handled.
+Examples can be found in the [examples](examples/) directory.
 
 ## Acknowledgements
 

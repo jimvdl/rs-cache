@@ -1,4 +1,4 @@
-//! High level abstraction over the RuneScape cache API.
+//! High level abstraction for the RuneScape cache.
 //! 
 //! This crate provides convenient access to the binary data of the [Oldschool RuneScape] and [RuneScape 3] cache protocols.
 //!
