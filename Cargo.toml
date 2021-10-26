@@ -18,6 +18,15 @@ maintenance = { status = "experimental" }
 [features]
 default = []
 serde-derive = ["serde", "serde-big-array"]
+rs3 = ["whirlpool", "num-bigint", "lzma-rs"]
+
+[[example]]
+name = "rs3_update_protocol"
+required-features = ["rs3"]
+
+[[example]]
+name = "custom_loader"
+required-features = [""]
 
 [lib]
 name = "rscache"
@@ -28,11 +37,11 @@ crc = "1.8"
 bzip2 = "0.4"
 nom = "7.0"
 itertools = "0.9"
-whirlpool = "0.9"
-num-bigint = "0.4"
+whirlpool = { version = "0.9", optional = true }
+num-bigint = { version = "0.4", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde-big-array = { version = "0.3", optional = true }
-lzma-rs = "0.2"
+lzma-rs = { version = "0.2", optional = true }
 flate2 = "1.0"
 memmap = "0.7"
 

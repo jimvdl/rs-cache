@@ -17,6 +17,7 @@ use std::{
 
 use crate::extension::ReadExt;
 
+#[cfg(not(feature = "rs3"))]
 macro_rules! impl_osrs_loader {
     ($ldr:ident, $def:ty, index_id: $idx_id:expr $(, archive_id: $arc_id:expr)?) => {
         impl $ldr {
@@ -44,6 +45,7 @@ macro_rules! impl_osrs_loader {
     };
 }
 
+#[cfg(feature = "rs3")]
 macro_rules! impl_rs3_loader {
     ($ldr:ident, $def:ty, index_id: $idx_id:expr) => {
         impl $ldr {

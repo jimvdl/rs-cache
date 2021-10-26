@@ -91,6 +91,7 @@
 // TODO: document how to make your own loader in ldr.rs
 // TODO: document unsafe memmap
 // TODO: maybe check load function names on map and location loader to reflect that they need mut for lazy caching.
+// TODO: remove custom loader test and make it documentation instead
 
 #[macro_use]
 pub mod util;
@@ -139,6 +140,7 @@ use nom::{
 };
 use memmap::Mmap;
 use crc::crc32;
+#[cfg(feature = "rs3")]
 use whirlpool::{ Whirlpool, Digest };
 
 use crate::{ 
@@ -312,14 +314,18 @@ impl Cache {
                     let (_, version) = cond(data[0] >= 6, be_u32)(&data[1..5])?;
                     let version = version.unwrap_or(0);
 
-                    let mut hasher = Whirlpool::new();
-                    hasher.update(&buffer);
-                    let hash = hasher.finalize().as_slice().to_vec();
+                    #[cfg(feature = "rs3")]
+                    let hash = {
+                        let mut hasher = Whirlpool::new();
+                        hasher.update(&buffer);
+                        hasher.finalize().as_slice().to_vec()
+                    };
 
                     checksum.push(
                         Entry { 
                             crc: crc32::checksum_ieee(&buffer), 
                             version,
+                            #[cfg(feature = "rs3")]
                             hash
                         }
                     );

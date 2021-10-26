@@ -1,5 +1,6 @@
 mod common;
 
+#[cfg(not(feature = "rs3"))]
 mod osrs {
     use super::common;
 

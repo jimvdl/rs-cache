@@ -22,7 +22,9 @@ use crate::{ codec::Compression, codec };
 
 #[cfg(feature = "serde-derive")]
 use serde::{ Serialize, Deserialize };
+#[cfg(feature = "rs3")]
 use num_bigint::{ BigInt, Sign };
+#[cfg(feature = "rs3")]
 use whirlpool::{ Whirlpool, Digest };
 
 /// Consumes the `Checksum` and encodes it into a byte buffer
@@ -82,6 +84,7 @@ pub trait OsrsEncode {
 ///     Ok(())
 /// }
 /// ```
+#[cfg(feature = "rs3")]
 pub trait Rs3Encode {
     fn encode(self, exponent: &[u8], modulus: &[u8]) -> crate::Result<Vec<u8>>;
 }
@@ -92,6 +95,7 @@ pub trait Rs3Encode {
 pub struct Entry {
     pub crc: u32,
     pub version: u32,
+    #[cfg(feature = "rs3")]
     pub hash: Vec<u8>,
 }
 
@@ -177,6 +181,7 @@ impl OsrsEncode for Checksum {
     }
 }
 
+#[cfg(feature = "rs3")]
 impl Rs3Encode for Checksum {
     #[inline]
     fn encode(self, exponent: &[u8], modulus: &[u8]) -> crate::Result<Vec<u8>> {
@@ -247,6 +252,7 @@ impl Default for Entry {
         Self {
             crc: 0,
             version: 0,
+            #[cfg(feature = "rs3")]
             hash: vec![0; 64]
         }
     }

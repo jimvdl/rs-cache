@@ -14,7 +14,9 @@
 //! # }
 //! ```
 
-use std::io::{ self, Read, Write, BufReader };
+use std::io::{ self, Read, Write };
+#[cfg(feature = "rs3")]
+use std::io::BufReader;
 use std::convert::TryFrom;
 
 use nom::{
@@ -33,6 +35,7 @@ use flate2::{
     write::GzEncoder,
     bufread::GzDecoder,
 };
+#[cfg(feature = "rs3")]
 use lzma_rs::{
     lzma_decompress_with_options,
     lzma_compress_with_options,
@@ -51,6 +54,7 @@ pub enum Compression {
     None,
     Bzip2,
     Gzip,
+    #[cfg(feature = "rs3")]
     Lzma,
 }
 
@@ -191,6 +195,7 @@ fn encode_internal(
         Compression::None => data.to_owned(),
         Compression::Bzip2 => compress_bzip2(data)?,
         Compression::Gzip => compress_gzip(data)?,
+        #[cfg(feature = "rs3")]
         Compression::Lzma => compress_lzma(data)?,
     };
 
@@ -267,6 +272,7 @@ fn decode_internal(buffer: &[u8], keys: Option<&[u32; 4]>) -> crate::Result<Deco
         Compression::None => decompress_none(&buffer, compressed_len)?,
         Compression::Bzip2 => decompress_bzip2(&buffer, compressed_len)?,
         Compression::Gzip => decompress_gzip(&buffer, compressed_len)?,
+        #[cfg(feature = "rs3")]
         Compression::Lzma => decompress_lzma(&buffer, compressed_len)?
     };
 
@@ -295,6 +301,7 @@ fn compress_gzip(data: &[u8]) -> io::Result<Vec<u8>> {
     Ok(compressed_data)
 }
 
+#[cfg(feature = "rs3")]
 fn compress_lzma(data: &[u8]) -> io::Result<Vec<u8>> {
     let input = data.to_owned();
     let mut output = Vec::new();
@@ -345,6 +352,7 @@ fn decompress_gzip(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i1
     Ok((decompressed_len as usize, version, decompressed_data))
 }
 
+#[cfg(feature = "rs3")]
 fn decompress_lzma(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i16>, Vec<u8>)> {
     let (buffer, decompressed_len) = be_u32(buffer)?;
     let mut compressed_data = vec![0; len - 4];
@@ -378,6 +386,7 @@ impl From<Compression> for u8 {
             Compression::None => 0,
             Compression::Bzip2 => 1,
             Compression::Gzip => 2,
+            #[cfg(feature = "rs3")]
             Compression::Lzma => 3,
         }
     }
@@ -392,6 +401,7 @@ impl TryFrom<u8> for Compression {
             0 => Ok(Self::None),
             1 => Ok(Self::Bzip2),
             2 => Ok(Self::Gzip),
+            #[cfg(feature = "rs3")]
             3 => Ok(Self::Lzma),
             _ => Err(CompressionError::Unsupported(compression))
         }
