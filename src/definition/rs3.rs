@@ -9,7 +9,7 @@ use crate::{
     Cache,
     codec,
     REFERENCE_TABLE,
-    arc::{ Archive, ArchiveFileGroup },
+    archive::{ Archive, ArchiveFileGroup },
 };
 
 pub const ID_BLOCK_SIZE: usize = 256;

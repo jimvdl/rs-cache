@@ -7,7 +7,7 @@ use std::{
 use serde::{ Serialize, Deserialize };
 
 use super::Definition;
-use crate::{ ext::ReadExt, util };
+use crate::{ extension::ReadExt, util };
 
 /// Contains all the information about a certain npc fetched from the cache through
 /// the [NpcLoader](struct.NpcLoader.html).

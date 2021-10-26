@@ -15,7 +15,7 @@ use std::{
     io::{ self, BufReader },
 };
 
-use crate::ext::ReadExt;
+use crate::extension::ReadExt;
 
 macro_rules! impl_osrs_loader {
     ($ldr:ident, $def:ty, index_id: $idx_id:expr $(, archive_id: $arc_id:expr)?) => {

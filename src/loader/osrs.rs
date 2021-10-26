@@ -28,7 +28,7 @@ use serde::{ Serialize, Deserialize };
 use crate::{
     Cache,
     codec,
-    def::osrs::{
+    definition::osrs::{
         Definition,
         FetchDefinition,
         ItemDefinition,

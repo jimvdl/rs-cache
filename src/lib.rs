@@ -94,16 +94,16 @@
 
 #[macro_use]
 pub mod util;
-pub mod cksm;
-pub mod ext;
+pub mod checksum;
+pub mod extension;
 pub mod parse;
 pub mod error;
 pub mod codec;
-pub mod def;
-pub mod ldr;
-mod idx;
-mod arc;
-mod sec;
+pub mod definition;
+pub mod loader;
+mod index;
+mod archive;
+mod sector;
 
 #[doc(inline)]
 pub use error::{ Result, CacheError };
@@ -111,11 +111,11 @@ pub use error::{ Result, CacheError };
 /// Core architecture.
 pub mod fs {
     #[doc(inline)]
-    pub use crate::arc::*;
+    pub use crate::archive::*;
     #[doc(inline)]
-    pub use crate::idx::*;
+    pub use crate::index::*;
     #[doc(inline)]
-    pub use crate::sec::*;
+    pub use crate::sector::*;
 
         /// Main data name.
     pub const MAIN_DATA: &str = "main_file_cache.dat2";
@@ -143,11 +143,11 @@ use whirlpool::{ Whirlpool, Digest };
 
 use crate::{ 
     fs::{MAIN_DATA, REFERENCE_TABLE},
-    cksm::{ Checksum, Entry },
-    idx::Indices,
-    arc::ArchiveRef,
+    checksum::{ Checksum, Entry },
+    index::Indices,
+    archive::ArchiveRef,
     error::{ ReadError, ParseError }, 
-    sec::{
+    sector::{
         Sector,
         SectorHeaderSize,
         SECTOR_SIZE,

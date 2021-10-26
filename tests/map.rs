@@ -2,7 +2,7 @@ mod common;
 
 mod osrs {
     use super::common;
-    use rscache::ldr::osrs::MapLoader;
+    use rscache::loader::osrs::MapLoader;
     
     #[test]
     fn load_lumbridge_map_data() -> rscache::Result<()> {

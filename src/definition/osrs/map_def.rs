@@ -6,7 +6,7 @@ use std::{
 use serde::{ Serialize, Deserialize };
 
 use super::Definition;
-use crate::ext::ReadExt;
+use crate::extension::ReadExt;
 
 const X: usize = 64;
 const Y: usize = 64;

@@ -27,7 +27,7 @@ use serde::{ Serialize, Deserialize };
 
 use crate::{
     Cache,
-    def::rs3::{
+    definition::rs3::{
         FetchDefinition,
         ItemDefinition,
     },

@@ -13,7 +13,7 @@ use nom::{
 
 use crate::{
     error::ReadError,
-    arc::ArchiveRef,
+    archive::ArchiveRef,
 };
 
 pub const SECTOR_HEADER_SIZE: usize = 8;

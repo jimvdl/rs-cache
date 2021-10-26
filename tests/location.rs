@@ -3,7 +3,7 @@ mod common;
 mod osrs {
     use super::common;
 
-    use rscache::ldr::osrs::LocationLoader;
+    use rscache::loader::osrs::LocationLoader;
     
     #[test]
     fn load_locations() -> rscache::Result<()> {

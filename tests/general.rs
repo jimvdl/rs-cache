@@ -4,7 +4,7 @@ mod osrs {
     use super::common;
     use rscache::{ 
         Cache, 
-        cksm::OsrsEncode,
+        checksum::OsrsEncode,
         util::Huffman,
     };
 
@@ -102,7 +102,7 @@ mod rs3 {
     use super::common;
     use rscache::{ 
         Cache, 
-        cksm::Rs3Encode,
+        checksum::Rs3Encode,
         util::Huffman,
     };
 

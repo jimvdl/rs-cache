@@ -18,7 +18,7 @@ use crate::{
     Cache,
     codec,
     REFERENCE_TABLE,
-    arc::{ Archive, ArchiveFileGroup },
+    archive::{ Archive, ArchiveFileGroup },
 };
 
 /// Marker trait for definitions.

@@ -12,7 +12,7 @@ use serde::{ Serialize, Deserialize };
 
 use crate::{ 
     codec,
-    arc::{ ArchiveRef, Archive, ARCHIVE_REF_LEN }, 
+    archive::{ ArchiveRef, Archive, ARCHIVE_REF_LEN }, 
     error::{ ReadError, ParseError },
     REFERENCE_TABLE, ReadInternal,
 };
