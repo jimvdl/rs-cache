@@ -4,8 +4,8 @@ use std::{
 };
 use rscache::{ 
     Cache,
-    def::osrs::{ Definition, FetchDefinition },
-    ext::ReadExt,
+    definition::osrs::{ Definition, FetchDefinition },
+    extension::ReadExt,
 };
 
 fn main() -> rscache::Result<()> {

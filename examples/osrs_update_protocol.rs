@@ -1,4 +1,4 @@
-use rscache::{ Cache, cksm::OsrsEncode };
+use rscache::{ Cache, checksum::OsrsEncode };
 
 struct IncomingUpdatePacket {
     pub index_id: u8,
