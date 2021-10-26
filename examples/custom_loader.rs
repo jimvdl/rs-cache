@@ -4,7 +4,6 @@ use std::{
 };
 use rscache::{ 
     Cache,
-    ldr::osrs::Loader,
     def::osrs::{ Definition, FetchDefinition },
     ext::ReadExt,
 };
@@ -34,7 +33,6 @@ struct CustomLoader(HashMap<u16, CustomDefinition>);
 struct CustomDefinition {
     pub id: u16,
     pub name: String,
-    // Some other fields that need to be parsed from the buffer go here.
 }
 
 impl Definition for CustomDefinition {
@@ -72,9 +70,7 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<CustomDef
     Ok(def)
 }
 
-impl Loader for CustomLoader {
-    type Definition = CustomDefinition;
-
+impl CustomLoader {
     fn new(cache: &Cache) -> rscache::Result<Self> {
         // Some definitions are all contained within one archive.
         // Other times one archive only contains one definition, but in most cases
@@ -83,13 +79,13 @@ impl Loader for CustomLoader {
         let index_id = 2; // Config index.
         let archive_id = 10; // Contains all ItemDefinitions.
 
-        let map = Self::Definition::fetch_from_archive(cache, index_id, archive_id)?;
+        let map = CustomDefinition::fetch_from_archive(cache, index_id, archive_id)?;
 
         Ok(Self(map))
     }
 
     // Simple HashMap lookup.
-    fn load(&self, id: u16) -> Option<&Self::Definition> {
+    fn load(&self, id: u16) -> Option<&CustomDefinition> {
         self.0.get(&id)
     }
 }

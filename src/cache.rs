@@ -37,41 +37,6 @@ pub const MAIN_MUSIC_DATA: &str = "main_file_cache.dat2m";
 /// Reference table id.
 pub const REFERENCE_TABLE: u8 = 255;
 
-/// Reads bytes from the cache into the given writer.
-/// 
-/// # Errors
-/// 
-/// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
-/// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
-/// 
-/// # Examples
-/// 
-/// ```
-/// use std::io::BufWriter;
-/// 
-/// # use rscache::Cache;
-/// use rscache::ReadIntoWriter;
-/// 
-/// # fn main() -> rscache::Result<()> {
-/// let cache = Cache::new("./data/osrs_cache")?;
-/// 
-/// let index_id = 2; // Config index
-/// let archive_id = 10; // Random archive.
-/// 
-/// let mut writer = BufWriter::new(Vec::new());
-/// cache.read_into_writer(index_id, archive_id, &mut writer)?;
-/// # Ok(())
-/// # }
-/// ```
-pub trait ReadIntoWriter {
-    fn read_into_writer<W: Write>(
-        &self, 
-        index_id: u8, 
-        archive_id: u32, 
-        writer: &mut W
-    ) -> crate::Result<()>;
-}
-
 /// Main cache struct providing basic utilities.
 #[derive(Debug)]
 pub struct Cache {
@@ -151,6 +116,49 @@ impl Cache {
     #[inline]
     pub fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
         self.read(archive.index_id, archive.id)
+    }
+
+    // FIXME
+    /// Reads bytes from the cache into the given writer.
+    /// 
+    /// # Errors
+    /// 
+    /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
+    /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
+    /// 
+    /// # Examples
+    /// 
+    /// ```
+    /// use std::io::BufWriter;
+    /// 
+    /// # use rscache::Cache;
+    /// use rscache::ReadIntoWriter;
+    /// 
+    /// # fn main() -> rscache::Result<()> {
+    /// let cache = Cache::new("./data/osrs_cache")?;
+    /// 
+    /// let index_id = 2; // Config index
+    /// let archive_id = 10; // Random archive.
+    /// 
+    /// let mut writer = BufWriter::new(Vec::new());
+    /// cache.read_into_writer(index_id, archive_id, &mut writer)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[inline]
+    pub fn read_into_writer<W: Write>(
+        &self, 
+        index_id: u8,
+        archive_id: u32, 
+        writer: &mut W
+    ) -> crate::Result<()> {
+        let index = self.indices.get(&index_id)
+            .ok_or(ReadError::IndexNotFound(index_id))?;
+
+        let archive = index.archive_refs().get(&archive_id)
+            .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
+            
+        self.data.read_internal(archive, writer)
     }
 
     /// Creates a `Checksum` which can be used to validate the cache data
@@ -281,24 +289,6 @@ impl Cache {
     #[inline]
     pub const fn indices(&self) -> &Indices {
         &self.indices
-    }
-}
-
-impl ReadIntoWriter for Cache {
-    #[inline]
-    fn read_into_writer<W: Write>(
-        &self, 
-        index_id: u8,
-        archive_id: u32, 
-        writer: &mut W
-    ) -> crate::Result<()> {
-        let index = self.indices.get(&index_id)
-            .ok_or(ReadError::IndexNotFound(index_id))?;
-
-        let archive = index.archive_refs().get(&archive_id)
-            .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
-            
-        self.data.read_internal(archive, writer)
     }
 }
 

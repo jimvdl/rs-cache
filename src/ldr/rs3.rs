@@ -28,19 +28,10 @@ use serde::{ Serialize, Deserialize };
 use crate::{
     Cache,
     def::rs3::{
-        Definition,
         FetchDefinition,
         ItemDefinition,
     },
 };
-
-/// The core of each Loader tasked with loading certain definitions.
-pub trait Loader: Sized {
-    type Definition: Definition;
-
-    fn new(cache: &Cache) -> crate::Result<Self>;
-    fn load(&self, id: u32) -> Option<&Self::Definition>;
-}
 
 /// Loads all item definitions from the current cache.
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Debug, Default)]

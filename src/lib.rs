@@ -83,9 +83,14 @@
     clippy::used_underscore_binding
 )]
 
-// TODO: maybe make Cache::new() panic because can't run without proper setup.
 // TODO: determine what belongs in public api
 // TODO: make serde a feature
+// TODO: add rust-version to [package]
+// TODO: add rs3 feature, you can drop in replace using use as syntax (use std::sync::Arc as SyncRc)
+// TODO: update min rust version badge + remove docs badge and license badge
+// TODO: document how to make your own loader in ldr.rs
+// TODO: document unsafe memmap
+// TODO: maybe check load function names on map and location loader to reflect that they need mut for lazy caching.
 
 #[macro_use]
 pub mod util;
@@ -104,7 +109,7 @@ mod sec;
 #[doc(inline)]
 pub use error::{ Result, CacheError };
 #[doc(inline)]
-pub use cache::{ Cache, ReadIntoWriter };
+pub use cache::Cache;
 
 /// Core architecture.
 pub mod fs {

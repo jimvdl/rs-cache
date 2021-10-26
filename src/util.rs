@@ -19,76 +19,48 @@ use crate::ext::ReadExt;
 
 macro_rules! impl_osrs_loader {
     ($ldr:ident, $def:ty, index_id: $idx_id:expr $(, archive_id: $arc_id:expr)?) => {
-         impl $ldr {
-             #[inline]
-             pub fn new(cache: &Cache) -> crate::Result<Self> {
-                 Loader::new(cache)
-             }
- 
-             #[inline]
-             pub fn load(&self, id: u16) -> Option<&$def> {
-                 Loader::load(self, id)
-             }
-         }
- 
-         impl Loader for $ldr {
-             type Definition = $def;
- 
-             #[allow(unreachable_code)]
-             #[inline]
-             fn new(cache: &Cache) -> crate::Result<Self> {            
-                 $(
-                     let map = Self::Definition::fetch_from_archive(cache, $idx_id, $arc_id)?;
- 
-                     return Ok(Self(map));
-                 )?
- 
-                 let map = Self::Definition::fetch_from_index(cache, $idx_id)?;
- 
-                 Ok(Self(map))
-             }
- 
-             #[inline]
-             fn load(&self, id: u16) -> Option<&Self::Definition> {
-                 self.0.get(&id)
-             }
-         }
- 
-         impl_iter_for_loader!($ldr, u16, $def);
+        impl $ldr {
+            #[allow(unreachable_code)]
+            #[inline]
+            pub fn new(cache: &Cache) -> crate::Result<Self> {
+                $(
+                    let map = <$def>::fetch_from_archive(cache, $idx_id, $arc_id)?;
+
+                    return Ok(Self(map));
+                )?
+
+                let map = <$def>::fetch_from_index(cache, $idx_id)?;
+
+                Ok(Self(map))
+            }
+
+            #[inline]
+            pub fn load(&self, id: u16) -> Option<&$def> {
+                self.0.get(&id)
+            }
+        }
+
+        impl_iter_for_loader!($ldr, u16, $def);
     };
 }
 
 macro_rules! impl_rs3_loader {
     ($ldr:ident, $def:ty, index_id: $idx_id:expr) => {
-         impl $ldr {
-             #[inline]
-             pub fn new(cache: &Cache) -> crate::Result<Self> {
-                 Loader::new(cache)
-             }
- 
-             #[inline]
-             pub fn load(&self, id: u32) -> Option<&$def> {
-                 Loader::load(self, id)
-             }
-         }
- 
-         impl Loader for $ldr {
-             type Definition = $def;
- 
-             #[inline]
-             fn new(cache: &Cache) -> crate::Result<Self> {
-                 let map = Self::Definition::fetch_from_index(cache, $idx_id)?;
- 
-                 Ok(Self(map))
-             }
- 
-             #[inline]
-             fn load(&self, id: u32) -> Option<&Self::Definition> {
-                 self.0.get(&id)
-             }
-         }
- 
-         impl_iter_for_loader!($ldr, u32, $def);
+        impl $ldr {
+            #[inline]
+            pub fn new(cache: &Cache) -> crate::Result<Self> {
+                let map = <$def>::fetch_from_index(cache, $idx_id)?;
+
+                Ok(Self(map))
+            }
+
+            #[inline]
+            pub fn load(&self, id: u32) -> Option<&$def> {
+                self.0.get(&id)
+            }
+        }
+
+        impl_iter_for_loader!($ldr, u32, $def);
     };
 }
 

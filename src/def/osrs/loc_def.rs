@@ -1,17 +1,8 @@
-use std::{
-    io,
-    io::BufReader,
-    collections::HashMap,
-};
-
-use serde::{ Serialize, Deserialize };
 use nom::number::complete::be_u8;
+use serde::{Deserialize, Serialize};
 
 use super::Definition;
-use crate::parse::{
-    be_u16_smart,
-    be_u32_smart_compat,
-};
+use crate::parse::{be_u16_smart, be_u32_smart_compat};
 
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct LocationDefinition {
@@ -21,12 +12,19 @@ pub struct LocationDefinition {
     pub data: Vec<Location>,
 }
 
+impl LocationDefinition {
+    #[inline]
+    pub const fn region_base_coords(&self) -> (u16, u16) {
+        (self.region_x << 6, self.region_y << 6)
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Location {
     pub id: u32,
     pub loc_type: u8,
     pub orientation: u8,
-    pub pos: (u32, u32, u32),
+    pub pos: (u16, u16, u16),
 }
 
 impl Definition for LocationDefinition {
@@ -41,7 +39,9 @@ impl Definition for LocationDefinition {
 fn decode_buffer(id: u16, mut buffer: &[u8]) -> crate::Result<LocationDefinition> {
     let mut loc_def = LocationDefinition {
         id,
-        .. LocationDefinition::default()
+        region_x: (id >> 8) & 0xFF,
+        region_y: id & 0xFF,
+        ..LocationDefinition::default()
     };
 
     let mut id = -1;
@@ -60,27 +60,27 @@ fn decode_buffer(id: u16, mut buffer: &[u8]) -> crate::Result<LocationDefinition
 
         loop {
             let (buf, pos_offset) = be_u16_smart(buffer)?;
-            let pos_offset = pos_offset as u32;
+            let pos_offset = pos_offset;
             buffer = buf;
 
-            if pos_offset == 0 || buffer.is_empty() {
+            if pos_offset == 0 {
                 break;
             }
 
             pos += pos_offset - 1;
 
-            let local_x = pos & 0x3F;
-            let local_y = pos >> 6 & 0x3F;
+            let local_x = pos >> 6 & 0x3F;
+            let local_y = pos & 0x3F;
             let local_z = pos >> 12 & 0x3;
 
             let (buf, attr) = be_u8(buffer)?;
             buffer = buf;
 
-            loc_def.data.push(Location { 
-                id: id as u32, 
+            loc_def.data.push(Location {
+                id: id as u32,
                 loc_type: attr >> 2,
                 orientation: attr & 0x3,
-                pos: (local_x, local_y, local_z)
+                pos: (loc_def.region_x + local_x, loc_def.region_y + local_y, local_z),
             });
 
             if buffer.is_empty() {
