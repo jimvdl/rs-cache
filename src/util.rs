@@ -112,7 +112,7 @@ macro_rules! impl_iter_for_loader {
     };
 }
 
-/// djd2 module for hashing strings
+/// djd2 module for string hashing
 pub mod djd2 {
 
     /// Hashes the string

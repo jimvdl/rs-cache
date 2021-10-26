@@ -1,39 +1,24 @@
-//! [Oldschool RuneScape](https://oldschool.runescape.com/) 
-//! & [RuneScape 3](https://www.runescape.com/) cache api for basic
-//! and simple cache interactions.
+//! This crate wraps the [Oldschool RuneScape] & [RuneScape 3] cache and provides convenient 
+//! means of accessing the internal binary data.
+//! 
+//! The library's API is mainly focussed around its main use-case which is reading bytes easily.
+//! Therefor it only offers a high level of abstraction over the binary cache. Most cache API's expose a 
+//! wide veriaty of internal types to let the user tinker around with the cache in unusual ways.
+//! To avoid undefined behaviour most (if not all) internal types are kept internal and private. 
+//! The goal of this crate is not to be a fully customisable cache API but just a simple interface for 
+//! basic reading of valuable data.
+//! 
+//! Note that this crate is still evolving, both OSRS & RS3 are not fully supported/implemented and
+//! will probably contain bugs or miss vital features. If this is the case consider [opening 
+//! an issue].
 //! 
 //! # Features
 //! 
-//! Currently rs-cache offers limited support for OSRS & RS3 with the features listed below.
-//! 
-//! Note: the public api of this crate is still evolving, it might contain bugs or miss features.
-//! 
-//! The following features are currently provided:
-//! - Reading from the cache.
-//! - Huffman buffer access.
-//! - Checksum with simple-to-use validation.
-//! - Compression and decompression:
-//!   - [Gzip](https://crates.io/crates/flate2)
-//!   - [Bzip2](https://crates.io/crates/bzip2)
-//!   - [LZMA](https://crates.io/crates/lzma_rs)
-//! - OSRS Loaders
-//!   - [`ItemLoader`](ldr/osrs/struct.ItemLoader.html)
-//!   - [`NpcLoader`](ldr/osrs/struct.NpcLoader.html)
-//!   - [`ObjectLoader`](ldr/osrs/struct.ObjectLoader.html)
-//! - RS3 Loaders
-//!   - [`ItemLoader`](ldr/rs3/struct.ItemLoader.html)
-//! - Utilities
-//!   - [`Huffman`](util/struct.Huffman.html) decompressor.
-//!   - [`Isaac`](util/struct.IsaacRand.html) randomizer.
-//!   - Xtea cipher.
-//! 
-//! Feature to be implemented in the future: 
-//! - Writing data to the cache.
+//! The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the _**rs3**_ compilation feature flag.
+//! A lot of the types add [serde]'s `Serialize` and `Deserialize`. To enable (de)serialization on 
+//! most types use the _**serde-derive**_ flag.
 //! 
 //! # Quick Start
-//! 
-//! The quickest and easiest way to get started is by using the
-//! [`Cache`](struct.Cache.html).
 //! 
 //! ```
 //! use rscache::Cache;
@@ -48,6 +33,20 @@
 //! # Ok(())
 //! # }
 //! ```
+//! 
+//! # Loaders
+//! 
+//! In order to get [definitions](crate::definition) you can look at the [loaders](crate::loader) this library provides. 
+//! The loaders use the cache as a dependency to parse in their data and cache the relevant definitions internally.
+//! 
+//! Note: Some loaders cache these definitions lazily because of either the size of the data or the 
+//! performance. The map loader for example is both slow and large so caching is by default lazy.
+//! Lazy loaders require mutabilitye.
+//! 
+//! [Oldschool RuneScape]: https://oldschool.runescape.com/
+//! [RuneScape 3]: https://www.runescape.com/
+//! [opening an issue]: https://github.com/jimvdl/rs-cache/issues/new
+//! [serde]: https://crates.io/crates/serde
 
 #![deny(clippy::all, clippy::nursery)]
 
@@ -85,15 +84,11 @@
     clippy::no_effect,
 )]
 
-// TODO: determine what belongs in public api
-// TODO: make serde a feature
 // TODO: add rust-version to [package]
-// TODO: add rs3 feature, you can drop in replace using use as syntax (use std::sync::Arc as SyncRc)
 // TODO: update min rust version badge + remove docs badge and license badge
 // TODO: document how to make your own loader in ldr.rs
 // TODO: document unsafe memmap
 // TODO: maybe check load function names on map and location loader to reflect that they need mut for lazy caching.
-// TODO: remove custom loader test and make it documentation instead
 
 #[macro_use]
 pub mod util;
@@ -111,9 +106,7 @@ mod sector;
 #[doc(inline)]
 pub use error::{ Result, CacheError };
 
-/// Main data name.
 pub(crate) const MAIN_DATA: &str = "main_file_cache.dat2";
-/// Reference table id.
 pub(crate) const REFERENCE_TABLE: u8 = 255;
 
 use std::{
@@ -145,7 +138,7 @@ use crate::{
     },
 };
 
-/// Main cache struct providing basic utilities.
+/// A parsed Jagex cache.
 #[derive(Debug)]
 pub struct Cache {
     data: Mmap,
@@ -155,21 +148,14 @@ pub struct Cache {
 impl Cache {
     /// Constructs a new `Cache`.
     ///
+    /// Each valid index is parsed and stored, and in turn all archive references as well.
+    /// If an index is not present it will simply be skipped.
+    /// However, the main data file and reference table both are required.
+    /// 
     /// # Errors
     /// 
     /// If this function encounters any form of I/O or other error, a `CacheError`
     /// is returned which wraps the underlying error.
-    /// 
-    /// # Examples
-    ///
-    /// ```
-    /// use rscache::Cache;
-    /// # fn main() -> rscache::Result<()> {
-    /// 
-    /// let cache = Cache::new("./data/osrs_cache")?;
-    /// # Ok(())
-    /// # }
-    /// ```
     #[inline]
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         let path = path.as_ref();
@@ -192,21 +178,6 @@ impl Cache {
     /// 
     /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
     /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// # use rscache::Cache;
-    /// # fn main() -> rscache::Result<()> {
-    /// let cache = Cache::new("./data/osrs_cache")?;
-    /// 
-    /// let index_id = 2; // Config index
-    /// let archive_id = 10; // Random archive.
-    /// 
-    /// let buffer = cache.read(index_id, archive_id)?;
-    /// # Ok(())
-    /// # }
-    /// ```
     #[inline]
     pub fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
         let index = self.indices.get(&index_id)
@@ -221,38 +192,18 @@ impl Cache {
         Ok(buffer)
     }
 
-    #[inline]
-    pub fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
+    pub(crate) fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
         self.read(archive.index_id, archive.id)
     }
 
-    // FIXME
     /// Reads bytes from the cache into the given writer.
+    /// 
+    /// This will not allocate a buffer but use the writer instead, see [`read`](Cache::read)
     /// 
     /// # Errors
     /// 
     /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
     /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// use std::io::BufWriter;
-    /// 
-    /// # use rscache::Cache;
-    /// use rscache::ReadIntoWriter;
-    /// 
-    /// # fn main() -> rscache::Result<()> {
-    /// let cache = Cache::new("./data/osrs_cache")?;
-    /// 
-    /// let index_id = 2; // Config index
-    /// let archive_id = 10; // Random archive.
-    /// 
-    /// let mut writer = BufWriter::new(Vec::new());
-    /// cache.read_into_writer(index_id, archive_id, &mut writer)?;
-    /// # Ok(())
-    /// # }
-    /// ```
     #[inline]
     pub fn read_into_writer<W: Write>(
         &self, 
@@ -280,17 +231,6 @@ impl Cache {
     /// 
     /// Returns an error when a buffer read from the reference
     /// table could not be decoded / decompressed.
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// # use rscache::Cache;
-    /// # fn main() -> rscache::Result<()> {
-    /// # let cache = Cache::new("./data/osrs_cache")?;
-    /// let checksum = cache.create_checksum()?;
-    /// #    Ok(())
-    /// # }
-    /// ```
     #[inline]
     pub fn create_checksum(&self) -> crate::Result<Checksum> {
         let mut checksum = Checksum::new(self.index_count());
@@ -327,6 +267,9 @@ impl Cache {
         Ok(checksum)
     }
 
+    /// Tries to return the huffman table from the cache.
+    /// 
+    /// This can be used to (de)compress chat messages, see [`Huffman`](crate::util::Huffman).
     #[inline]
     pub fn huffman_table(&self) -> crate::Result<Vec<u8>> {
         let index_id = 10;
@@ -337,29 +280,8 @@ impl Cache {
         codec::decode(&buffer)
     }
 
-    /// Searches for the archive which contains the given name hash in the given
-    /// index_id.
-    /// 
-    /// # Errors
-    /// 
-    /// Panics if the string couldn't be hashed by the djd2 hasher.
-    /// 
-    /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
-    /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.\
-    /// Returns an `NameNotInArchive` error if the `name` hash is not present in this archive.
-    /// 
-    /// # Examples
-    /// ```
-    /// # use rscache::{ Cache, codec };
-    /// # fn main() -> rscache::Result<()> {
-    /// # let cache = Cache::new("./data/osrs_cache")?;
-    /// let index_id = 10;
-    /// let archive = cache.archive_by_name(index_id, "huffman")?;
-    /// # Ok(())
-    /// # }
-    /// ```
     #[inline]
-    pub fn archive_by_name<T: AsRef<str>>(&self, index_id: u8, name: T) -> crate::Result<&ArchiveRef> {
+    pub(crate) fn archive_by_name<T: AsRef<str>>(&self, index_id: u8, name: T) -> crate::Result<&ArchiveRef> {
         let index = self.indices.get(&index_id)
             .ok_or(ReadError::IndexNotFound(index_id))?;
         
@@ -379,11 +301,6 @@ impl Cache {
     #[inline]
     pub fn index_count(&self) -> usize {
         self.indices.len()
-    }
-
-    #[inline]
-    pub const fn indices(&self) -> &Indices {
-        &self.indices
     }
 }
 
