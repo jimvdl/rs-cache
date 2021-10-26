@@ -1,26 +1,3 @@
-//! # Example
-//!
-//! ```
-//! use rscache::Cache;
-//! use rscache::loader::osrs::ItemLoader;
-//!
-//! # fn main() -> rscache::Result<()> {
-//! let cache = Cache::new("./data/osrs_cache")?;
-//! let item_ldr = ItemLoader::new(&cache)?;
-//!
-//! if let Some(def) = item_ldr.load(1042) {
-//!     assert_eq!("Blue partyhat", def.name);
-//!     assert!(!def.stackable);
-//!     assert!(!def.members_only);
-//! }
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! # Errors
-//!
-//! Every loader returns a `CacheError` with an inner error.
-
 use std::collections::{
     hash_map::{self, Entry},
     HashMap,

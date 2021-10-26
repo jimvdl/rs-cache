@@ -95,23 +95,6 @@ pub struct DecodedBuffer {
 
 impl DecodedBuffer {
     /// Free conversion from `DecodedBuffer` into `Vec<u8>`.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use rscache::Cache;
-    /// # use rscache::codec::Compression;
-    /// # use rscache::codec::DecodedBuffer;
-    /// # use std::convert::TryFrom;
-    /// # fn main() -> rscache::Result<()> {
-    /// # let cache = Cache::new("./data/osrs_cache")?;
-    /// let buffer = cache.read(2, 10)?;
-    /// let decoded = DecodedBuffer::try_from(buffer.as_slice())?;
-    ///
-    /// let inner_buffer: Vec<u8> = decoded.into_vec();
-    /// # Ok(())
-    /// # }
-    /// ```
     // False positive, issue already open but not being worked on atm.
     #[allow(clippy::missing_const_for_fn)]
     #[inline]
@@ -141,20 +124,6 @@ impl DecodedBuffer {
 /// # Errors
 ///
 /// Returns an error if the data couldn't be compressed or is invalid.
-///
-/// # Examples
-///
-/// ```
-/// use rscache::codec::{ self, Compression };
-///
-/// # fn main() -> rscache::Result<()> {
-/// # let buffer = vec![0; 20];
-/// let encoded_buffer = codec::encode(Compression::Bzip2, &buffer, None)?;
-///
-/// assert_eq!(Compression::Bzip2 as u8, encoded_buffer[0]);
-/// # Ok(())
-/// # }
-/// ```
 #[inline]
 pub fn encode(
     compression: Compression,
@@ -164,7 +133,9 @@ pub fn encode(
     encode_internal(compression, data, version, None)
 }
 
-// TODO
+/// Encodes the buffer with the given XTEA keys.
+/// 
+/// For more details see [`encode`](encode)
 #[inline]
 pub fn encode_with_keys(
     compression: Compression,
@@ -219,26 +190,14 @@ fn encode_internal(
 /// # Errors
 ///
 /// Returns an error if the remaining bytes couldn't be decompressed.
-///
-/// # Examples
-///
-/// ```
-/// # use rscache::Cache;
-/// use rscache::codec::{ self, Compression };
-///
-/// # fn main() -> rscache::Result<()> {
-/// # let cache = Cache::new("./data/osrs_cache")?;
-/// let buffer = cache.read(2, 10)?;
-/// let decoded_buffer = codec::decode(&buffer)?;
-/// # Ok(())
-/// # }
-/// ```
 #[inline]
 pub fn decode(buffer: &[u8]) -> crate::Result<Vec<u8>> {
     Ok(DecodedBuffer::try_from(buffer)?.into_vec())
 }
 
-// TODO
+/// Decodes the buffer with the given XTEA keys.
+/// 
+/// For more details see [`decode`](decode)
 #[inline]
 pub fn decode_with_keys(buffer: &[u8], keys: &[u32; 4]) -> crate::Result<Vec<u8>> {
     Ok(decode_internal(buffer, Some(keys))?.into_vec())
@@ -402,25 +361,6 @@ impl TryFrom<&[u8]> for DecodedBuffer {
 
     #[inline]
     fn try_from(buffer: &[u8]) -> Result<Self, Self::Error> {
-        // let (buffer, compression) = be_u8(buffer)?;
-        // let compression = Compression::try_from(compression)?;
-
-        // let (buffer, compressed_len) = be_u32(buffer)?;
-        // let compressed_len = compressed_len as usize;
-        // let (decompressed_len, version, buffer) = match compression {
-        //     Compression::None => decompress_none(buffer, compressed_len)?,
-        //     Compression::Bzip2 => decompress_bzip2(buffer, compressed_len)?,
-        //     Compression::Gzip => decompress_gzip(buffer, compressed_len)?,
-        //     Compression::Lzma => decompress_lzma(buffer, compressed_len)?
-        // };
-
-        // Ok(Self{
-        //     compression,
-        //     len: decompressed_len,
-        //     version,
-        //     buffer
-        // })
-
         decode_internal(buffer, None)
     }
 }

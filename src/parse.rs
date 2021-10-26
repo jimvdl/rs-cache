@@ -1,4 +1,4 @@
-//! Faster parsers using nom.
+//! Faster parsers using [nom](https://crates.io/crates/nom).
 
 use nom::{
     bytes::complete::{tag, take_while},
@@ -36,10 +36,7 @@ pub fn rs_string<'a, E: ParseError<&'a [u8]>>(buffer: &'a [u8]) -> IResult<&'a [
     Ok((buffer, String::from_utf8_lossy(string).to_string()))
 }
 
-// TODO documentation
-
-#[inline]
-pub fn be_u32_smart_compat<'a, E: ParseError<&'a [u8]>>(
+pub(crate) fn be_u32_smart_compat<'a, E: ParseError<&'a [u8]>>(
     buffer: &'a [u8],
 ) -> IResult<&'a [u8], u32, E> {
     let mut var1 = 0_u32;
@@ -62,6 +59,13 @@ pub fn be_u32_smart_compat<'a, E: ParseError<&'a [u8]>>(
     Ok((buffer, var1))
 }
 
+/// be_u16_smart but as i16.
+///
+/// For more details see [`be_u16_smart`](be_u16_smart)
+/// 
+/// # Errors
+///
+/// Parser can reach EOF early if not enough bytes are supplied.
 #[inline]
 pub fn be_i16_smart<'a, E: ParseError<&'a [u8]>>(buffer: &'a [u8]) -> IResult<&'a [u8], u16, E> {
     if buffer[0] < 128 {

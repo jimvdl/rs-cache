@@ -1,4 +1,4 @@
-//! Definitions.
+//! Defines RuneScape data structures.
 
 /// OSRS definitions.
 #[cfg(not(feature = "rs3"))]
