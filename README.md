@@ -5,7 +5,6 @@
 [![RS3 Version](https://img.shields.io/badge/RS3-904-blue)]()
 [![API](https://docs.rs/rs-cache/badge.svg)](https://docs.rs/rs-cache)
 [![Minimum rustc version](https://img.shields.io/badge/rustc-1.41%2B-yellow)](https://blog.rust-lang.org/2020/01/30/Rust-1.41.0.html)
-[![License](https://img.shields.io/crates/l/rs-cache?color=black)](https://github.com/jimvdl/rs-cache/blob/master/LICENSE)
 
 High level abstraction for the RuneScape cache.
 This crate provides convenient access to the binary data of the [Oldschool RuneScape](https://oldschool.runescape.com/) and [RuneScape 3](https://www.runescape.com/) cache protocols.
