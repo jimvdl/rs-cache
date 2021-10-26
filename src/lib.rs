@@ -80,7 +80,9 @@
     clippy::too_many_lines, 
     clippy::type_repetition_in_bounds,
     clippy::unseparated_literal_suffix, 
-    clippy::used_underscore_binding
+    clippy::used_underscore_binding,
+    clippy::should_implement_trait,
+    clippy::no_effect,
 )]
 
 // TODO: determine what belongs in public api
@@ -109,22 +111,10 @@ mod sector;
 #[doc(inline)]
 pub use error::{ Result, CacheError };
 
-/// Core architecture.
-pub mod fs {
-    #[doc(inline)]
-    pub use crate::archive::*;
-    #[doc(inline)]
-    pub use crate::index::*;
-    #[doc(inline)]
-    pub use crate::sector::*;
-
-        /// Main data name.
-    pub const MAIN_DATA: &str = "main_file_cache.dat2";
-    /// Main music data name.
-    pub const MAIN_MUSIC_DATA: &str = "main_file_cache.dat2m";
-    /// Reference table id.
-    pub const REFERENCE_TABLE: u8 = 255;
-}
+/// Main data name.
+pub(crate) const MAIN_DATA: &str = "main_file_cache.dat2";
+/// Reference table id.
+pub(crate) const REFERENCE_TABLE: u8 = 255;
 
 use std::{
     path::Path,
@@ -144,7 +134,6 @@ use crc::crc32;
 use whirlpool::{ Whirlpool, Digest };
 
 use crate::{ 
-    fs::{MAIN_DATA, REFERENCE_TABLE},
     checksum::{ Checksum, Entry },
     index::Indices,
     archive::ArchiveRef,
@@ -223,7 +212,7 @@ impl Cache {
         let index = self.indices.get(&index_id)
             .ok_or(ReadError::IndexNotFound(index_id))?;
 
-        let archive = index.archive_refs().get(&archive_id)
+        let archive = index.archive_refs.get(&archive_id)
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
 
         let mut buffer = Vec::with_capacity(archive.length);
@@ -274,7 +263,7 @@ impl Cache {
         let index = self.indices.get(&index_id)
             .ok_or(ReadError::IndexNotFound(index_id))?;
 
-        let archive = index.archive_refs().get(&archive_id)
+        let archive = index.archive_refs.get(&archive_id)
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
             
         self.data.read_internal(archive, writer)
@@ -376,34 +365,17 @@ impl Cache {
         
         let hash = util::djd2::hash(&name);
         
-        let archive = index.archives().iter()
+        let archive = index.archives.iter()
             .find(|archive| archive.name_hash == hash)
             .ok_or_else(|| ReadError::NameNotInArchive(hash, name.as_ref().into(), index_id))?;
 
-        let archive_ref = index.archive_refs()
+        let archive_ref = index.archive_refs
             .get(&archive.id)
             .ok_or(ReadError::ArchiveNotFound(index_id, archive.id))?;
 
         Ok(archive_ref)
     }
 
-    /// Simply returns the index count, by getting the `len()` of 
-    /// the underlying `indices` vector.
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// # use rscache::Cache;
-    /// # fn main() -> rscache::Result<()> {
-    /// # let cache = Cache::new("./data/osrs_cache")?;
-    /// for index in 0..cache.index_count() {
-    ///     // ...
-    /// }
-    /// 
-    /// assert_eq!(22, cache.index_count());
-    /// # Ok(())
-    /// # }
-    /// ```
     #[inline]
     pub fn index_count(&self) -> usize {
         self.indices.len()

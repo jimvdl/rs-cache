@@ -1,5 +1,3 @@
-//! Represents linked sectors in the main data file.
-
 #[cfg(feature = "serde-derive")]
 use serde::{ Serialize, Deserialize };
 use nom::{
@@ -23,12 +21,9 @@ pub const SECTOR_DATA_SIZE: usize = 512;
 pub const SECTOR_EXPANDED_DATA_SIZE: usize = 510;
 pub const SECTOR_SIZE: usize = SECTOR_HEADER_SIZE + SECTOR_DATA_SIZE;
 
-/// Type alias for readability.
 pub type HeaderSize = usize;
-/// Type alias for readability.
 pub type DataSize = usize;
 
-/// Sector data for reading.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Sector<'a> {
@@ -36,18 +31,13 @@ pub struct Sector<'a> {
     pub data_block: &'a [u8]
 }
 
-/// Conveys the size of the header.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub enum SectorHeaderSize {
-    /// Header consisting of 8 bytes.
     Normal,
-    /// Header consisting of 10 bytes.
     Expanded
 }
 
-/// Contains the sector header for reading the next sector
-/// and validating the current sector.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct SectorHeader {
@@ -58,32 +48,15 @@ pub struct SectorHeader {
 }
 
 impl<'a> Sector<'a> {
-    /// Decodes the buffer from the reference table into a `Sector`.
-    #[inline]
     pub fn new(buffer: &'a [u8], header_size: &SectorHeaderSize) -> crate::Result<Self> {
         let (buffer, header) = SectorHeader::new(buffer, header_size)?;
         let (_, data_block) = rest(buffer)?;
 
         Ok(Self { header, data_block })
     }
-
-    // TODO change to with_normal_header, same for expanded
-    /// Convenience function to create a `Sector` with a `Normal` header size.
-    #[inline]
-    pub fn from_normal_header(buffer: &'a [u8]) -> crate::Result<Self> {
-        Self::new(buffer, &SectorHeaderSize::Normal)
-    }
-
-    /// Convenience function to create a `Sector` with a `Expanded` header size.
-    #[inline]
-    pub fn from_expanded_header(buffer: &'a [u8]) -> crate::Result<Self> {
-        Self::new(buffer, &SectorHeaderSize::Expanded)
-    }
 }
 
 impl SectorHeaderSize {
-    /// Determines the size of the header for the given archive.
-    #[inline]
     pub fn from_archive(archive: &ArchiveRef) -> Self {
         if archive.id > std::u16::MAX.into() { 
             Self::Expanded 
@@ -93,7 +66,6 @@ impl SectorHeaderSize {
     }
 }
 
-/// Converts a `SectorHeaderSize` to the corresponding header size and data size.
 impl From<SectorHeaderSize> for (HeaderSize, DataSize) {
     #[inline]
     fn from(header_size: SectorHeaderSize) -> Self {
@@ -109,10 +81,6 @@ impl From<SectorHeaderSize> for (HeaderSize, DataSize) {
 }
 
 impl<'a> SectorHeader {
-    /// Decodes only the header data from the buffer leaving the data block untouched.
-    /// 
-    /// The expanded header should be 10 bytes instead of the usual 8 bytes.
-    #[inline]
     pub fn new(buffer: &'a [u8], header_size: &SectorHeaderSize) -> crate::Result<(&'a [u8], Self)> {
         let (buffer, archive_id) = match header_size {
             SectorHeaderSize::Normal => {
@@ -134,9 +102,6 @@ impl<'a> SectorHeader {
         }))
     }
 
-    /// Validates the current `archive_id`, `chunk` and `index_id` against the expected
-    /// values from this header struct.
-    #[inline]
     pub const fn validate(&self, archive_id: u32, chunk: usize, index_id: u8) -> Result<(), ReadError> {
         if self.archive_id != archive_id {
             return Err(ReadError::SectorArchiveMismatch(self.archive_id, archive_id))
@@ -155,7 +120,6 @@ impl<'a> SectorHeader {
 }
 
 impl Default for SectorHeaderSize {
-    #[inline]
     fn default() -> Self {
         Self::Normal
     }

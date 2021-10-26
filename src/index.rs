@@ -1,5 +1,3 @@
-//! Index with parsing.
-
 use std::{
     path::Path,
     collections::{ hash_map, HashMap },
@@ -19,36 +17,21 @@ use crate::{
     REFERENCE_TABLE, ReadInternal,
 };
 
-/// Index prefix name.
 pub const IDX_PREFIX: &str = "main_file_cache.idx";
 
-/// Represents all indicies loaded by the cache.
 #[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
-pub struct Indices(HashMap<u8, Index>);
+pub struct Indices(pub HashMap<u8, Index>);
 
-/// Represents an .idx file.
 #[derive(Clone, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Index {
-    id: u8,
-    archive_refs: HashMap<u32, ArchiveRef>,
-    archives: Vec<Archive>,
+    pub id: u8,
+    pub archive_refs: HashMap<u32, ArchiveRef>,
+    pub archives: Vec<Archive>,
 }
 
 impl Indices {
-    /// Loads all indices present in the cache folder.
-    /// 
-    /// It loops through the directory searching for the reference table and
-    /// every index that is compatible.
-    /// 
-    /// # Errors
-    /// 
-    /// Can return multiple errors: 
-    /// - Reference table not found.
-    /// - Index failed to parse. 
-    /// - Index couldn't be opened.
-    #[inline]
     pub fn new<P: AsRef<Path>>(path: P, data: &Mmap) -> crate::Result<Self> {
         let path = path.as_ref();
         let mut indices = HashMap::new();
@@ -90,7 +73,7 @@ impl Indices {
             if path.exists() {
                 let mut index = Index::from_path(index_id, path)?;
 
-                let archive_ref = ref_index.archive_refs().get(&(index_id as u32))
+                let archive_ref = ref_index.archive_refs.get(&(index_id as u32))
                     .ok_or(ReadError::ArchiveNotFound(REFERENCE_TABLE, index_id as u32))?;
                 
                 if archive_ref.length != 0 {
@@ -109,55 +92,16 @@ impl Indices {
         Ok(Self(indices))
     }
 
-    #[inline]
     pub fn get(&self, key: &u8) -> Option<&Index> {
         self.0.get(key)
     }
 
-    #[inline]
     pub fn len(&self) -> usize {
         self.0.len()
-    }
-
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
-    #[inline]
-    pub const fn inner(&self) -> &HashMap<u8, Index> {
-        &self.0
     }
 }
 
 impl Index {
-    /// Creates an `Index` from a path.
-    /// 
-    /// # Panics
-    /// 
-    /// Panics if the file path given does not lead to valid index file with
-    /// extension `.idx#` where the # must be its id.
-    /// 
-    /// Also panics if the given `id` does not match the id in the file extension.
-    /// 
-    /// # Errors
-    /// 
-    /// Can return multiple errors:
-    /// - Index failed to parse. 
-    /// - Index couldn't be opened.
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// # use std::io::{ self, Read };
-    /// # use rscache::fs::Index;
-    /// # fn main() -> rscache::Result<()> {
-    /// let index_id = 2;
-    /// let index = Index::from_path(index_id, "./data/osrs_cache/main_file_cache.idx2")?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    #[inline]
     pub fn from_path<P: AsRef<Path>>(id: u8, path: P) -> crate::Result<Self> {
         let path = path.as_ref();
         
@@ -177,33 +121,6 @@ impl Index {
         Self::from_buffer(id, &buffer)
     }
 
-    /// Creates an `Index` from the given buffer.
-    /// 
-    /// The buffer always contains the entire index file in bytes
-    /// and is internally parsed.
-    /// 
-    /// # Errors
-    /// 
-    /// If the archive reference can't be parsed correctly it can return
-    /// a EOF error.
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// # use std::fs::File;
-    /// # use std::io::{ self, Read };
-    /// # use rscache::fs::Index;
-    /// # fn main() -> rscache::Result<()> {
-    /// # let index_id = 2;
-    /// let mut index_file = File::open("./data/osrs_cache/main_file_cache.idx2")?;
-    /// let mut index_buffer = Vec::with_capacity(index_file.metadata()?.len() as usize);
-    /// 
-    /// index_file.read_to_end(&mut index_buffer)?;
-    /// let index = Index::from_buffer(index_id, &index_buffer)?;
-    /// # Ok(())
-    /// # }
-    /// ```
-    #[inline]
     pub fn from_buffer(id: u8, buffer: &[u8]) -> crate::Result<Self> {
         let mut archive_refs = HashMap::new();
 
@@ -219,21 +136,6 @@ impl Index {
         }
 
         Ok(Self { id, archive_refs, archives: Vec::new() })
-    }
-
-    #[inline]
-    pub const fn id(&self) -> u8 {
-        self.id
-    }
-
-    #[inline]
-    pub(crate) const fn archive_refs(&self) -> &HashMap<u32, ArchiveRef> {
-        &self.archive_refs
-    }
-
-    #[inline]
-    pub(crate) const fn archives(&self) -> &Vec<Archive> {
-        &self.archives
     }
 }
 

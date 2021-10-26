@@ -1,7 +1,3 @@
-//! Archives with parsing and decoding.
-
-// TODO: determine what functions to expose. best done when writing is available
-
 use std::{
     io,
     slice::{ Iter, IterMut },
@@ -30,10 +26,8 @@ use itertools::izip;
 
 use crate::parse::be_u32_smart;
 
-/// Archive reference length to help parsing the reference table.
 pub const ARCHIVE_REF_LEN: usize = 6;
 
-/// Represents an archive reference to an archive within the main data file.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ArchiveRef {
@@ -43,7 +37,6 @@ pub struct ArchiveRef {
     pub length: usize
 }
 
-/// Represents an archive.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Archive {
@@ -58,7 +51,6 @@ pub struct Archive {
     pub valid_ids: Vec<u32>
 }
 
-/// Represents one file inside an `ArchiveGroup`, contains only its id and a byte buffer.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ArchiveFileData {
@@ -66,47 +58,11 @@ pub struct ArchiveFileData {
     pub data: Vec<u8>
 }
 
-/// Represents a group of `ArchiveFileData`.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ArchiveFileGroup(Vec<ArchiveFileData>);
 
 impl ArchiveRef {
-    /// Creates an `ArchiveRef` from the given buffer.
-    /// 
-    /// The buffer always contains the total length in bytes for the
-    /// given archive and the sector start ptr.
-    /// 
-    /// The constant `ARCHIVE_REF_LEN` defines the `ArchiveRef` buffer length.
-    /// 
-    /// # Examples
-    /// 
-    /// ```
-    /// # use std::fs::File;
-    /// # use std::io::{ self, Read };
-    /// # use rscache::{
-    /// #   fs::{ Index, ARCHIVE_REF_LEN, ArchiveRef },
-    /// #   error::ParseError,
-    /// # };
-    /// # fn main() -> rscache::Result<()> {
-    /// # let index_id = 2;
-    /// let mut index_file = File::open("./data/osrs_cache/main_file_cache.idx2")?;
-    /// let mut index_buffer = Vec::with_capacity(index_file.metadata()?.len() as usize);
-    /// 
-    /// index_file.read_to_end(&mut index_buffer)?;
-    ///     
-    /// for (archive_id, archive_data) in index_buffer.chunks_exact(ARCHIVE_REF_LEN).enumerate() {
-    ///     let archive_id = archive_id as u32;
-    ///
-    ///     let archive = match ArchiveRef::from_buffer(archive_id, index_id, archive_data) {
-    ///         Ok(archive) => archive,
-    ///         Err(_) => return Err(ParseError::Archive(archive_id).into())
-    ///      };
-    /// }
-    /// # Ok(())
-    /// # }
-    /// ```
-    #[inline]
     pub fn from_buffer(id: u32, index_id: u8, buffer: &[u8]) -> crate::Result<Self> {
         let (buffer, len) = be_u24(buffer)?;
         let (_, sec) = be_u24(buffer)?;
@@ -116,8 +72,7 @@ impl ArchiveRef {
 }
 
 impl Archive {
-    #[inline]
-    pub(crate) fn parse(buffer: &[u8]) -> crate::Result<Vec<Self>> {
+    pub fn parse(buffer: &[u8]) -> crate::Result<Vec<Self>> {
         let (buffer, protocol) = be_u8(buffer)?;
         let (buffer, _) = cond(protocol >= 6, be_u32)(buffer)?;
         let (buffer, identified, whirlpool, codec, hash) = parse_identified(buffer)?;
@@ -157,8 +112,7 @@ impl Archive {
 }
 
 impl ArchiveFileGroup {
-    #[inline]
-    pub(crate) fn parse(buffer: &[u8], entry_count: usize) -> io::Result<Self> {
+    pub fn parse(buffer: &[u8], entry_count: usize) -> io::Result<Self> {
         let chunks = buffer[buffer.len() - 1] as usize;
         let mut data = Vec::with_capacity(chunks);
         let mut cached_chunks = Vec::new();
@@ -190,12 +144,10 @@ impl ArchiveFileGroup {
         Ok(Self(data))
     }
 
-    #[inline]
     pub fn iter(&self) -> Iter<'_, ArchiveFileData> {
         self.0.iter()
     }
 
-    #[inline]
     pub fn iter_mut(&mut self) -> IterMut<'_, ArchiveFileData> {
         self.0.iter_mut()
     }
