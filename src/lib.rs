@@ -1,4 +1,4 @@
-//! A immutable, high-level API for the RuneScape cache file system.
+//! An immutable, high-level API for the RuneScape cache file system.
 //! 
 //! This crate provides convenient access to the binary file system of the [Oldschool RuneScape] and [RuneScape 3] caches.
 //!
