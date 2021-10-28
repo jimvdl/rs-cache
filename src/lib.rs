@@ -1,23 +1,29 @@
-//! High level abstraction for the RuneScape cache.
+//! High level abstraction API for the RuneScape cache.
 //! 
-//! This crate provides convenient access to the binary data of the [Oldschool RuneScape] and [RuneScape 3] cache protocols.
+//! This crate provides convenient access to the binary file system of the [Oldschool RuneScape] and [RuneScape 3] cache protocols.
 //!
-//! The library's API is mainly focussed around its main use-case which is reading bytes easily.
-//! Therefor it only offers a high level of abstraction over the binary cache. Most cache API's expose a
+//! The library's API is mainly focussed around reading bytes easily.
+//! Therefore it offers a higher level of abstraction then most other libraries. Most cache API's expose a
 //! wide variety of internal types to let the user tinker around with the cache in unusual ways.
-//! To avoid undefined behaviour most internal types are kept private.
-//! The goal of this crate is not to be a fully customisable cache API but just a simple interface for
-//! basic reading of valuable data.
+//! To avoid undefined behavior most internal types are kept private.
+//! The goal of this crate is to provide a simple interface for basic reading of valuable data.
 //!
 //! Note that this crate is still evolving, both OSRS & RS3 are not fully supported/implemented and
 //! will probably contain bugs or miss vital features. If this is the case for you then consider [opening
 //! an issue].
+//! 
+//! # Safety
+//! 
+//! This crate internally uses [memmap] and this is safe because: the RuneScape cache is a read-only binary files ystem 
+//! which is never modified by any process, and should never be modified. To ensure the main file is never moved while the
+//! cache has memory mapped to it a file handle is kept internally to make access more safe. It is not possible to prevent 
+//! parallel access to a certain file and prevent modifications. Therefore file-backed mapped memory is inherently unsafe.
 //!
 //! # Features
 //!
-//! The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the _**rs3**_ compilation feature flag.
-//! A lot of the types add [serde]'s `Serialize` and `Deserialize`. To enable (de)serialization on
-//! most types use the _**serde-derive**_ flag.
+//! The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the _**rs3**_ feature flag.
+//! A lot of types derive [serde]'s `Serialize` and `Deserialize`. To enable (de)serialization on
+//! most types use the _**serde-derive**_ feature flag.
 //!
 //! # Quick Start
 //!
@@ -39,7 +45,8 @@
 //!
 //! In order to get [definitions](crate::definition) you can look at the [loaders](crate::loader) this library provides.
 //! The loaders use the cache as a dependency to parse in their data and cache the relevant definitions internally.
-//!
+//! The loader module also tells you how to make a loader if this crate doesn't (yet) provide it. 
+//! 
 //! Note: Some loaders cache these definitions lazily because of either the size of the data or the
 //! performance. The map loader for example is both slow and large so caching is by default lazy.
 //! Lazy loaders require mutability.
@@ -48,6 +55,7 @@
 //! [RuneScape 3]: https://www.runescape.com/
 //! [opening an issue]: https://github.com/jimvdl/rs-cache/issues/new
 //! [serde]: https://crates.io/crates/serde
+//! [memmap]: https://crates.io/crates/memmap
 
 #![deny(clippy::all, clippy::nursery)]
 #![warn(
@@ -128,6 +136,7 @@ use crate::{
 /// A parsed Jagex cache.
 #[derive(Debug)]
 pub struct Cache {
+    main_file: File,
     data: Mmap,
     indices: Indices,
 }
@@ -151,7 +160,7 @@ impl Cache {
         let data = unsafe { Mmap::map(&main_file)? };
         let indices = Indices::new(path, &data)?;
 
-        Ok(Self { data, indices })
+        Ok(Self { main_file, data, indices })
     }
 
     /// Reads from the internal data.

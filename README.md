@@ -4,19 +4,16 @@
 [![OSRS Version](https://img.shields.io/badge/OSRS-180-blue)]()
 [![RS3 Version](https://img.shields.io/badge/RS3-904-blue)]()
 [![API](https://docs.rs/rs-cache/badge.svg)](https://docs.rs/rs-cache)
-[![Minimum rustc version](https://img.shields.io/badge/rustc-1.41%2B-yellow)](https://blog.rust-lang.org/2020/01/30/Rust-1.41.0.html)
 
-High level abstraction for the RuneScape cache.
-This crate provides convenient access to the binary data of the [Oldschool RuneScape](https://oldschool.runescape.com/) and [RuneScape 3](https://www.runescape.com/) cache protocols.
+High level abstraction API for the RuneScape cache.
 
+This crate provides convenient access to the binary file system of the [Oldschool RuneScape](https://oldschool.runescape.com/) and [RuneScape 3](https://www.runescape.com/) caches.
 
-The library's API is mainly focussed around its main use-case which is reading bytes easily.
-Therefor it only offers a high level of abstraction over the binary cache. Most cache API's expose a
+The library's API is mainly focussed around reading bytes easily.
+Therefore it offers a higher level of abstraction then most other libraries. Most cache API's expose a
 wide variety of internal types to let the user tinker around with the cache in unusual ways.
-To avoid undefined behaviour most internal types are kept private.
-The goal of this crate is not to be a fully customisable cache API but just a simple interface for
-basic reading of valuable data.
-
+To avoid undefined behavior most internal types are kept private.
+The goal of this crate is to provide a simple interface for basic reading of valuable data.
 
 Note that this crate is still evolving, both OSRS & RS3 are not fully supported/implemented and
 will probably contain bugs or miss vital features. If this is the case for you then consider [opening
@@ -26,6 +23,18 @@ Useful links:\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/5/5d/Fire_rune_detail.png/800px-Fire_rune_detail.png?07ed5" width="10"> &nbsp;[Releases](https://github.com/jimvdl/rs-cache/tags)\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/7/74/Water_rune_detail.png/800px-Water_rune_detail.png?4e790" width="10"> &nbsp;[Documentation](https://docs.rs/rs-cache)\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/e/ef/Nature_rune_detail.png/800px-Nature_rune_detail.png?a062f" width="10"> &nbsp;[Examples](examples/)
+
+## Safety
+
+This crate internally uses [memmap](https://crates.io/crates/memmap) and this is safe because: the RuneScape cache is a read-only binary files ystem 
+which is never modified by any process, and should never be modified. To ensure the main file is never moved while the
+cache has memory mapped to it a file handle is kept internally to make access more safe. It is not possible to prevent 
+parallel access to a certain file and prevent modifications. Therefore file-backed mapped memory is inherently unsafe.
+
+## Features
+The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the _**rs3**_ feature flag.
+A lot of types derive [serde](https://crates.io/crates/serde)'s `Serialize` and `Deserialize`. To enable (de)serialization on
+most types use the _**serde-derive**_ feature flag.
 
 ## Quick Start
 
