@@ -2,21 +2,21 @@
 //! 
 //! This crate provides convenient access to the binary file system of the [Oldschool RuneScape] and [RuneScape 3] caches.
 //!
-//! The library's API is mainly focussed around reading bytes easily.
-//! Therefore it offers a higher level of abstraction compared to other libraries. Most cache API's expose a
+//! The library's API is mainly focused around reading bytes easily.
+//! Therefore, it offers a higher level of abstraction compared to other libraries. Most cache API's expose a
 //! wide variety of internal types to let the user tinker around with the cache in unusual ways.
-//! To avoid undefined behavior most internal types are kept private.
+//! To avoid undefined behavior, most internal types are kept private.
 //! The goal of this crate is to provide a simple interface for basic reading of valuable data.
 //!
-//! Note that this crate is still evolving, both OSRS & RS3 are not fully supported/implemented and
+//! Note that this crate is still evolving; both OSRS & RS3 are not fully supported/implemented and
 //! will probably contain bugs or miss vital features. If this is the case for you then consider [opening
 //! an issue].
 //! 
 //! # Safety
 //! 
-//! This crate internally uses [memmap] and this is safe because: the RuneScape cache is a read-only binary files ystem 
-//! which is never modified by any process, and should never be modified. To ensure the main file is never moved while the
-//! cache has memory mapped to it a file handle is kept internally to make access more safe. It is not possible to prevent 
+//! This crate internally uses [memmap] and this is safe because: the RuneScape cache is a read-only binary file system 
+//! which is never modified by any process, and should never be modified. In order to ensure more safety a file handle is 
+//! preserved internally. This can help avoid accidentally moving the main file while the cache is in use. It is not possible to prevent 
 //! parallel access to a certain file and prevent modifications. Therefore file-backed mapped memory is inherently unsafe.
 //!
 //! # Features
