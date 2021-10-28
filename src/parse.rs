@@ -36,6 +36,7 @@ pub fn rs_string<'a, E: ParseError<&'a [u8]>>(buffer: &'a [u8]) -> IResult<&'a [
     Ok((buffer, String::from_utf8_lossy(string).to_string()))
 }
 
+#[allow(dead_code)]
 pub(crate) fn be_u32_smart_compat<'a, E: ParseError<&'a [u8]>>(
     buffer: &'a [u8],
 ) -> IResult<&'a [u8], u32, E> {

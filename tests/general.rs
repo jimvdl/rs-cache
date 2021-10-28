@@ -1,6 +1,6 @@
 mod common;
 
-#[cfg(not(feature = "rs3"))]
+#[cfg(feature = "osrs")]
 mod osrs {
     use super::common;
     use rscache::{checksum::OsrsEncode, util::Huffman, Cache};

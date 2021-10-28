@@ -35,7 +35,7 @@ use whirlpool::{Digest, Whirlpool};
 /// # Errors
 ///
 /// Returns a `CacheError` if the encoding fails.
-#[cfg(not(feature = "rs3"))]
+#[cfg(feature = "osrs")]
 pub trait OsrsEncode {
     fn encode(self) -> crate::Result<Vec<u8>>;
 }
@@ -110,6 +110,7 @@ impl Checksum {
     }
 }
 
+#[cfg(feature = "osrs")]
 impl OsrsEncode for Checksum {
     #[inline]
     fn encode(self) -> crate::Result<Vec<u8>> {

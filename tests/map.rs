@@ -1,6 +1,6 @@
 mod common;
 
-#[cfg(not(feature = "rs3"))]
+#[cfg(feature = "osrs")]
 mod osrs {
     use super::common;
     use rscache::loader::osrs::MapLoader;
