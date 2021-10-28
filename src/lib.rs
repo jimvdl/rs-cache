@@ -1,6 +1,6 @@
-//! High level abstraction API for the RuneScape cache.
+//! A high-level API for the RuneScape cache.
 //! 
-//! This crate provides convenient access to the binary file system of the [Oldschool RuneScape] and [RuneScape 3] cache protocols.
+//! This crate provides convenient access to the binary file system of the [Oldschool RuneScape] and [RuneScape 3] caches.
 //!
 //! The library's API is mainly focussed around reading bytes easily.
 //! Therefore it offers a higher level of abstraction then most other libraries. Most cache API's expose a

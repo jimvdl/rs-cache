@@ -5,7 +5,7 @@
 [![RS3 Version](https://img.shields.io/badge/RS3-904-blue)]()
 [![API](https://docs.rs/rs-cache/badge.svg)](https://docs.rs/rs-cache)
 
-High level abstraction API for the RuneScape cache.
+A high-level API for the RuneScape cache.
 
 This crate provides convenient access to the binary file system of the [Oldschool RuneScape](https://oldschool.runescape.com/) and [RuneScape 3](https://www.runescape.com/) caches.
 
