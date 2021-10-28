@@ -74,7 +74,7 @@ impl<'cache> MapLoader<'cache> {
     }
 }
 
-/// Loads maps definitions lazily from the current cache.
+/// Loads location definitions lazily from the current cache.
 #[derive(Debug)]
 pub struct LocationLoader<'cache> {
     cache: &'cache Cache,

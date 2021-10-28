@@ -10,13 +10,14 @@ use crate::{
     codec, Cache, REFERENCE_TABLE,
 };
 
-pub const ID_BLOCK_SIZE: usize = 256;
+pub(crate) const ID_BLOCK_SIZE: usize = 256;
 
 /// Marker trait for definitions.
 pub trait Definition: Sized {
     fn new(id: u32, buffer: &[u8]) -> crate::Result<Self>;
 }
 
+/// Adds definition fetching from the cache to every struct that implements `Definition`.
 pub trait FetchDefinition: Definition {
     // TODO: example
     /// Fetches multiple definitions from every archive in the index.

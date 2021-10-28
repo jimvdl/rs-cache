@@ -3,7 +3,7 @@
 //! This crate provides convenient access to the binary file system of the [Oldschool RuneScape] and [RuneScape 3] caches.
 //!
 //! The library's API is mainly focussed around reading bytes easily.
-//! Therefore it offers a higher level of abstraction then most other libraries. Most cache API's expose a
+//! Therefore it offers a higher level of abstraction compared to other libraries. Most cache API's expose a
 //! wide variety of internal types to let the user tinker around with the cache in unusual ways.
 //! To avoid undefined behavior most internal types are kept private.
 //! The goal of this crate is to provide a simple interface for basic reading of valuable data.
