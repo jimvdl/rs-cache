@@ -93,10 +93,7 @@
 )]
 
 // TODO: add rust-version to [package]
-// TODO: update min rust version badge + remove docs badge and license badge
-// TODO: document how to make your own loader in ldr.rs
-// TODO: document unsafe memmap
-// TODO: maybe check load function names on map and location loader to reflect that they need mut for lazy caching.
+// TODO: run cargo outdated when it is fixed for stable 1.56
 
 #[macro_use]
 pub mod util;

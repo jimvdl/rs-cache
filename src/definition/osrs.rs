@@ -86,7 +86,6 @@ pub trait FetchDefinition: Definition {
     /// # Ok(())
     /// # }
     /// ```
-    // FIXME
     #[inline]
     fn fetch_from_archive<D>(
         cache: &Cache,
