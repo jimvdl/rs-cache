@@ -56,6 +56,34 @@ pub struct ArchiveFileData {
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct ArchiveFileGroup(Vec<ArchiveFileData>);
 
+use crate::sector::{DataSize, HeaderSize, SectorHeaderSize};
+
+pub struct Chunks {
+    count: usize,
+    remainder: usize,
+    header_len: HeaderSize,
+    data_len: DataSize,
+}
+
+impl Iterator for Chunks {
+    type Item = usize;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.count == 0 {
+            return None;
+        }
+
+        let n = if self.count == 1 && self.remainder != 0 {
+            self.remainder
+        } else {
+            self.data_len
+        };
+
+        self.count -= 1;
+        Some(self.header_len + n)
+    }
+}
+
 impl ArchiveRef {
     pub fn from_buffer(id: u32, index_id: u8, buffer: &[u8]) -> crate::Result<Self> {
         let (buffer, len) = be_u24(buffer)?;
@@ -67,6 +95,25 @@ impl ArchiveRef {
             sector: sec as usize,
             length: len as usize,
         })
+    }
+
+    pub fn chunks(&self) -> (SectorHeaderSize, Chunks) {
+        let header_size = SectorHeaderSize::from_archive(self);
+        let (header_len, data_len) = header_size.clone().into();
+
+        let n = self.length / data_len;
+        let rem = self.length % data_len;
+        let n = if rem > 0 { n + 1 } else { n };
+
+        (
+            header_size,
+            Chunks {
+                count: n,
+                remainder: rem,
+                header_len,
+                data_len,
+            },
+        )
     }
 }
 

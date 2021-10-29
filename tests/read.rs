@@ -70,6 +70,29 @@ mod osrs {
     }
 
     #[test]
+    fn read_from_3_278() -> rscache::Result<()> {
+        let cache = common::osrs::setup()?;
+        
+        let archive = cache.read(3, 278)?;
+
+        assert_eq!(archive.len(), 512);
+        
+        Ok(())
+    }
+
+    #[test]
+    fn read_from_0_1077() -> rscache::Result<()> {
+        let cache = common::osrs::setup()?;
+        
+        let archive = cache.read(0, 1077)?;
+
+        assert_eq!(archive.len(), 1024);
+        
+        Ok(())
+    }
+
+
+    #[test]
     fn read_from_2_25000_fails() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
         

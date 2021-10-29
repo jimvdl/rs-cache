@@ -94,7 +94,10 @@
 
 // TODO: add rust-version to [package]
 // TODO: run cargo outdated when it is fixed for stable 1.56
-
+// TODO: maybe refactor read internal to include ::std::cmp::min() -> min(buf.len(), state.data.len()) 
+// buf[..n].copy_from_slice(data[..n]) see 1:13:41
+// TODO: reorder all structs and impl blocks in crate
+ 
 #[macro_use]
 pub mod util;
 mod archive;
@@ -127,7 +130,7 @@ use crate::{
     checksum::{Checksum, Entry},
     error::{ParseError, ReadError},
     index::Indices,
-    sector::{Sector, SectorHeaderSize, SECTOR_SIZE},
+    sector::{Sector, SECTOR_SIZE},
 };
 
 /// A parsed Jagex cache.
@@ -185,6 +188,8 @@ impl Cache {
 
         let mut buffer = Vec::with_capacity(archive.length);
         self.data.read_internal(archive, &mut buffer)?;
+
+        assert_eq!(buffer.len(), archive.length);
 
         Ok(buffer)
     }
@@ -315,49 +320,23 @@ pub(crate) trait ReadInternal {
 impl ReadInternal for Mmap {
     #[inline]
     fn read_internal<W: Write>(&self, archive: &ArchiveRef, writer: &mut W) -> crate::Result<()> {
-        let header_size = SectorHeaderSize::from_archive(archive);
-        let (header_len, data_len) = header_size.clone().into();
         let mut current_sector = archive.sector;
-        let mut remaining = archive.length;
-        let mut chunk = 0;
+        let (header_size, chunks) = archive.chunks();
 
-        loop {
-            let offset = current_sector as usize * SECTOR_SIZE;
-            if remaining >= data_len {
-                let data_block = &self[offset..offset + SECTOR_SIZE];
-                match Sector::new(data_block, &header_size) {
-                    Ok(sector) => {
-                        sector
-                            .header
-                            .validate(archive.id, chunk, archive.index_id)?;
-                        current_sector = sector.header.next;
-                        writer.write_all(sector.data_block)?;
-                    }
-                    Err(_) => return Err(ParseError::Sector(archive.sector).into()),
-                };
+        for (chunk, data_len) in chunks.enumerate() {
+            let offset = current_sector * SECTOR_SIZE;
 
-                remaining -= data_len;
-            } else {
-                if remaining == 0 {
-                    break;
+            let data_block = &self[offset..offset + data_len];
+            match Sector::new(data_block, &header_size) {
+                Ok(sector) => {
+                    sector
+                        .header
+                        .validate(archive.id, chunk, archive.index_id)?;
+                    current_sector = sector.header.next;
+                    writer.write_all(sector.data_block)?;
                 }
-
-                let data_block = &self[offset..offset + remaining + header_len];
-
-                match Sector::new(data_block, &header_size) {
-                    Ok(sector) => {
-                        sector
-                            .header
-                            .validate(archive.id, chunk, archive.index_id)?;
-                        writer.write_all(sector.data_block)?;
-
-                        break;
-                    }
-                    Err(_) => return Err(ParseError::Sector(archive.sector).into()),
-                };
-            }
-
-            chunk += 1;
+                Err(_) => return Err(ParseError::Sector(archive.sector).into()),
+            };
         }
 
         Ok(())
