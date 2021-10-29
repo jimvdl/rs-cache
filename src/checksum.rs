@@ -27,37 +27,8 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "rs3")]
 use whirlpool::{Digest, Whirlpool};
 
-/// Consumes the `Checksum` and encodes it into a byte buffer
-/// using the OSRS protocol.
-///
-/// After encoding the checksum it can be sent to the client.
-///
-/// # Errors
-///
-/// Returns a `CacheError` if the encoding fails.
-#[cfg(feature = "osrs")]
-pub trait OsrsEncode {
-    fn encode(self) -> crate::Result<Vec<u8>>;
-}
-
-/// Consumes the `Checksum` and encodes it into a byte buffer
-/// using the RS3 protocol.
-///
-/// Note: RS3 clients use RSA. The encoding process requires an exponent
-/// and a modulus to encode the buffer properly.
-///
-/// After encoding the checksum it can be sent to the client.
-///
-/// # Errors
-///
-/// Returns a `CacheError` if the encoding fails.
-#[cfg(any(feature = "rs3", doc))]
-pub trait Rs3Encode {
-    fn encode(self, exponent: &[u8], modulus: &[u8]) -> crate::Result<Vec<u8>>;
-}
-
 /// Contains index validation data.
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Entry {
     pub crc: u32,
@@ -110,6 +81,19 @@ impl Checksum {
     }
 }
 
+/// Consumes the `Checksum` and encodes it into a byte buffer
+/// using the OSRS protocol.
+///
+/// After encoding the checksum it can be sent to the client.
+///
+/// # Errors
+///
+/// Returns a `CacheError` if the encoding fails.
+#[cfg(feature = "osrs")]
+pub trait OsrsEncode {
+    fn encode(self) -> crate::Result<Vec<u8>>;
+}
+
 #[cfg(feature = "osrs")]
 impl OsrsEncode for Checksum {
     #[inline]
@@ -123,6 +107,22 @@ impl OsrsEncode for Checksum {
 
         codec::encode(Compression::None, &buffer, None)
     }
+}
+
+/// Consumes the `Checksum` and encodes it into a byte buffer
+/// using the RS3 protocol.
+///
+/// Note: RS3 clients use RSA. The encoding process requires an exponent
+/// and a modulus to encode the buffer properly.
+///
+/// After encoding the checksum it can be sent to the client.
+///
+/// # Errors
+///
+/// Returns a `CacheError` if the encoding fails.
+#[cfg(any(feature = "rs3", doc))]
+pub trait Rs3Encode {
+    fn encode(self, exponent: &[u8], modulus: &[u8]) -> crate::Result<Vec<u8>>;
 }
 
 #[cfg(feature = "rs3")]
@@ -177,17 +177,5 @@ impl<'a> IntoIterator for &'a Checksum {
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
         self.entries.iter()
-    }
-}
-
-impl Default for Entry {
-    #[inline]
-    fn default() -> Self {
-        Self {
-            crc: 0,
-            version: 0,
-            #[cfg(feature = "rs3")]
-            hash: vec![0; 64],
-        }
     }
 }

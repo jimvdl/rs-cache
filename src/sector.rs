@@ -23,22 +23,6 @@ pub struct Sector<'a> {
     pub data_block: &'a [u8],
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
-pub enum SectorHeaderSize {
-    Normal,
-    Expanded,
-}
-
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
-pub struct SectorHeader {
-    pub archive_id: u32,
-    pub chunk: usize,
-    pub next: usize,
-    pub index_id: u8,
-}
-
 impl<'a> Sector<'a> {
     pub fn new(buffer: &'a [u8], header_size: &SectorHeaderSize) -> crate::Result<Self> {
         let (buffer, header) = SectorHeader::new(buffer, header_size)?;
@@ -48,24 +32,13 @@ impl<'a> Sector<'a> {
     }
 }
 
-impl SectorHeaderSize {
-    pub fn from_archive(archive: &ArchiveRef) -> Self {
-        if archive.id > std::u16::MAX.into() {
-            Self::Expanded
-        } else {
-            Self::Normal
-        }
-    }
-}
-
-impl From<SectorHeaderSize> for (HeaderSize, DataSize) {
-    #[inline]
-    fn from(header_size: SectorHeaderSize) -> Self {
-        match header_size {
-            SectorHeaderSize::Normal => (SECTOR_HEADER_SIZE, SECTOR_DATA_SIZE),
-            SectorHeaderSize::Expanded => (SECTOR_EXPANDED_HEADER_SIZE, SECTOR_EXPANDED_DATA_SIZE),
-        }
-    }
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+pub struct SectorHeader {
+    pub archive_id: u32,
+    pub chunk: usize,
+    pub next: usize,
+    pub index_id: u8,
 }
 
 impl<'a> SectorHeader {
@@ -123,6 +96,33 @@ impl<'a> SectorHeader {
 impl Default for SectorHeaderSize {
     fn default() -> Self {
         Self::Normal
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+pub enum SectorHeaderSize {
+    Normal,
+    Expanded,
+}
+
+impl SectorHeaderSize {
+    pub fn from_archive(archive: &ArchiveRef) -> Self {
+        if archive.id > std::u16::MAX.into() {
+            Self::Expanded
+        } else {
+            Self::Normal
+        }
+    }
+}
+
+impl From<SectorHeaderSize> for (HeaderSize, DataSize) {
+    #[inline]
+    fn from(header_size: SectorHeaderSize) -> Self {
+        match header_size {
+            SectorHeaderSize::Normal => (SECTOR_HEADER_SIZE, SECTOR_DATA_SIZE),
+            SectorHeaderSize::Expanded => (SECTOR_EXPANDED_HEADER_SIZE, SECTOR_EXPANDED_DATA_SIZE),
+        }
     }
 }
 

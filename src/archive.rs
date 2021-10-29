@@ -19,6 +19,7 @@ use nom::{
 };
 
 use crate::parse::be_u32_smart;
+use crate::sector::{DataSize, HeaderSize, SectorHeaderSize};
 
 pub const ARCHIVE_REF_LEN: usize = 6;
 
@@ -29,59 +30,6 @@ pub struct ArchiveRef {
     pub index_id: u8,
     pub sector: usize,
     pub length: usize,
-}
-
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
-pub struct Archive {
-    pub id: u32,
-    pub name_hash: i32,
-    pub crc: u32,
-    pub hash: i32,
-    #[cfg_attr(feature = "serde-derive", serde(with = "BigArray"))]
-    pub whirlpool: [u8; 64],
-    pub version: u32,
-    pub entry_count: usize,
-    pub valid_ids: Vec<u32>,
-}
-
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
-pub struct ArchiveFileData {
-    pub id: u32,
-    pub data: Vec<u8>,
-}
-
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
-pub struct ArchiveFileGroup(Vec<ArchiveFileData>);
-
-use crate::sector::{DataSize, HeaderSize, SectorHeaderSize};
-
-pub struct Chunks {
-    count: usize,
-    remainder: usize,
-    header_len: HeaderSize,
-    data_len: DataSize,
-}
-
-impl Iterator for Chunks {
-    type Item = usize;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.count == 0 {
-            return None;
-        }
-
-        let n = if self.count == 1 && self.remainder != 0 {
-            self.remainder
-        } else {
-            self.data_len
-        };
-
-        self.count -= 1;
-        Some(self.header_len + n)
-    }
 }
 
 impl ArchiveRef {
@@ -115,6 +63,46 @@ impl ArchiveRef {
             },
         )
     }
+}
+
+pub struct Chunks {
+    count: usize,
+    remainder: usize,
+    header_len: HeaderSize,
+    data_len: DataSize,
+}
+
+impl Iterator for Chunks {
+    type Item = usize;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.count == 0 {
+            return None;
+        }
+
+        let n = if self.count == 1 && self.remainder != 0 {
+            self.remainder
+        } else {
+            self.data_len
+        };
+
+        self.count -= 1;
+        Some(self.header_len + n)
+    }
+}
+
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+pub struct Archive {
+    pub id: u32,
+    pub name_hash: i32,
+    pub crc: u32,
+    pub hash: i32,
+    #[cfg_attr(feature = "serde-derive", serde(with = "BigArray"))]
+    pub whirlpool: [u8; 64],
+    pub version: u32,
+    pub entry_count: usize,
+    pub valid_ids: Vec<u32>,
 }
 
 impl Archive {
@@ -163,6 +151,17 @@ impl Archive {
         Ok(archives)
     }
 }
+
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+pub struct ArchiveFileData {
+    pub id: u32,
+    pub data: Vec<u8>,
+}
+
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+pub struct ArchiveFileGroup(Vec<ArchiveFileData>);
 
 impl ArchiveFileGroup {
     pub fn parse(buffer: &[u8], entry_count: usize) -> io::Result<Self> {

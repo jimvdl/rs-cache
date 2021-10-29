@@ -23,14 +23,6 @@ pub const IDX_PREFIX: &str = "main_file_cache.idx";
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Indices(pub HashMap<u8, Index>);
 
-#[derive(Clone, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
-pub struct Index {
-    pub id: u8,
-    pub archive_refs: HashMap<u32, ArchiveRef>,
-    pub archives: Vec<Archive>,
-}
-
 impl Indices {
     pub fn new<P: AsRef<Path>>(path: P, data: &Mmap) -> crate::Result<Self> {
         let path = path.as_ref();
@@ -96,6 +88,14 @@ impl Indices {
     pub fn len(&self) -> usize {
         self.0.len()
     }
+}
+
+#[derive(Clone, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+pub struct Index {
+    pub id: u8,
+    pub archive_refs: HashMap<u32, ArchiveRef>,
+    pub archives: Vec<Archive>,
 }
 
 impl Index {
