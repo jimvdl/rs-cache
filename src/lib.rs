@@ -15,9 +15,9 @@
 //! # Safety
 //! 
 //! This crate internally uses [memmap] and this is safe because: the RuneScape cache is a read-only binary file system 
-//! which is never modified by any process, and should never be modified. In order to ensure more safety a file handle is 
-//! preserved internally. This can help avoid accidentally moving the main file while the cache is in use. It is not possible to prevent 
-//! parallel access to a certain file and prevent modifications. Therefore file-backed mapped memory is inherently unsafe.
+//! which is never modified by any process, and should never be modified. [`Mmap`] provides basic file safety with
+//! [`std::file::File`]. It is not possible to prevent parallel access to a certain file and prevent modifications. 
+//! Therefore file-backed mapped memory is inherently unsafe.
 //!
 //! # Features
 //!
@@ -56,6 +56,8 @@
 //! [opening an issue]: https://github.com/jimvdl/rs-cache/issues/new
 //! [serde]: https://crates.io/crates/serde
 //! [memmap]: https://crates.io/crates/memmap
+//! [`Mmap`]: https://docs.rs/memmap/0.7.0/memmap/struct.Mmap.html
+//! [`std::file::File`]: https://doc.rust-lang.org/std/fs/struct.File.html
 
 #![deny(clippy::all, clippy::nursery)]
 #![warn(
@@ -136,7 +138,6 @@ use crate::{
 /// A parsed Jagex cache.
 #[derive(Debug)]
 pub struct Cache {
-    main_file: File,
     data: Mmap,
     indices: Indices,
 }
@@ -160,7 +161,7 @@ impl Cache {
         let data = unsafe { Mmap::map(&main_file)? };
         let indices = Indices::new(path, &data)?;
 
-        Ok(Self { main_file, data, indices })
+        Ok(Self { data, indices })
     }
 
     /// Reads from the internal data.
