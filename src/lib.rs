@@ -94,11 +94,9 @@
     clippy::no_effect
 )]
 
-// TODO: add rust-version to [package]
-// TODO: run cargo outdated when it is fixed for stable 1.56
-// TODO: maybe refactor read internal to include ::std::cmp::min() -> min(buf.len(), state.data.len()) 
-// buf[..n].copy_from_slice(data[..n]) see 1:13:41
-// TODO: reorder all structs and impl blocks in crate
+// TODO: add rust-version to [package] (atm 1.56.1)
+// TODO: run cargo outdated when it is fixed for stable 1.56 (0.9.17)
+// TODO: maybe include https://deps.rs/repo/github/jimvdl/rs-cache, need to swap to memmap replacement because it is insecure
  
 #[macro_use]
 pub mod util;
