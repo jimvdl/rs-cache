@@ -16,7 +16,7 @@
 //! 
 //! This crate internally uses [memmap] and this is safe because: the RuneScape cache is a read-only binary file system 
 //! which is never modified by any process, and should never be modified. [`Mmap`] provides basic file safety with
-//! [`std::file::File`]. It is not possible to prevent parallel access to a certain file and prevent modifications. 
+//! [`std::fs::File`]. It is not possible to prevent parallel access to a certain file and prevent modifications. 
 //! Therefore file-backed mapped memory is inherently unsafe.
 //!
 //! # Features
@@ -57,7 +57,7 @@
 //! [serde]: https://crates.io/crates/serde
 //! [memmap]: https://crates.io/crates/memmap
 //! [`Mmap`]: https://docs.rs/memmap/0.7.0/memmap/struct.Mmap.html
-//! [`std::file::File`]: https://doc.rust-lang.org/std/fs/struct.File.html
+//! [`std::fs::File`]: https://doc.rust-lang.org/std/fs/struct.File.html
 
 #![deny(clippy::all, clippy::nursery)]
 #![warn(
