@@ -34,7 +34,7 @@ name = "rscache"
 path = "src/lib.rs"
 
 [dependencies]
-crc = "1.8"
+crc = "2.1"
 bzip2 = "0.4"
 nom = "7.0"
 itertools = "0.9"

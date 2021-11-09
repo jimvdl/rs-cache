@@ -116,10 +116,11 @@ pub use error::{CacheError, Result};
 
 pub(crate) const MAIN_DATA: &str = "main_file_cache.dat2";
 pub(crate) const REFERENCE_TABLE: u8 = 255;
+const CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
 use std::{fs::File, io::Write, path::Path};
 
-use crc::crc32;
+use crc::{Crc, CRC_32_ISO_HDLC};
 use memmap::Mmap;
 use nom::{combinator::cond, number::complete::be_u32};
 #[cfg(feature = "rs3")]
@@ -253,8 +254,11 @@ impl Cache {
                         hasher.finalize().as_slice().to_vec()
                     };
 
+                    let mut digest = CRC.digest();
+                    digest.update(&buffer);
+
                     checksum.push(Entry {
-                        crc: crc32::checksum_ieee(&buffer),
+                        crc: digest.finalize(),
                         version,
                         #[cfg(feature = "rs3")]
                         hash,

@@ -28,7 +28,7 @@ use serde::{Deserialize, Serialize};
 use whirlpool::{Digest, Whirlpool};
 
 /// Contains index validation data.
-#[derive(Clone, Default, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct Entry {
     pub crc: u32,
@@ -177,5 +177,17 @@ impl<'a> IntoIterator for &'a Checksum {
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
         self.entries.iter()
+    }
+}
+
+impl Default for Entry {
+    #[inline]
+    fn default() -> Self {
+        Self {
+            crc: 0,
+            version: 0,
+            #[cfg(feature = "rs3")]
+            hash: vec![0; 64],
+        }
     }
 }
