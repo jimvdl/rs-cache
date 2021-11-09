@@ -5,7 +5,7 @@ use std::{
     path::Path,
 };
 
-use memmap::Mmap;
+use memmap2::Mmap;
 
 #[cfg(feature = "serde-derive")]
 use serde::{Deserialize, Serialize};

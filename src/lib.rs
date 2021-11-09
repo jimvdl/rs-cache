@@ -121,7 +121,7 @@ const CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 use std::{fs::File, io::Write, path::Path};
 
 use crc::{Crc, CRC_32_ISO_HDLC};
-use memmap::Mmap;
+use memmap2::Mmap;
 use nom::{combinator::cond, number::complete::be_u32};
 #[cfg(feature = "rs3")]
 use whirlpool::{Digest, Whirlpool};

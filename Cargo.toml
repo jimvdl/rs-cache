@@ -44,7 +44,7 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 serde-big-array = { version = "0.3", optional = true }
 lzma-rs = { version = "0.2", optional = true }
 flate2 = "1.0"
-memmap = "0.7"
+memmap2 = "0.5"
 
 [dev-dependencies]
 sha1 = "0.6"
