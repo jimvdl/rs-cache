@@ -1,9 +1,10 @@
 # rs-cache
 [![Build](https://github.com/jimvdl/rs-cache/workflows/build/badge.svg)](https://github.com/jimvdl/rs-cache)
+[![API](https://docs.rs/rs-cache/badge.svg)](https://docs.rs/rs-cache)
 [![Crate](https://img.shields.io/crates/v/rs-cache)](https://crates.io/crates/rs-cache)
 [![OSRS Version](https://img.shields.io/badge/OSRS-180-blue)]()
 [![RS3 Version](https://img.shields.io/badge/RS3-904-blue)]()
-[![API](https://docs.rs/rs-cache/badge.svg)](https://docs.rs/rs-cache)
+[![dependency status](https://deps.rs/repo/github/jimvdl/rs-cache/status.svg)](https://deps.rs/repo/github/jimvdl/rs-cache)
 
 An immutable, high-level API for the RuneScape cache file system.
 
