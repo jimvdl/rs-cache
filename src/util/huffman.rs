@@ -1,4 +1,28 @@
 /// Decompresses chat messages.
+/// 
+/// # Examples
+///
+/// ```
+/// # use rscache::Cache;
+/// use rscache::util::Huffman;
+///
+/// # fn main() -> rscache::Result<()> {
+/// # let cache = Cache::new("./data/osrs_cache")?;
+/// let huffman_tbl = cache.huffman_table()?;
+/// let huffman = Huffman::new(&huffman_tbl);
+///
+/// let compressed_msg = &[174, 128, 35, 32, 208, 96];
+/// let decompressed_len = 8; // client will include this in the chat packet.
+///
+/// let decompressed_msg = huffman.decompress(compressed_msg, decompressed_len);
+///
+/// if let Ok(msg) = String::from_utf8(decompressed_msg) {
+///     assert_eq!(msg, "rs-cache");
+/// }
+/// # Ok(())
+/// # }
+/// ```
+
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Huffman {
     keys: Vec<i32>,
@@ -8,31 +32,8 @@ impl Huffman {
     /// Initializes the Huffman struct with the given sizes.
     ///
     /// The sizes can be found in the cache.
-    /// Call the `huffman_table()` function to get the huffman table which
+    /// Call the [`huffman_table()`](../struct.Cache.html#method.huffman_table) function to get the huffman table which
     /// contains the sizes needed to initialize this struct.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// # use rscache::Cache;
-    /// use rscache::util::Huffman;
-    ///
-    /// # fn main() -> rscache::Result<()> {
-    /// # let cache = Cache::new("./data/osrs_cache")?;
-    /// let huffman_tbl = cache.huffman_table()?;
-    /// let huffman = Huffman::new(&huffman_tbl);
-    ///
-    /// let compressed_msg = &[174, 128, 35, 32, 208, 96];
-    /// let decompressed_len = 8; // client will include this in the chat packet.
-    ///
-    /// let decompressed_msg = huffman.decompress(compressed_msg, decompressed_len);
-    ///
-    /// if let Ok(msg) = String::from_utf8(decompressed_msg) {
-    ///     assert_eq!(msg, "rs-cache");
-    /// }
-    /// # Ok(())
-    /// # }
-    /// ```
     #[inline]
     pub fn new(sizes: &[u8]) -> Self {
         let i_2 = sizes.len();

@@ -204,7 +204,9 @@ impl Cache {
 
     /// Reads bytes from the cache into the given writer.
     ///
-    /// This will not allocate a buffer but use the writer instead, see [`read`](Cache::read)
+    /// For read-heavy workloads it is recommended to use this version of read to prevent
+    /// multiple buffer allocations, instead it will not allocate a buffer but use the writer 
+    /// instead, see [`read`](Cache::read).
     ///
     /// # Errors
     ///
@@ -278,7 +280,7 @@ impl Cache {
 
     /// Tries to return the huffman table from the cache.
     ///
-    /// This can be used to (de)compress chat messages, see [`Huffman`](crate::util::Huffman).
+    /// This can be used to decompress chat messages, see [`Huffman`](crate::util::Huffman).
     #[inline]
     pub fn huffman_table(&self) -> crate::Result<Vec<u8>> {
         let index_id = 10;

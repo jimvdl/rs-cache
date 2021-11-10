@@ -5,15 +5,16 @@ const MASK: u32 = (SIZE as u32 - 1) << 2;
 
 /// Default Isaac random implementation
 ///
-/// Can be used to encode and decode packet ids.
+/// Can be used to encode and decode game packet id's.
 ///
-/// **NOTE: The client will only send one set of keys, the decoder keys.
-/// To get the encoder keys, simply add 50 to every decoder key.**
+/// Note: The client will only send one set of keys, the decoder keys.
+/// To get the encoder keys, simply add 50 to every decoder key.
 /// ```
-/// # let xtea_keys: Vec<u32> = Vec::new();
+/// # let xtea_keys: Vec<u32> = vec![0; 4];
 /// let mut isaac_decoder_keys = Vec::with_capacity(4);
 /// let mut isaac_encoder_keys = Vec::with_capacity(4);
-/// for key in xtea_keys.clone() {
+/// 
+/// for key in xtea_keys {
 ///     isaac_decoder_keys.push(key);
 ///     isaac_encoder_keys.push(key + 50);
 /// }
@@ -32,11 +33,11 @@ const MASK: u32 = (SIZE as u32 - 1) << 2;
 /// let mut packet_id_encoder = IsaacRand::new(&encoder_keys);
 /// let mut packet_id_decoder = IsaacRand::new(&decoder_keys);
 ///
-/// // decoding packet id that was sent in the client packet buffer.
+/// // decoding game packet id that was sent by the client.
 /// let packet_id =
 ///     (packet_buffer[0] as u32).overflowing_sub(packet_id_decoder.next().unwrap());
 ///
-/// // encoding packet id that will be sent in a packet to the client.
+/// // encoding packet id that will be sent to the client.
 /// let packet_id = packet.id + packet_id_encoder.next().unwrap();
 /// # Ok(())
 /// # }
