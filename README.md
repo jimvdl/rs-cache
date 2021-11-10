@@ -30,13 +30,13 @@ Useful links:\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/7/74/Water_rune_detail.png/800px-Water_rune_detail.png?4e790" width="10"> &nbsp;[Documentation](https://docs.rs/rs-cache)\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/e/ef/Nature_rune_detail.png/800px-Nature_rune_detail.png?a062f" width="10"> &nbsp;[Examples](examples/)
 
-# Safety
+## Safety
 
 In order to read bytes in a high performant way the cache uses [memmap2](https://crates.io/crates/memmap2). This can be unsafe because of its potential for _Undefined Behaviour_ when the underlying file is subsequently modified, in or out of process. Using `Mmap` here is safe because the RuneScape cache is a read-only binary file system. The map will remain valid even after the `File` is dropped, it's completely independent of the `File` used to create it. Therefore, the use of unsafe is not propagated outwards. When the `Cache` is dropped memory will be subsequently unmapped.
 
 ## Features
 The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the `rs3` feature flag.
-A lot of types derive [serde](https://crates.io/crates/serde)'s `Serialize` and `Deserialize`. To enable (de)serialization on any compatible types use the `serde-derive` feature flag.
+A lot of types derive [serde](https://crates.io/crates/serde)'s `Serialize` and `Deserialize`. The `serde-derive` feature flag can be used to enable (de)serialization on any compatible types.
 
 ## Quick Start
 
@@ -87,6 +87,6 @@ The following sources aided with the development of this crate:\
 
 
 ## License
-RS-Cache is distributed under the terms of the MIT license.
+`rs-cache` is distributed under the terms of the MIT license.
 
 See [LICENSE](LICENSE) for details.
