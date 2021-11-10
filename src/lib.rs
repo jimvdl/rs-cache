@@ -1,15 +1,22 @@
 //! An immutable, high-level API for the RuneScape cache file system.
 //! 
-//! This crate provides convenient access to the binary file system of the [Oldschool RuneScape] and [RuneScape 3] caches.
-//!
-//! The library's API is mainly focused around reading bytes easily.
-//! Therefore, it offers a higher level of abstraction compared to other libraries. Most cache API's expose a
-//! wide variety of internal types to let the user tinker around with the cache in unusual ways.
-//! To avoid undefined behavior, most internal types are kept private.
-//! The goal of this crate is to provide a simple interface for basic reading of valuable data.
-//!
+//! This crate provides high performant data reads into the [Oldschool RuneScape] and [RuneScape 3] file systems.
+//! It can read the necessary data to syncronize the client's cache with the server. There are also some 
+//! [loaders](#loaders) that give access to definitions from the cache such as items or npcs. 
+//! 
+//! For read-heavy workloads, a writer can be used to prevent continous buffer allocations.
+//! By default every read will allocate a writer with the correct capacity.
+//! 
+//! RuneScape's chat system uses huffman coding to compress messages. In order to decompress them this library has
+//! a [`Huffman`] implementation.
+//! 
+//! When a RuneScape client sends game packets the id's are encoded and can be decoded with the [`IsaacRand`]
+//! implementation. These id's are encoded by the client in a predictable random order which can be reversed if
+//! the server has its own `IsaacRand` with the same encoder/decoder keys. These keys are sent by the client
+//! on login and are user specific. It will only send encoded packet id's if the packets are game packets.
+//! 
 //! Note that this crate is still evolving; both OSRS & RS3 are not fully supported/implemented and
-//! will probably contain bugs or miss vital features. If this is the case for you then consider [opening
+//! will probably contain bugs or miss core features. If you require features or find bugs consider [opening
 //! an issue].
 //! 
 //! # Safety
@@ -22,9 +29,9 @@
 //!
 //! # Features
 //!
-//! The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the _**rs3**_ feature flag.
+//! The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the `rs3` feature flag.
 //! A lot of types derive [serde]'s `Serialize` and `Deserialize`. To enable (de)serialization on
-//! most types use the _**serde-derive**_ feature flag.
+//! most types use the `serde-derive` feature flag.
 //!
 //! # Quick Start
 //!
@@ -58,7 +65,8 @@
 //! [serde]: https://crates.io/crates/serde
 //! [memmap2]: https://crates.io/crates/memmap2
 //! [`Mmap`]: https://docs.rs/memmap2/0.5.0/memmap2/struct.Mmap.html
-//! [`std::fs::File`]: https://doc.rust-lang.org/std/fs/struct.File.html
+//! [`Huffman`]: crate::util::Huffman
+//! [`IsaacRand`]: crate::util::IsaacRand
 
 #![deny(clippy::all, clippy::nursery)]
 #![warn(
