@@ -1,6 +1,6 @@
 //! An immutable, high-level API for the RuneScape cache file system.
 //! 
-//! This crate provides high performant data reads into the [Oldschool RuneScape] and [RuneScape 3] file systems.
+//! This crate provides high performant data reads into the [Oldschool RuneScape] and [RuneScape 3] file systems. 
 //! It can read the necessary data to syncronize the client's cache with the server. There are also some 
 //! [loaders](#loaders) that give access to definitions from the cache such as items or npcs. 
 //! 
@@ -23,15 +23,15 @@
 //! 
 //! In order to read bytes in a high performant way the cache uses [memmap2]. This can be unsafe because of its potential for
 //! _Undefined Behaviour_ when the underlying file is subsequently modified, in or out of process. 
-//! Using [`Mmap`] here is safe because the RuneScape cache is a read-only binary file system. The map will remain valid even
+//! Using `Mmap` here is safe because the RuneScape cache is a read-only binary file system. The map will remain valid even
 //! after the `File` is dropped, it's completely independent of the `File` used to create it. When the `Cache` is dropped 
 //! memory will be subsequently unmapped.
 //!
 //! # Features
 //!
 //! The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the `rs3` feature flag.
-//! A lot of types derive [serde]'s `Serialize` and `Deserialize`. To enable (de)serialization on
-//! most types use the `serde-derive` feature flag.
+//! A lot of types derive [serde]'s `Serialize` and `Deserialize`. To enable (de)serialization on any compatible
+//! types use the `serde-derive` feature flag.
 //!
 //! # Quick Start
 //!
@@ -64,7 +64,6 @@
 //! [opening an issue]: https://github.com/jimvdl/rs-cache/issues/new
 //! [serde]: https://crates.io/crates/serde
 //! [memmap2]: https://crates.io/crates/memmap2
-//! [`Mmap`]: https://docs.rs/memmap2/0.5.0/memmap2/struct.Mmap.html
 //! [`Huffman`]: crate::util::Huffman
 //! [`IsaacRand`]: crate::util::IsaacRand
 
@@ -102,10 +101,6 @@
     clippy::should_implement_trait,
     clippy::no_effect
 )]
-
-// TODO: add rust-version to [package] (atm 1.56.1)
-// TODO: run cargo outdated when it is fixed for stable 1.56 (0.9.17)
-// TODO: update memmap reference to memmap2 + update safety docs
  
 #[macro_use]
 pub mod util;

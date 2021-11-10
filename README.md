@@ -8,16 +8,22 @@
 
 An immutable, high-level API for the RuneScape cache file system.
 
-This crate provides convenient access to the binary file system of the [Oldschool RuneScape](https://oldschool.runescape.com/) and [RuneScape 3](https://www.runescape.com/) caches.
+This crate provides high performant data reads into the [Oldschool RuneScape](https://oldschool.runescape.com/) and [RuneScape 3](https://www.runescape.com/) file systems. It can read the necessary data to syncronize the client's cache with the server. There are also some 
+loaders that give access to definitions from the cache such as items or npcs. 
 
-The library's API is mainly focused around reading bytes easily.
-Therefore, it offers a higher level of abstraction then most other libraries. Most cache API's expose a
-wide variety of internal types to let the user tinker around with the cache in unusual ways.
-To avoid undefined behavior, most internal types are kept private.
-The goal of this crate is to provide a simple interface for basic reading of valuable data.
+For read-heavy workloads, a writer can be used to prevent continous buffer allocations.
+By default every read will allocate a writer with the correct capacity.
+
+RuneScape's chat system uses huffman coding to compress messages. In order to decompress them this library has
+a `Huffman` implementation.
+
+When a RuneScape client sends game packets the id's are encoded and can be decoded with the `IsaacRand`
+implementation. These id's are encoded by the client in a predictable random order which can be reversed if
+the server has its own `IsaacRand` with the same encoder/decoder keys. These keys are sent by the client
+on login and are user specific. It will only send encoded packet id's if the packets are game packets.
 
 Note that this crate is still evolving; both OSRS & RS3 are not fully supported/implemented and
-will probably contain bugs or miss vital features. If this is the case for you then consider [opening
+will probably contain bugs or miss core features. If you require features or find bugs consider [opening
 an issue](https://github.com/jimvdl/rs-cache/issues/new).
 
 Useful links:\
@@ -25,16 +31,13 @@ Useful links:\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/7/74/Water_rune_detail.png/800px-Water_rune_detail.png?4e790" width="10"> &nbsp;[Documentation](https://docs.rs/rs-cache)\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="https://oldschool.runescape.wiki/images/thumb/e/ef/Nature_rune_detail.png/800px-Nature_rune_detail.png?a062f" width="10"> &nbsp;[Examples](examples/)
 
-## Safety
+# Safety
 
-This crate internally uses [memmap](https://crates.io/crates/memmap) and this is safe because: the RuneScape cache is a read-only binary file system 
-which is never modified by any process, and should never be modified. [`Mmap`](https://docs.rs/memmap/0.7.0/memmap/struct.Mmap.html) provides basic file safety with [`std::fs::File`](https://doc.rust-lang.org/std/fs/struct.File.html). 
-It is not possible to prevent parallel access to a certain file and prevent modifications. Therefore file-backed mapped memory is inherently unsafe.
+In order to read bytes in a high performant way the cache uses [memmap2](https://crates.io/crates/memmap2). This can be unsafe because of its potential for _Undefined Behaviour_ when the underlying file is subsequently modified, in or out of process. Using `Mmap` here is safe because the RuneScape cache is a read-only binary file system. The map will remain valid even after the `File` is dropped, it's completely independent of the `File` used to create it. When the `Cache` is dropped memory will be subsequently unmapped.
 
 ## Features
-The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the _**rs3**_ feature flag.
-A lot of types derive [serde](https://crates.io/crates/serde)'s `Serialize` and `Deserialize`. To enable (de)serialization on
-most types use the _**serde-derive**_ feature flag.
+The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the `rs3` feature flag.
+A lot of types derive [serde](https://crates.io/crates/serde)'s `Serialize` and `Deserialize`. To enable (de)serialization on any compatible types use the `serde-derive` feature flag.
 
 ## Quick Start
 
