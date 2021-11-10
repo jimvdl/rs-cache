@@ -14,10 +14,11 @@
 //! 
 //! # Safety
 //! 
-//! This crate internally uses [memmap] and this is safe because: the RuneScape cache is a read-only binary file system 
-//! which is never modified by any process, and should never be modified. [`Mmap`] provides basic file safety with
-//! [`std::fs::File`]. It is not possible to prevent parallel access to a certain file and prevent modifications. 
-//! Therefore file-backed mapped memory is inherently unsafe.
+//! In order to read bytes in a high performant way the cache uses [memmap2]. This can be unsafe because of its potential for
+//! _Undefined Behaviour_ when the underlying file is subsequently modified, in or out of process. 
+//! Using [`Mmap`] here is safe because the RuneScape cache is a read-only binary file system. The map will remain valid even
+//! after the `File` is dropped, it's completely independent of the `File` used to create it. When the `Cache` is dropped 
+//! memory will be subsequently unmapped.
 //!
 //! # Features
 //!
@@ -55,8 +56,8 @@
 //! [RuneScape 3]: https://www.runescape.com/
 //! [opening an issue]: https://github.com/jimvdl/rs-cache/issues/new
 //! [serde]: https://crates.io/crates/serde
-//! [memmap]: https://crates.io/crates/memmap
-//! [`Mmap`]: https://docs.rs/memmap/0.7.0/memmap/struct.Mmap.html
+//! [memmap2]: https://crates.io/crates/memmap2
+//! [`Mmap`]: https://docs.rs/memmap2/0.5.0/memmap2/struct.Mmap.html
 //! [`std::fs::File`]: https://doc.rust-lang.org/std/fs/struct.File.html
 
 #![deny(clippy::all, clippy::nursery)]
@@ -96,7 +97,7 @@
 
 // TODO: add rust-version to [package] (atm 1.56.1)
 // TODO: run cargo outdated when it is fixed for stable 1.56 (0.9.17)
-// TODO: maybe include https://deps.rs/repo/github/jimvdl/rs-cache, need to swap to memmap replacement because it is insecure
+// TODO: update memmap reference to memmap2 + update safety docs
  
 #[macro_use]
 pub mod util;
