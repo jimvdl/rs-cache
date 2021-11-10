@@ -2,16 +2,15 @@
 [![Build](https://github.com/jimvdl/rs-cache/workflows/build/badge.svg)](https://github.com/jimvdl/rs-cache)
 [![API](https://docs.rs/rs-cache/badge.svg)](https://docs.rs/rs-cache)
 [![Crate](https://img.shields.io/crates/v/rs-cache)](https://crates.io/crates/rs-cache)
+[![dependency status](https://deps.rs/repo/github/jimvdl/rs-cache/status.svg)](https://deps.rs/repo/github/jimvdl/rs-cache)
 [![OSRS Version](https://img.shields.io/badge/OSRS-180-blue)]()
 [![RS3 Version](https://img.shields.io/badge/RS3-904-blue)]()
-[![dependency status](https://deps.rs/repo/github/jimvdl/rs-cache/status.svg)](https://deps.rs/repo/github/jimvdl/rs-cache)
 
 An immutable, high-level API for the RuneScape cache file system.
 
-This crate provides high performant data reads into the [Oldschool RuneScape](https://oldschool.runescape.com/) and [RuneScape 3](https://www.runescape.com/) file systems. It can read the necessary data to syncronize the client's cache with the server. There are also some 
-loaders that give access to definitions from the cache such as items or npcs. 
+This crate provides high performant data reads into the [Oldschool RuneScape](https://oldschool.runescape.com/) and [RuneScape 3](https://www.runescape.com/) cache file systems. It can read the necessary data to synchronize the client's cache with the server. There are also some loaders that give access to definitions from the cache such as items or npcs. 
 
-For read-heavy workloads, a writer can be used to prevent continous buffer allocations.
+For read-heavy workloads, a writer can be used to prevent continuous buffer allocations.
 By default every read will allocate a writer with the correct capacity.
 
 RuneScape's chat system uses huffman coding to compress messages. In order to decompress them this library has
@@ -33,7 +32,7 @@ Useful links:\
 
 # Safety
 
-In order to read bytes in a high performant way the cache uses [memmap2](https://crates.io/crates/memmap2). This can be unsafe because of its potential for _Undefined Behaviour_ when the underlying file is subsequently modified, in or out of process. Using `Mmap` here is safe because the RuneScape cache is a read-only binary file system. The map will remain valid even after the `File` is dropped, it's completely independent of the `File` used to create it. When the `Cache` is dropped memory will be subsequently unmapped.
+In order to read bytes in a high performant way the cache uses [memmap2](https://crates.io/crates/memmap2). This can be unsafe because of its potential for _Undefined Behaviour_ when the underlying file is subsequently modified, in or out of process. Using `Mmap` here is safe because the RuneScape cache is a read-only binary file system. The map will remain valid even after the `File` is dropped, it's completely independent of the `File` used to create it. Therefore, the use of unsafe is not propagated outwards. When the `Cache` is dropped memory will be subsequently unmapped.
 
 ## Features
 The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the `rs3` feature flag.
@@ -60,8 +59,8 @@ The [osrs specifications](osrs_specifications.md) and [rs3 specifications](rs3_s
 
 Integration tests are running on Oldschool RuneScape version 180, which you can run at any time because the cache is included in the `./data/osrs_cache` directory. RS3 Integration tests are running on version 904. The RS3 cache is too large to include on GitHub.
 
-This crate is experimentald. I will implement Additional features once I need them for my own project.
-__If you require a certain feature feel free to open an issue.__
+This crate is marked as experimental. I will implement additional features once I need them for my own project.
+__If you require a certain feature feel free to [open an issue](https://github.com/jimvdl/rs-cache/issues/new).__
 
 ## Usage
 
@@ -72,7 +71,7 @@ Add this to your `Cargo.toml`:
 rs-cache = "0.7"
 ```
 
-Examples can be found in the [examples](examples/) directory.
+Examples can be found in the [examples](examples/) directory which include both update protocols.
 
 ## Acknowledgements
 

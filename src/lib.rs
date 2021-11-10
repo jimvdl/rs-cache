@@ -1,10 +1,10 @@
 //! An immutable, high-level API for the RuneScape cache file system.
 //! 
-//! This crate provides high performant data reads into the [Oldschool RuneScape] and [RuneScape 3] file systems. 
-//! It can read the necessary data to syncronize the client's cache with the server. There are also some 
+//! This crate provides high performant data reads into the [Oldschool RuneScape] and [RuneScape 3] cache file systems. 
+//! It can read the necessary data to synchronize the client's cache with the server. There are also some 
 //! [loaders](#loaders) that give access to definitions from the cache such as items or npcs. 
 //! 
-//! For read-heavy workloads, a writer can be used to prevent continous buffer allocations.
+//! For read-heavy workloads, a writer can be used to prevent continuous buffer allocations.
 //! By default every read will allocate a writer with the correct capacity.
 //! 
 //! RuneScape's chat system uses huffman coding to compress messages. In order to decompress them this library has
@@ -24,14 +24,14 @@
 //! In order to read bytes in a high performant way the cache uses [memmap2]. This can be unsafe because of its potential for
 //! _Undefined Behaviour_ when the underlying file is subsequently modified, in or out of process. 
 //! Using `Mmap` here is safe because the RuneScape cache is a read-only binary file system. The map will remain valid even
-//! after the `File` is dropped, it's completely independent of the `File` used to create it. When the `Cache` is dropped 
-//! memory will be subsequently unmapped.
+//! after the `File` is dropped, it's completely independent of the `File` used to create it. Therefore, the use of unsafe is 
+//! not propagated outwards. When the `Cache` is dropped memory will be subsequently unmapped.
 //!
 //! # Features
 //!
 //! The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the `rs3` feature flag.
-//! A lot of types derive [serde]'s `Serialize` and `Deserialize`. To enable (de)serialization on any compatible
-//! types use the `serde-derive` feature flag.
+//! A lot of types derive [serde]'s `Serialize` and `Deserialize`. The `serde-derive` feature flag can be used to 
+//! enable (de)serialization on any compatible types.
 //!
 //! # Quick Start
 //!
