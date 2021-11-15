@@ -7,6 +7,7 @@ struct IncomingUpdatePacket {
 }
 
 const HEADER_LEN: usize = 8;
+const DATA_LEN: usize = 512;
 
 // This example illustrates the osrs update protocol.
 // You can use this to handle client requests for cache data.
@@ -45,9 +46,9 @@ fn main() -> rscache::Result<()> {
     archive_data.extend(&length.to_be_bytes());
     archive_data.extend(buffer);
 
-    let chunks = archive_data.len() / 512;
-    for index in (0..archive_data.len() + chunks).step_by(512) {
-        if index == 0 || archive_data.len() == 512 {
+    let chunks = archive_data.len() / DATA_LEN;
+    for index in (0..archive_data.len() + chunks).step_by(DATA_LEN) {
+        if index == 0 || archive_data.len() == DATA_LEN {
             continue;
         }
 
