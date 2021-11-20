@@ -1,5 +1,5 @@
 use nom::number::complete::{be_u32, be_u8};
-use rscache::{checksum::OsrsEncode, Cache};
+use rscache::{checksum::Checksum, Cache};
 
 struct IncomingUpdatePacket {
     pub index_id: u8,
@@ -24,7 +24,7 @@ fn main() -> rscache::Result<()> {
         IncomingUpdatePacket {
             index_id: 255,
             archive_id: 255,
-        } => cache.create_checksum()?.encode()?,
+        } => Checksum::new(&cache)?.encode()?,
         IncomingUpdatePacket {
             index_id,
             archive_id,

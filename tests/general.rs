@@ -3,14 +3,13 @@ mod common;
 #[cfg(feature = "osrs")]
 mod osrs {
     use super::common;
-    use rscache::{checksum::OsrsEncode, util::Huffman, Cache};
+    use rscache::{checksum::Checksum, util::Huffman, Cache};
 
     #[test]
     fn setup_cache() -> rscache::Result<()> {
         let cache = common::osrs::setup();
 
         assert!(cache.is_ok());
-        assert_eq!(cache?.index_count(), 22);
 
         Ok(())
     }
@@ -28,7 +27,7 @@ mod osrs {
     fn create_checksum() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
 
-        assert!(cache.create_checksum().is_ok());
+        assert!(Checksum::new(&cache).is_ok());
 
         Ok(())
     }
@@ -37,8 +36,7 @@ mod osrs {
     fn encode_checksum() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
 
-        let checksum = cache.create_checksum()?;
-        let buffer = checksum.encode()?;
+        let buffer = Checksum::new(&cache)?.encode()?;
 
         let hash = common::hash(&buffer);
         assert_eq!(&hash, "0cb64350dc138e91bb83bc9c84b454631711f5de");
@@ -50,7 +48,7 @@ mod osrs {
     #[test]
     fn validate_checksum() -> rscache::Result<()> {
         let cache = common::osrs::setup()?;
-        let checksum = cache.create_checksum()?;
+        let checksum = Checksum::new(&cache)?;
 
         let crcs = vec![
             1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 686540367,
@@ -96,15 +94,21 @@ mod osrs {
 
 #[cfg(feature = "rs3")]
 mod rs3 {
-    use super::common;
-    use rscache::{checksum::Rs3Encode, util::Huffman, Cache};
+    use super::common::{
+        self,
+        rs3::{EXPONENT, MODULUS},
+    };
+    use rscache::{
+        checksum::{Checksum, RsaKeys},
+        util::Huffman,
+        Cache,
+    };
 
     #[test]
     fn setup_cache() -> rscache::Result<()> {
         let cache = common::rs3::setup();
 
         assert!(cache.is_ok());
-        assert_eq!(cache?.index_count(), 58);
 
         Ok(())
     }
@@ -122,7 +126,7 @@ mod rs3 {
     fn create_checksum() -> rscache::Result<()> {
         let cache = common::rs3::setup()?;
 
-        assert!(cache.create_checksum().is_ok());
+        assert!(Checksum::with_rsa(&cache, RsaKeys::new(EXPONENT, MODULUS)).is_ok());
 
         Ok(())
     }
@@ -131,8 +135,7 @@ mod rs3 {
     fn encode_checksum() -> rscache::Result<()> {
         let cache = common::rs3::setup()?;
 
-        let checksum = cache.create_checksum()?;
-        let buffer = checksum.encode(common::rs3::EXPONENT, common::rs3::MODULUS)?;
+        let buffer = Checksum::with_rsa(&cache, RsaKeys::new(EXPONENT, MODULUS))?.encode()?;
 
         let hash = common::hash(&buffer);
         assert_eq!(&hash, "118e0146af6cf288630357eec6298c34a2430065");

@@ -18,7 +18,9 @@
 
 use std::slice::Iter;
 
-use crate::{codec, codec::Compression};
+use crate::{codec, codec::Compression, Cache, REFERENCE_TABLE};
+use crc::{Crc, CRC_32_ISO_HDLC};
+use nom::{combinator::cond, number::complete::be_u32};
 
 #[cfg(feature = "rs3")]
 use num_bigint::{BigInt, Sign};
@@ -26,6 +28,8 @@ use num_bigint::{BigInt, Sign};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "rs3")]
 use whirlpool::{Digest, Whirlpool};
+
+const CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
 /// Contains index validation data.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
@@ -37,6 +41,7 @@ pub struct Entry {
     pub hash: Vec<u8>,
 }
 
+// TODO: fix documentation
 /// Validator for the `Cache`.
 ///
 /// Used to validate cache index files. It contains a list of entries, one entry for each index file.
@@ -46,21 +51,89 @@ pub struct Entry {
 /// called on `Cache`.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
-pub struct Checksum {
+pub struct Checksum<'a> {
     index_count: usize,
     entries: Vec<Entry>,
+    rsa_keys: Option<RsaKeys<'a>>,
 }
 
-impl Checksum {
-    pub(crate) fn new(index_count: usize) -> Self {
-        Self {
-            index_count,
-            entries: Vec::with_capacity(index_count),
-        }
+impl<'a> Checksum<'a> {
+    #[inline]
+    pub fn new(cache: &Cache) -> crate::Result<Self> {
+        Self::new_internal(cache, None)
     }
 
-    pub(crate) fn push(&mut self, entry: Entry) {
-        self.entries.push(entry);
+    #[cfg(any(feature = "rs3", doc))]
+    #[inline]
+    pub fn with_rsa(cache: &Cache, rsa_keys: RsaKeys<'a>) -> crate::Result<Self> {
+        Self::new_internal(cache, Some(rsa_keys))
+    }
+
+    fn new_internal(cache: &Cache, rsa_keys: Option<RsaKeys<'a>>) -> crate::Result<Self> {
+        let entries: Vec<Entry> = (0..cache.indices.len())
+            .into_iter()
+            .filter_map(|idx_id| cache.read(REFERENCE_TABLE, idx_id as u32).ok())
+            .enumerate()
+            .map(|(idx_id, buffer)| -> crate::Result<Entry> {
+                if buffer.is_empty() || idx_id == 47 {
+                    Ok(Entry::default())
+                } else {
+                    let data = codec::decode(&buffer)?;
+                    let (_, version) = cond(data[0] >= 6, be_u32)(&data[1..5])?;
+                    let version = version.unwrap_or(0);
+
+                    #[cfg(feature = "rs3")]
+                    let hash = {
+                        let mut hasher = Whirlpool::new();
+                        hasher.update(&buffer);
+                        hasher.finalize().as_slice().to_vec()
+                    };
+
+                    let mut digest = CRC.digest();
+                    digest.update(&buffer);
+
+                    Ok(Entry {
+                        crc: digest.finalize(),
+                        version,
+                        #[cfg(feature = "rs3")]
+                        hash,
+                    })
+                }
+            })
+            .filter_map(crate::Result::ok)
+            .collect();
+
+        Ok(Self {
+            index_count: cache.indices.len(),
+            entries,
+            rsa_keys,
+        })
+    }
+
+    /// Consumes the `Checksum` and encodes it into a byte buffer.
+    ///
+    ///
+    /// Note: It defaults to OSRS. RS3 clients use RSA to encrypt
+    /// network traffic, which includes the checksum. When encoding for RS3 clients
+    /// first call [`with_rsa_keys`](struct.Checksum.html#method.with_rsa_keys) to make
+    /// the checksum aware of the clients keys.
+    ///
+    /// After encoding the checksum it can be sent to the client.
+    ///
+    /// # Errors
+    ///
+    /// Returns a `CacheError` if the encoding fails.
+    #[inline]
+    pub fn encode(self) -> crate::Result<Vec<u8>> {
+        match self.rsa_keys {
+            Some(_) => {
+                #[cfg(feature = "rs3")]
+                return self.encode_rs3();
+                #[cfg(feature = "osrs")]
+                unreachable!()
+            }
+            None => self.encode_osrs(),
+        }
     }
 
     /// Validates crcs with internal crcs.
@@ -70,34 +143,7 @@ impl Checksum {
         internal == crcs
     }
 
-    #[inline]
-    pub const fn index_count(&self) -> usize {
-        self.index_count
-    }
-
-    #[inline]
-    pub fn iter(&self) -> Iter<'_, Entry> {
-        self.entries.iter()
-    }
-}
-
-/// Consumes the `Checksum` and encodes it into a byte buffer
-/// using the OSRS protocol.
-///
-/// After encoding the checksum it can be sent to the client.
-///
-/// # Errors
-///
-/// Returns a `CacheError` if the encoding fails.
-#[cfg(feature = "osrs")]
-pub trait OsrsEncode {
-    fn encode(self) -> crate::Result<Vec<u8>>;
-}
-
-#[cfg(feature = "osrs")]
-impl OsrsEncode for Checksum {
-    #[inline]
-    fn encode(self) -> crate::Result<Vec<u8>> {
+    fn encode_osrs(self) -> crate::Result<Vec<u8>> {
         let mut buffer = Vec::with_capacity(self.entries.len() * 8);
 
         for entry in self.entries {
@@ -107,28 +153,9 @@ impl OsrsEncode for Checksum {
 
         codec::encode(Compression::None, &buffer, None)
     }
-}
 
-/// Consumes the `Checksum` and encodes it into a byte buffer
-/// using the RS3 protocol.
-///
-/// Note: RS3 clients use RSA. The encoding process requires an exponent
-/// and a modulus to encode the buffer properly.
-///
-/// After encoding the checksum it can be sent to the client.
-///
-/// # Errors
-///
-/// Returns a `CacheError` if the encoding fails.
-#[cfg(any(feature = "rs3", doc))]
-pub trait Rs3Encode {
-    fn encode(self, exponent: &[u8], modulus: &[u8]) -> crate::Result<Vec<u8>>;
-}
-
-#[cfg(feature = "rs3")]
-impl Rs3Encode for Checksum {
-    #[inline]
-    fn encode(self, exponent: &[u8], modulus: &[u8]) -> crate::Result<Vec<u8>> {
+    #[cfg(feature = "rs3")]
+    fn encode_rs3(self) -> crate::Result<Vec<u8>> {
         let index_count = self.index_count - 1;
         let mut buffer = vec![0; 81 * index_count];
 
@@ -147,8 +174,10 @@ impl Rs3Encode for Checksum {
         let mut hash = hasher.finalize().as_slice().to_vec();
         hash.insert(0, 0);
 
-        let exp = BigInt::parse_bytes(exponent, 10).unwrap_or_default();
-        let mud = BigInt::parse_bytes(modulus, 10).unwrap_or_default();
+        // unwrap here is safe because this function never executes if self.rsa_keys is not `Some`.
+        let rsa_keys = self.rsa_keys.as_ref().unwrap();
+        let exp = BigInt::parse_bytes(rsa_keys.exponent, 10).unwrap_or_default();
+        let mud = BigInt::parse_bytes(rsa_keys.modulus, 10).unwrap_or_default();
         let rsa = BigInt::from_bytes_be(Sign::Plus, &hash)
             .modpow(&exp, &mud)
             .to_bytes_be()
@@ -158,27 +187,51 @@ impl Rs3Encode for Checksum {
 
         Ok(buffer)
     }
-}
-
-impl IntoIterator for Checksum {
-    type Item = Entry;
-    type IntoIter = std::vec::IntoIter<Entry>;
 
     #[inline]
-    fn into_iter(self) -> Self::IntoIter {
-        self.entries.into_iter()
+    pub const fn index_count(&self) -> usize {
+        self.index_count
     }
-}
-
-impl<'a> IntoIterator for &'a Checksum {
-    type Item = &'a Entry;
-    type IntoIter = Iter<'a, Entry>;
 
     #[inline]
-    fn into_iter(self) -> Self::IntoIter {
+    pub fn iter(&self) -> Iter<'_, Entry> {
         self.entries.iter()
     }
 }
+
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
+#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+pub struct RsaKeys<'a> {
+    pub(crate) exponent: &'a [u8],
+    pub(crate) modulus: &'a [u8],
+}
+
+impl<'a> RsaKeys<'a> {
+    #[inline]
+    pub const fn new(exponent: &'a [u8], modulus: &'a [u8]) -> Self {
+        Self { exponent, modulus }
+    }
+}
+
+// impl IntoIterator for Checksum {
+//     type Item = Entry;
+//     type IntoIter = std::vec::IntoIter<Entry>;
+
+//     #[inline]
+//     fn into_iter(self) -> Self::IntoIter {
+//         self.entries.into_iter()
+//     }
+// }
+
+// impl<'a> IntoIterator for &'a Checksum {
+//     type Item = &'a Entry;
+//     type IntoIter = Iter<'a, Entry>;
+
+//     #[inline]
+//     fn into_iter(self) -> Self::IntoIter {
+//         self.entries.iter()
+//     }
+// }
 
 impl Default for Entry {
     #[inline]

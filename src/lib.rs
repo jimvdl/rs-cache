@@ -120,19 +120,16 @@ pub use error::{CacheError, Result};
 
 pub(crate) const MAIN_DATA: &str = "main_file_cache.dat2";
 pub(crate) const REFERENCE_TABLE: u8 = 255;
-const CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
 use std::{fs::File, io::Write, path::Path};
 
-use crc::{Crc, CRC_32_ISO_HDLC};
+
 use memmap2::Mmap;
-use nom::{combinator::cond, number::complete::be_u32};
 #[cfg(feature = "rs3")]
 use whirlpool::{Digest, Whirlpool};
 
 use crate::{
     archive::ArchiveRef,
-    checksum::{Checksum, Entry},
     error::{ParseError, ReadError},
     index::Indices,
     sector::{Sector, SECTOR_SIZE},
@@ -142,7 +139,7 @@ use crate::{
 #[derive(Debug)]
 pub struct Cache {
     data: Mmap,
-    indices: Indices,
+    pub(crate) indices: Indices,
 }
 
 impl Cache {
@@ -231,53 +228,6 @@ impl Cache {
         self.data.read_internal(archive, writer)
     }
 
-    /// Creates a `Checksum` which can be used to validate the cache data
-    /// that the client received during the update protocol.
-    ///
-    /// NOTE: The RuneScape client doesn't have a valid crc for index 16.
-    /// This checksum sets the crc and version for index 16 both to 0.
-    /// The crc for index 16 should be skipped.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error when a buffer read from the reference
-    /// table could not be decoded / decompressed.
-    #[inline]
-    pub fn create_checksum(&self) -> crate::Result<Checksum> {
-        let mut checksum = Checksum::new(self.index_count());
-
-        for index_id in 0..self.index_count() as u32 {
-            if let Ok(buffer) = self.read(REFERENCE_TABLE, index_id) {
-                if !buffer.is_empty() && index_id != 47 {
-                    let data = codec::decode(&buffer)?;
-                    let (_, version) = cond(data[0] >= 6, be_u32)(&data[1..5])?;
-                    let version = version.unwrap_or(0);
-
-                    #[cfg(feature = "rs3")]
-                    let hash = {
-                        let mut hasher = Whirlpool::new();
-                        hasher.update(&buffer);
-                        hasher.finalize().as_slice().to_vec()
-                    };
-
-                    let mut digest = CRC.digest();
-                    digest.update(&buffer);
-
-                    checksum.push(Entry {
-                        crc: digest.finalize(),
-                        version,
-                        #[cfg(feature = "rs3")]
-                        hash,
-                    });
-                } else {
-                    checksum.push(Entry::default());
-                }
-            };
-        }
-
-        Ok(checksum)
-    }
-
     /// Tries to return the huffman table from the cache.
     ///
     /// This can be used to decompress chat messages, see [`Huffman`](crate::util::Huffman).
@@ -314,11 +264,6 @@ impl Cache {
             .ok_or(ReadError::ArchiveNotFound(index_id, archive.id))?;
 
         Ok(archive_ref)
-    }
-
-    #[inline]
-    pub fn index_count(&self) -> usize {
-        self.indices.len()
     }
 }
 
