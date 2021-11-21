@@ -19,7 +19,7 @@
 use std::iter::IntoIterator;
 use std::slice::Iter;
 
-use crate::{codec, codec::Compression, Cache, REFERENCE_TABLE};
+use crate::{codec, codec::Compression, error::ValidateError, Cache, REFERENCE_TABLE};
 use crc::{Crc, CRC_32_ISO_HDLC};
 use nom::{combinator::cond, number::complete::be_u32};
 
@@ -137,16 +137,35 @@ impl<'a> Checksum<'a> {
         }
     }
 
+    // TODO: documentation and write fail tests for this. (also fix the rs3 tests)
     /// Validates crcs with internal crcs.
     ///
     /// Only returns `true` if both the length of the iterators are the same
     /// and all of its elements are `eq`.
     #[inline]
-    pub fn validate<'b, I>(&self, crcs: I) -> bool
+    pub fn validate<'b, I>(&self, crcs: I) -> crate::Result<()>
     where
-        I: IntoIterator<Item=&'b u32>,
+        I: IntoIterator<Item = &'b u32>,
     {
-        self.entries.iter().map(|entry| &entry.crc).eq(crcs)
+        let mut crcs = crcs.into_iter();
+        let crcs_len = crcs.by_ref().count();
+        if self.entries.len() != crcs_len {
+            return Err(ValidateError::InvalidLength(self.entries.len(), crcs_len).into());
+        }
+
+        for (index, (internal, external)) in self
+            .entries
+            .iter()
+            .map(|entry| &entry.crc)
+            .zip(crcs)
+            .enumerate()
+        {
+            if internal != external {
+                return Err(ValidateError::InvalidCrc(*internal, *external, index).into());
+            }
+        }
+
+        Ok(())
     }
 
     fn encode_osrs(self) -> crate::Result<Vec<u8>> {

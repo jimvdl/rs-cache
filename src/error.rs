@@ -37,6 +37,7 @@ pub enum CacheError {
     Compression(CompressionError),
     /// Clarification error for failed parsers.
     Parse(ParseError),
+    Validate(ValidateError),
 }
 
 macro_rules! impl_from {
@@ -54,6 +55,7 @@ impl_from!(io::Error, Io);
 impl_from!(ReadError, Read);
 impl_from!(CompressionError, Compression);
 impl_from!(ParseError, Parse);
+impl_from!(ValidateError, Validate);
 
 impl From<nom::Err<()>> for CacheError {
     #[inline]
@@ -70,6 +72,7 @@ impl Error for CacheError {
             Self::Read(err) => Some(err),
             Self::Compression(err) => Some(err),
             Self::Parse(err) => Some(err),
+            Self::Validate(err) => Some(err),
         }
     }
 }
@@ -82,6 +85,7 @@ impl fmt::Display for CacheError {
             Self::Read(err) => err.fmt(f),
             Self::Compression(err) => err.fmt(f),
             Self::Parse(err) => err.fmt(f),
+            Self::Validate(err) => err.fmt(f),
         }
     }
 }
@@ -175,6 +179,30 @@ impl fmt::Display for ParseError {
                 f,
                 "Unable to parse child sector of parent {}, unexpected eof.",
                 id
+            ),
+        }
+    }
+}
+
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+pub enum ValidateError {
+    InvalidLength(usize, usize),
+    InvalidCrc(u32, u32, usize),
+}
+
+impl Error for ValidateError {}
+
+impl fmt::Display for ValidateError {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::InvalidLength(expected, actual) => {
+                write!(f, "Expected length of {} but was {}.", expected, actual)
+            }
+            Self::InvalidCrc(expected, actual, index) => write!(
+                f,
+                "Mismatch crc at index {}, expected {} but was {}.",
+                index, expected, actual
             ),
         }
     }
