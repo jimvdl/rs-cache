@@ -1,36 +1,36 @@
 //! An immutable, high-level API for the RuneScape cache file system.
-//! 
-//! This crate provides high performant data reads into the [Oldschool RuneScape] and [RuneScape 3] cache file systems. 
-//! It can read the necessary data to synchronize the client's cache with the server. There are also some 
-//! [loaders](#loaders) that give access to definitions from the cache such as items or npcs. 
-//! 
+//!
+//! This crate provides high performant data reads into the [Oldschool RuneScape] and [RuneScape 3] cache file systems.
+//! It can read the necessary data to synchronize the client's cache with the server. There are also some
+//! [loaders](#loaders) that give access to definitions from the cache such as items or npcs.
+//!
 //! For read-heavy workloads, a writer can be used to prevent continuous buffer allocations.
 //! By default every read will allocate a writer with the correct capacity.
-//! 
+//!
 //! RuneScape's chat system uses huffman coding to compress messages. In order to decompress them this library has
 //! a [`Huffman`] implementation.
-//! 
+//!
 //! When a RuneScape client sends game packets the id's are encoded and can be decoded with the [`IsaacRand`]
 //! implementation. These id's are encoded by the client in a predictable random order which can be reversed if
 //! the server has its own `IsaacRand` with the same encoder/decoder keys. These keys are sent by the client
 //! on login and are user specific. It will only send encoded packet id's if the packets are game packets.
-//! 
+//!
 //! Note that this crate is still evolving; both OSRS & RS3 are not fully supported/implemented and
 //! will probably contain bugs or miss core features. If you require features or find bugs consider [opening
 //! an issue].
-//! 
+//!
 //! # Safety
-//! 
+//!
 //! In order to read bytes in a high performant way the cache uses [memmap2]. This can be unsafe because of its potential for
-//! _Undefined Behaviour_ when the underlying file is subsequently modified, in or out of process. 
+//! _Undefined Behaviour_ when the underlying file is subsequently modified, in or out of process.
 //! Using `Mmap` here is safe because the RuneScape cache is a read-only binary file system. The map will remain valid even
-//! after the `File` is dropped, it's completely independent of the `File` used to create it. Therefore, the use of unsafe is 
+//! after the `File` is dropped, it's completely independent of the `File` used to create it. Therefore, the use of unsafe is
 //! not propagated outwards. When the `Cache` is dropped memory will be subsequently unmapped.
 //!
 //! # Features
 //!
 //! The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the `rs3` feature flag.
-//! A lot of types derive [serde]'s `Serialize` and `Deserialize`. The `serde-derive` feature flag can be used to 
+//! A lot of types derive [serde]'s `Serialize` and `Deserialize`. The `serde-derive` feature flag can be used to
 //! enable (de)serialization on any compatible types.
 //!
 //! # Quick Start
@@ -53,8 +53,8 @@
 //!
 //! In order to get [definitions](crate::definition) you can look at the [loaders](crate::loader) this library provides.
 //! The loaders use the cache as a dependency to parse in their data and cache the relevant definitions internally.
-//! The loader module also tells you how to make a loader if this crate doesn't (yet) provide it. 
-//! 
+//! The loader module also tells you how to make a loader if this crate doesn't (yet) provide it.
+//!
 //! Note: Some loaders cache these definitions lazily because of either the size of the data or the
 //! performance. The map loader for example is both slow and large so caching is by default lazy.
 //! Lazy loaders require mutability.
@@ -101,7 +101,6 @@
     clippy::should_implement_trait,
     clippy::no_effect
 )]
- 
 #[macro_use]
 pub mod util;
 mod archive;
@@ -123,10 +122,7 @@ pub(crate) const REFERENCE_TABLE: u8 = 255;
 
 use std::{fs::File, io::Write, path::Path};
 
-
 use memmap2::Mmap;
-#[cfg(feature = "rs3")]
-use whirlpool::{Digest, Whirlpool};
 
 use crate::{
     archive::ArchiveRef,
@@ -202,7 +198,7 @@ impl Cache {
     /// Reads bytes from the cache into the given writer.
     ///
     /// For read-heavy workloads it is recommended to use this version of read to prevent
-    /// multiple buffer allocations, instead it will not allocate a buffer but use the writer 
+    /// multiple buffer allocations, instead it will not allocate a buffer but use the writer
     /// instead, see [`read`](Cache::read).
     ///
     /// # Errors

@@ -4,11 +4,11 @@
 //!
 //! ```
 //! # use rscache::Cache;
-//! use rscache::checksum::{ Checksum, OsrsEncode };
+//! use rscache::checksum::{Checksum};
 //!
 //! # fn main() -> rscache::Result<()> {
 //! # let cache = Cache::new("./data/osrs_cache")?;
-//! let checksum = cache.create_checksum()?;
+//! let checksum = Checksum::new(&cache)?;
 //!
 //! // Encode the checksum with the OSRS protocol.
 //! let buffer = checksum.encode()?;
@@ -16,6 +16,7 @@
 //! # }
 //! ```
 
+use std::iter::IntoIterator;
 use std::slice::Iter;
 
 use crate::{codec, codec::Compression, Cache, REFERENCE_TABLE};
@@ -129,7 +130,7 @@ impl<'a> Checksum<'a> {
             Some(_) => {
                 #[cfg(feature = "rs3")]
                 return self.encode_rs3();
-                #[cfg(feature = "osrs")]
+                #[cfg(not(feature = "rs3"))]
                 unreachable!()
             }
             None => self.encode_osrs(),
@@ -137,10 +138,15 @@ impl<'a> Checksum<'a> {
     }
 
     /// Validates crcs with internal crcs.
+    ///
+    /// Only returns `true` if both the length of the iterators are the same
+    /// and all of its elements are `eq`.
     #[inline]
-    pub fn validate(&self, crcs: &[u32]) -> bool {
-        let internal: Vec<u32> = self.entries.iter().map(|entry| entry.crc).collect();
-        internal == crcs
+    pub fn validate<'b, I>(&self, crcs: I) -> bool
+    where
+        I: IntoIterator<Item=&'b u32>,
+    {
+        self.entries.iter().map(|entry| &entry.crc).eq(crcs)
     }
 
     fn encode_osrs(self) -> crate::Result<Vec<u8>> {
@@ -199,6 +205,7 @@ impl<'a> Checksum<'a> {
     }
 }
 
+// TODO: documentation
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
 pub struct RsaKeys<'a> {
