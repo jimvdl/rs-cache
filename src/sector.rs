@@ -126,78 +126,73 @@ impl From<SectorHeaderSize> for (HeaderSize, DataSize) {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[test]
+fn header_size_normal() -> crate::Result<()> {
+    let archive = ArchiveRef {
+        id: u16::MAX as u32,
+        index_id: 0,
+        sector: 0,
+        length: 0,
+    };
+    let header_size = SectorHeaderSize::from_archive(&archive);
 
-    #[test]
-    fn header_size_normal() -> crate::Result<()> {
-        let archive = ArchiveRef {
-            id: u16::MAX as u32,
-            index_id: 0,
-            sector: 0,
-            length: 0,
-        };
-        let header_size = SectorHeaderSize::from_archive(&archive);
+    assert_eq!(header_size, SectorHeaderSize::Normal);
 
-        assert_eq!(header_size, SectorHeaderSize::Normal);
+    Ok(())
+}
 
-        Ok(())
-    }
+#[test]
+fn header_size_expanded() -> crate::Result<()> {
+    let archive = ArchiveRef {
+        id: (u16::MAX as u32) + 1,
+        index_id: 0,
+        sector: 0,
+        length: 0,
+    };
+    let header_size = SectorHeaderSize::from_archive(&archive);
 
-    #[test]
-    fn header_size_expanded() -> crate::Result<()> {
-        let archive = ArchiveRef {
-            id: (u16::MAX as u32) + 1,
-            index_id: 0,
-            sector: 0,
-            length: 0,
-        };
-        let header_size = SectorHeaderSize::from_archive(&archive);
+    assert_eq!(header_size, SectorHeaderSize::Expanded);
 
-        assert_eq!(header_size, SectorHeaderSize::Expanded);
+    Ok(())
+}
 
-        Ok(())
-    }
+#[test]
+fn parse_header() -> crate::Result<()> {
+    let buffer = &[0, 0, 0, 0, 0, 0, 2, 255];
+    let (_, header) = SectorHeader::new(buffer, &SectorHeaderSize::Normal)?;
 
-    #[test]
-    fn parse_header() -> crate::Result<()> {
-        let buffer = &[0, 0, 0, 0, 0, 0, 2, 255];
-        let (_, header) = SectorHeader::new(buffer, &SectorHeaderSize::Normal)?;
-
-        assert_eq!(
-            header,
-            SectorHeader {
-                archive_id: 0,
-                chunk: 0,
-                next: 2,
-                index_id: 255
-            }
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn header_validation() {
-        let header = SectorHeader {
+    assert_eq!(
+        header,
+        SectorHeader {
             archive_id: 0,
             chunk: 0,
             next: 2,
-            index_id: 255,
-        };
+            index_id: 255
+        }
+    );
 
-        assert_eq!(
-            header.validate(1, 0, 255),
-            Err(ReadError::SectorArchiveMismatch(header.archive_id, 1))
-        );
-        assert_eq!(
-            header.validate(0, 1, 255),
-            Err(ReadError::SectorChunkMismatch(header.chunk, 1))
-        );
-        assert_eq!(
-            header.validate(0, 0, 0),
-            Err(ReadError::SectorIndexMismatch(header.index_id, 0))
-        );
-    }
+    Ok(())
+}
+
+#[test]
+fn header_validation() {
+    let header = SectorHeader {
+        archive_id: 0,
+        chunk: 0,
+        next: 2,
+        index_id: 255,
+    };
+
+    assert_eq!(
+        header.validate(1, 0, 255),
+        Err(ReadError::SectorArchiveMismatch(header.archive_id, 1))
+    );
+    assert_eq!(
+        header.validate(0, 1, 255),
+        Err(ReadError::SectorChunkMismatch(header.chunk, 1))
+    );
+    assert_eq!(
+        header.validate(0, 0, 0),
+        Err(ReadError::SectorIndexMismatch(header.index_id, 0))
+    );
 }

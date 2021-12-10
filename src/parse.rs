@@ -63,7 +63,7 @@ pub(crate) fn be_u32_smart_compat<'a, E: ParseError<&'a [u8]>>(
 /// be_u16_smart but as i16.
 ///
 /// For more details see [`be_u16_smart`](be_u16_smart)
-/// 
+///
 /// # Errors
 ///
 /// Parser can reach EOF early if not enough bytes are supplied.
@@ -146,45 +146,40 @@ pub fn be_u32_smart<'a, E: ParseError<&'a [u8]>>(buffer: &'a [u8]) -> IResult<&'
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[test]
+fn rs_string_parser() -> crate::Result<()> {
+    let buffer = vec![
+        82, 117, 110, 105, 116, 101, 32, 98, 97, 114, 0, 52, 14, 85, 65, 4, 56,
+    ];
 
-    #[test]
-    fn rs_string_parser() -> crate::Result<()> {
-        let buffer = vec![
-            82, 117, 110, 105, 116, 101, 32, 98, 97, 114, 0, 52, 14, 85, 65, 4, 56,
-        ];
+    let (buffer, string) = rs_string(&buffer)?;
 
-        let (buffer, string) = rs_string(&buffer)?;
+    assert_eq!(&string, "Runite bar");
+    assert_eq!(&buffer, &[52, 14, 85, 65, 4, 56]);
 
-        assert_eq!(&string, "Runite bar");
-        assert_eq!(&buffer, &[52, 14, 85, 65, 4, 56]);
+    Ok(())
+}
 
-        Ok(())
-    }
+#[test]
+fn be_u16_smart_parser() -> crate::Result<()> {
+    let buffer = &[17, 142, 64, 4, 24, 254];
+    let (buffer, value1) = be_u16_smart(buffer)?;
+    let (buffer, value2) = be_u16_smart(buffer)?;
+    assert_eq!(value1, 17);
+    assert_eq!(value2, 3648);
+    assert_eq!(buffer, &[4, 24, 254]);
 
-    #[test]
-    fn be_u16_smart_parser() -> crate::Result<()> {
-        let buffer = &[17, 142, 64, 4, 24, 254];
-        let (buffer, value1) = be_u16_smart(buffer)?;
-        let (buffer, value2) = be_u16_smart(buffer)?;
-        assert_eq!(value1, 17);
-        assert_eq!(value2, 3648);
-        assert_eq!(buffer, &[4, 24, 254]);
+    Ok(())
+}
 
-        Ok(())
-    }
+#[test]
+fn be_u32_smart_parser() -> crate::Result<()> {
+    let buffer = &[255, 54, 2, 0, 62, 1, 42, 233];
+    let (buffer, value1) = be_u32_smart(buffer)?;
+    let (buffer, value2) = be_u32_smart(buffer)?;
+    assert_eq!(value1, 2134245888);
+    assert_eq!(value2, 15873);
+    assert_eq!(buffer, &[42, 233]);
 
-    #[test]
-    fn be_u32_smart_parser() -> crate::Result<()> {
-        let buffer = &[255, 54, 2, 0, 62, 1, 42, 233];
-        let (buffer, value1) = be_u32_smart(buffer)?;
-        let (buffer, value2) = be_u32_smart(buffer)?;
-        assert_eq!(value1, 2134245888);
-        assert_eq!(value2, 15873);
-        assert_eq!(buffer, &[42, 233]);
-
-        Ok(())
-    }
+    Ok(())
 }

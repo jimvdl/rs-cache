@@ -353,26 +353,20 @@ impl<'a> IntoIterator for &'a ArchiveFileGroup {
         self.0.iter()
     }
 }
+#[test]
+fn parse_archive() -> crate::Result<()> {
+    let buffer = &[0, 0, 77, 0, 1, 196];
+    let archive = ArchiveRef::from_buffer(10, 255, buffer)?;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+    assert_eq!(
+        archive,
+        ArchiveRef {
+            id: 10,
+            index_id: 255,
+            sector: 452,
+            length: 77
+        }
+    );
 
-    #[test]
-    fn parse_archive() -> crate::Result<()> {
-        let buffer = &[0, 0, 77, 0, 1, 196];
-        let archive = ArchiveRef::from_buffer(10, 255, buffer)?;
-
-        assert_eq!(
-            archive,
-            ArchiveRef {
-                id: 10,
-                index_id: 255,
-                sector: 452,
-                length: 77
-            }
-        );
-
-        Ok(())
-    }
+    Ok(())
 }
