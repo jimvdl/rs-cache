@@ -134,7 +134,7 @@ pub fn encode(
 }
 
 /// Encodes the buffer with the given XTEA keys.
-/// 
+///
 /// For more details see [`encode`](encode)
 #[inline]
 pub fn encode_with_keys(
@@ -196,7 +196,7 @@ pub fn decode(buffer: &[u8]) -> crate::Result<Vec<u8>> {
 }
 
 /// Decodes the buffer with the given XTEA keys.
-/// 
+///
 /// For more details see [`decode`](decode)
 #[inline]
 pub fn decode_with_keys(buffer: &[u8], keys: &[u32; 4]) -> crate::Result<Vec<u8>> {
@@ -210,11 +210,7 @@ fn decode_internal(buffer: &[u8], keys: Option<&[u32; 4]>) -> crate::Result<Deco
     let (buffer, compressed_len) = be_u32(buffer)?;
     let compressed_len = compressed_len as usize;
 
-    let buffer = if let Some(keys) = keys {
-        xtea::decipher(buffer, keys)
-    } else {
-        buffer.to_vec()
-    };
+    let buffer = keys.map_or_else(|| buffer.to_vec(), |keys| xtea::decipher(buffer, keys));
 
     let (decompressed_len, version, buffer) = match compression {
         Compression::None => decompress_none(&buffer, compressed_len)?,

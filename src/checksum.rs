@@ -35,6 +35,7 @@ const CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 /// Contains index validation data.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(not(feature = "rs3"), derive(Default))]
 pub struct Entry {
     pub crc: u32,
     pub version: u32,
@@ -259,13 +260,13 @@ impl<'a> RsaKeys<'a> {
 //     }
 // }
 
+#[cfg(feature = "rs3")]
 impl Default for Entry {
     #[inline]
     fn default() -> Self {
         Self {
             crc: 0,
             version: 0,
-            #[cfg(feature = "rs3")]
             hash: vec![0; 64],
         }
     }
