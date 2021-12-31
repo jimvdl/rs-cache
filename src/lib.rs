@@ -129,10 +129,10 @@ impl Cache {
         let path = path.as_ref();
         let main_file = File::open(path.join(MAIN_DATA))?;
 
-        let data = unsafe { Mmap::map(&main_file)? };
-        let indices = Indices::new(path, &data)?;
-
-        Ok(Self { data, indices })
+        Ok(Self {
+            data: unsafe { Mmap::map(&main_file)? },
+            indices: Indices::new(path)?,
+        })
     }
 
     /// Reads from the internal data.
