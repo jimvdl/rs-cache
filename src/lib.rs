@@ -267,3 +267,10 @@ impl ReadInternal for Mmap {
         Ok(())
     }
 }
+
+#[cfg(test)]
+fn is_normal<T: Send + Sync + Sized + Unpin>() {}
+#[test]
+fn normal_types() {
+    is_normal::<Cache>();
+}
