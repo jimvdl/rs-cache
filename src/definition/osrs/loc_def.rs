@@ -1,5 +1,5 @@
 use nom::number::complete::be_u8;
-#[cfg(feature = "serde-derive")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use super::Definition;
@@ -8,7 +8,7 @@ use crate::parse::{be_u16_smart, be_u32_smart_compat};
 /// Contains all the information about a certain location fetched from the cache through
 /// the [LocationLoader](../../loader/osrs/struct.LocationLoader.html).
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct LocationDefinition {
     pub id: u16,
     pub region_x: u16,
@@ -24,7 +24,7 @@ impl LocationDefinition {
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Location {
     pub id: u32,
     pub loc_type: u8,

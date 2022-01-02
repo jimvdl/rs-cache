@@ -2,7 +2,7 @@ use nom::{
     combinator::rest,
     number::complete::{be_u16, be_u24, be_u32, be_u8},
 };
-#[cfg(feature = "serde-derive")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::{archive::ArchiveRef, error::ReadError};
@@ -17,7 +17,7 @@ pub type HeaderSize = usize;
 pub type DataSize = usize;
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sector<'a> {
     pub header: SectorHeader,
     pub data_block: &'a [u8],
@@ -33,7 +33,7 @@ impl<'a> Sector<'a> {
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct SectorHeader {
     pub archive_id: u32,
     pub chunk: usize,
@@ -100,7 +100,7 @@ impl Default for SectorHeaderSize {
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum SectorHeaderSize {
     Normal,
     Expanded,

@@ -16,18 +16,11 @@ categories = ["development-tools", "filesystem"]
 maintenance = { status = "experimental" }
 
 [features]
-default = ["osrs"]
-serde-derive = ["serde", "serde-big-array"]
-osrs = []
 rs3 = ["whirlpool", "num-bigint", "lzma-rs"]
 
 [[example]]
 name = "rs3_update_protocol"
 required-features = ["rs3"]
-
-[[example]]
-name = "osrs_update_protocol"
-required-features = ["osrs"]
 
 [lib]
 name = "rscache"

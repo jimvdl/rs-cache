@@ -25,7 +25,7 @@ use nom::{combinator::cond, number::complete::be_u32};
 
 #[cfg(feature = "rs3")]
 use num_bigint::{BigInt, Sign};
-#[cfg(feature = "serde-derive")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "rs3")]
 use whirlpool::{Digest, Whirlpool};
@@ -34,7 +34,7 @@ const CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
 /// Contains index validation data.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(not(feature = "rs3"), derive(Default))]
 pub struct Entry {
     pub crc: u32,
@@ -52,7 +52,7 @@ pub struct Entry {
 /// [create_checksum()](../struct.Cache.html#method.create_checksum) function has to be
 /// called on `Cache`.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Checksum<'a> {
     index_count: usize,
     entries: Vec<Entry>,
@@ -227,7 +227,7 @@ impl<'a> Checksum<'a> {
 
 // TODO: documentation
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct RsaKeys<'a> {
     pub(crate) exponent: &'a [u8],
     pub(crate) modulus: &'a [u8],

@@ -91,7 +91,6 @@
 //! ```
 
 /// OSRS loaders.
-#[cfg(feature = "osrs")]
 pub mod osrs;
 /// RS3 loaders.
 #[cfg(any(feature = "rs3", doc))]

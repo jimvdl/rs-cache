@@ -1,6 +1,5 @@
 mod common;
 
-#[cfg(feature = "osrs")]
 mod osrs {
     use super::common;
     use rscache::{checksum::Checksum, util::Huffman, Cache};

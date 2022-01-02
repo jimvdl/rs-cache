@@ -7,7 +7,7 @@ use std::{
 
 use memmap2::Mmap;
 
-#[cfg(feature = "serde-derive")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -20,7 +20,7 @@ use crate::{
 pub const IDX_PREFIX: &str = "main_file_cache.idx";
 
 #[derive(Clone, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Indices(pub HashMap<u8, Index>);
 
 impl Indices {
@@ -72,7 +72,7 @@ impl Indices {
 }
 
 #[derive(Clone, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Index {
     pub id: u8,
     pub archive_refs: HashMap<u32, ArchiveRef>,

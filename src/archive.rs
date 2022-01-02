@@ -3,11 +3,11 @@ use std::{
     slice::{Iter, IterMut},
 };
 
-#[cfg(feature = "serde-derive")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
-#[cfg(feature = "serde-derive")]
+#[cfg(feature = "serde")]
 use serde_big_array::big_array;
-#[cfg(feature = "serde-derive")]
+#[cfg(feature = "serde")]
 big_array! { BigArray; }
 
 use itertools::izip;
@@ -24,7 +24,7 @@ use crate::sector::{DataSize, HeaderSize, SectorHeaderSize};
 pub const ARCHIVE_REF_LEN: usize = 6;
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ArchiveRef {
     pub id: u32,
     pub index_id: u8,
@@ -92,13 +92,13 @@ impl Iterator for Chunks {
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Archive {
     pub id: u32,
     pub name_hash: i32,
     pub crc: u32,
     pub hash: i32,
-    #[cfg_attr(feature = "serde-derive", serde(with = "BigArray"))]
+    #[cfg_attr(feature = "serde", serde(with = "BigArray"))]
     pub whirlpool: [u8; 64],
     pub version: u32,
     pub entry_count: usize,
@@ -153,14 +153,14 @@ impl Archive {
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ArchiveFileData {
     pub id: u32,
     pub data: Vec<u8>,
 }
 
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde-derive", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ArchiveFileGroup(Vec<ArchiveFileData>);
 
 impl ArchiveFileGroup {
