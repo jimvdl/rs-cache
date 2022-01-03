@@ -6,8 +6,8 @@ use std::collections::{
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
+use runefs::codec;
 use crate::{
-    codec,
     definition::osrs::{
         Definition, FetchDefinition, ItemDefinition, LocationDefinition, MapDefinition,
         NpcDefinition, ObjectDefinition,

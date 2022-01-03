@@ -1,0 +1,26 @@
+[package]
+name = "rune-fs"
+version = "0.1.0"
+authors = ["jimvdl <jimvdlind@gmail.com>"]
+edition = "2021"
+license = "MIT"
+description = "Read-only virtual file types for the RuneScape file system."
+repository = "https://github.com/jimvdl/rune-fs"
+documentation = "https://docs.rs/rune-fs"
+readme = "README.md"
+keywords = ["runescape", "osrs", "rs3"]
+categories = ["development-tools", "filesystem"]
+
+[badges]
+maintenance = { status = "experimental" }
+
+[lib]
+name = "runefs"
+path = "src/lib.rs"
+
+[dependencies]
+nom = "7.0"
+itertools = "0.10"
+flate2 = "1.0"
+bzip2 = "0.4"
+memmap2 = "0.5"

@@ -3,7 +3,7 @@ use nom::number::complete::be_u8;
 use serde::{Deserialize, Serialize};
 
 use super::Definition;
-use crate::parse::{be_u16_smart, be_u32_smart_compat};
+use runefs::parse::{be_u16_smart, be_u32_smart_compat};
 
 /// Contains all the information about a certain location fetched from the cache through
 /// the [LocationLoader](../../loader/osrs/struct.LocationLoader.html).

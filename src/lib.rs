@@ -78,38 +78,23 @@
 
 #[macro_use]
 pub mod util;
-mod archive;
 pub mod checksum;
-pub mod codec;
 pub mod definition;
 pub mod error;
 pub mod extension;
-mod index;
 pub mod loader;
-pub mod parse;
-mod sector;
 
 #[doc(inline)]
 pub use error::{CacheError, Result};
 
-pub(crate) const MAIN_DATA: &str = "main_file_cache.dat2";
-pub(crate) const REFERENCE_TABLE: u8 = 255;
-
-use std::{fs::File, io::Write, path::Path};
-
-use memmap2::Mmap;
-
-use crate::{
-    archive::ArchiveRef,
-    error::{ParseError, ReadError},
-    index::Indices,
-    sector::{Sector, SECTOR_SIZE},
-};
+use crate::error::ReadError;
+use runefs::{MAIN_DATA, ArchiveRef, Indices, Dat2};
+use std::{io::Write, path::Path};
 
 /// A parsed Jagex cache.
 #[derive(Debug)]
 pub struct Cache {
-    data: Mmap,
+    data: Dat2,
     pub(crate) indices: Indices,
 }
 
@@ -126,11 +111,8 @@ impl Cache {
     /// is returned which wraps the underlying error.
     #[inline]
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
-        let path = path.as_ref();
-        let main_file = File::open(path.join(MAIN_DATA))?;
-
         Ok(Self {
-            data: unsafe { Mmap::map(&main_file)? },
+            data: Dat2::new(path.as_ref().join(MAIN_DATA))?,
             indices: Indices::new(path)?,
         })
     }
@@ -159,7 +141,7 @@ impl Cache {
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
 
         let mut buffer = Vec::with_capacity(archive.length);
-        self.data.read_internal(archive, &mut buffer)?;
+        self.data.read(archive, &mut buffer)?;
 
         assert_eq!(buffer.len(), archive.length);
 
@@ -196,7 +178,7 @@ impl Cache {
             .archive_refs
             .get(&archive_id)
             .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
-        self.data.read_internal(archive, writer)
+        Ok(self.data.read(archive, writer)?)
     }
 
     /// Tries to return the huffman table from the cache.
@@ -208,7 +190,7 @@ impl Cache {
 
         let archive = self.archive_by_name(index_id, "huffman")?;
         let buffer = self.read_archive(archive)?;
-        codec::decode(&buffer)
+        Ok(runefs::codec::decode(&buffer)?)
     }
 
     #[inline]
@@ -235,36 +217,6 @@ impl Cache {
             .ok_or(ReadError::ArchiveNotFound(index_id, archive.id))?;
 
         Ok(archive_ref)
-    }
-}
-
-pub(crate) trait ReadInternal {
-    fn read_internal<W: Write>(&self, archive: &ArchiveRef, writer: &mut W) -> crate::Result<()>;
-}
-
-impl ReadInternal for Mmap {
-    #[inline]
-    fn read_internal<W: Write>(&self, archive: &ArchiveRef, writer: &mut W) -> crate::Result<()> {
-        let mut current_sector = archive.sector;
-        let (header_size, chunks) = archive.chunks();
-
-        for (chunk, data_len) in chunks.enumerate() {
-            let offset = current_sector * SECTOR_SIZE;
-
-            let data_block = &self[offset..offset + data_len];
-            match Sector::new(data_block, &header_size) {
-                Ok(sector) => {
-                    sector
-                        .header
-                        .validate(archive.id, chunk, archive.index_id)?;
-                    current_sector = sector.header.next;
-                    writer.write_all(sector.data_block)?;
-                }
-                Err(_) => return Err(ParseError::Sector(archive.sector).into()),
-            };
-        }
-
-        Ok(())
     }
 }
 

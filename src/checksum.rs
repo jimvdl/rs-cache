@@ -19,7 +19,8 @@
 use std::iter::IntoIterator;
 use std::slice::Iter;
 
-use crate::{codec, codec::Compression, error::ValidateError, Cache, REFERENCE_TABLE};
+use runefs::{codec, codec::Compression, REFERENCE_TABLE};
+use crate::{error::ValidateError, Cache};
 use crc::{Crc, CRC_32_ISO_HDLC};
 use nom::{combinator::cond, number::complete::be_u32};
 
@@ -177,7 +178,7 @@ impl<'a> Checksum<'a> {
             buffer.extend(&u32::to_be_bytes(entry.version));
         }
 
-        codec::encode(Compression::None, &buffer, None)
+        Ok(codec::encode(Compression::None, &buffer, None)?)
     }
 
     #[cfg(feature = "rs3")]

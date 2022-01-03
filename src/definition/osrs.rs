@@ -14,9 +14,10 @@ pub use obj_def::*;
 
 use std::collections::HashMap;
 
-use crate::{
-    archive::{Archive, ArchiveFileGroup},
-    codec, Cache, REFERENCE_TABLE,
+use crate::Cache;
+use runefs::{
+    Archive, ArchiveFileGroup,
+    codec, REFERENCE_TABLE,
 };
 
 /// Marker trait for definitions.

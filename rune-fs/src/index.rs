@@ -5,8 +5,6 @@ use std::{
     path::Path,
 };
 
-use memmap2::Mmap;
-
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
@@ -14,7 +12,7 @@ use crate::{
     archive::{Archive, ArchiveRef, ARCHIVE_REF_LEN},
     codec,
     error::{ParseError, ReadError},
-    ReadInternal, REFERENCE_TABLE,
+    Dat2, REFERENCE_TABLE,
 };
 
 pub const IDX_PREFIX: &str = "main_file_cache.idx";
@@ -35,8 +33,7 @@ impl Indices {
             return Err(ReadError::ReferenceTableNotFound.into());
         };
 
-        let main_file = File::open(path.join(crate::MAIN_DATA))?;
-        let data = unsafe { Mmap::map(&main_file)? };
+        let data = Dat2::new(path.join(crate::MAIN_DATA))?;
 
         for index_id in 0..REFERENCE_TABLE {
             let path = path.join(format!("{}{}", IDX_PREFIX, index_id));
@@ -49,7 +46,7 @@ impl Indices {
                     .ok_or(ReadError::ArchiveNotFound(REFERENCE_TABLE, index_id as u32))?;
                 if archive_ref.length != 0 {
                     let mut buffer = Vec::with_capacity(archive_ref.length);
-                    data.read_internal(archive_ref, &mut buffer)?;
+                    data.read(archive_ref, &mut buffer)?;
                     let buffer = codec::decode(&buffer)?;
                     index.archives = Archive::parse(&buffer)?;
                 }
@@ -145,9 +142,9 @@ impl<'a> IntoIterator for &'a Indices {
 
 #[test]
 fn from_path_correct_extension() -> crate::Result<()> {
-    let index2 = Index::from_path(2, "./data/osrs_cache/main_file_cache.idx2")?;
-    let index15 = Index::from_path(15, "./data/osrs_cache/main_file_cache.idx15")?;
-    let index255 = Index::from_path(255, "./data/osrs_cache/main_file_cache.idx255")?;
+    let index2 = Index::from_path(2, "../data/osrs_cache/main_file_cache.idx2")?;
+    let index15 = Index::from_path(15, "../data/osrs_cache/main_file_cache.idx15")?;
+    let index255 = Index::from_path(255, "../data/osrs_cache/main_file_cache.idx255")?;
 
     assert_eq!(index2.id, 2);
     assert_eq!(index15.id, 15);
@@ -159,5 +156,5 @@ fn from_path_correct_extension() -> crate::Result<()> {
 #[test]
 #[should_panic]
 fn from_path_incorrect_extension() {
-    Index::from_path(2, "./data/osrs_cache/main_file_cache.idx1").unwrap();
+    Index::from_path(2, "../data/osrs_cache/main_file_cache.idx1").unwrap();
 }

@@ -39,5 +39,11 @@ lzma-rs = { version = "0.2", optional = true }
 flate2 = "1.0"
 memmap2 = "0.5"
 
+[dependencies.rune-fs]
+path = "rune-fs"
+
 [dev-dependencies]
 sha1 = "0.6"
+
+[workspace]
+members = ["rune-fs"]

@@ -29,8 +29,8 @@ use nom::{
 };
 
 use crate::{
-    error::{CacheError, CompressionError},
-    util::xtea,
+    error::{RuneFsError, CompressionUnsupported},
+    xtea,
 };
 
 /// Supported compression types for RuneScape.
@@ -337,7 +337,7 @@ impl From<Compression> for u8 {
 }
 
 impl TryFrom<u8> for Compression {
-    type Error = CompressionError;
+    type Error = CompressionUnsupported;
 
     #[inline]
     fn try_from(compression: u8) -> Result<Self, Self::Error> {
@@ -347,13 +347,13 @@ impl TryFrom<u8> for Compression {
             2 => Ok(Self::Gzip),
             #[cfg(feature = "rs3")]
             3 => Ok(Self::Lzma),
-            _ => Err(CompressionError::Unsupported(compression)),
+            _ => Err(CompressionUnsupported),
         }
     }
 }
 
 impl TryFrom<&[u8]> for DecodedBuffer {
-    type Error = CacheError;
+    type Error = RuneFsError;
 
     #[inline]
     fn try_from(buffer: &[u8]) -> Result<Self, Self::Error> {

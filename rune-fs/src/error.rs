@@ -1,12 +1,11 @@
 //! Error management.
 
 use std::{error::Error, fmt, io};
-use runefs::error::RuneFsError;
 
 /// A specialized result type for cache operations.
 ///
 /// This type is broadly used across rscache for any operation which may produce a
-/// [CacheError](enum.CacheError.html).
+/// [RuneFsError](enum.RuneFsError.html).
 ///
 /// # Examples
 ///
@@ -16,7 +15,7 @@ use runefs::error::RuneFsError;
 /// use rscache::Cache;
 /// use rscache::codec;
 ///
-/// // Same result as Result<Vec<u8>, CacheError>
+/// // Same result as Result<Vec<u8>, RuneFsError>
 /// fn item_def_data(cache: &Cache) -> rscache::Result<Vec<u8>> {
 ///     let index_id = 2;
 ///     let archive_id = 10;
@@ -27,24 +26,23 @@ use runefs::error::RuneFsError;
 ///     Ok(buffer)
 /// }
 /// ```
-pub type Result<T> = std::result::Result<T, CacheError>;
+pub type Result<T> = std::result::Result<T, RuneFsError>;
 
 /// Super error type for all sub cache errors
 #[derive(Debug)]
-pub enum CacheError {
+pub enum RuneFsError {
     /// Wrapper for the std::io::Error type.
     Io(io::Error),
     Read(ReadError),
-    Compression(CompressionError),
+    Compression(CompressionUnsupported),
     /// Clarification error for failed parsers.
     Parse(ParseError),
     Validate(ValidateError),
-    RuneFs(RuneFsError),
 }
 
 macro_rules! impl_from {
     ($ty:path, $var:ident) => {
-        impl From<$ty> for CacheError {
+        impl From<$ty> for RuneFsError {
             #[inline]
             fn from(err: $ty) -> Self {
                 Self::$var(err)
@@ -55,19 +53,18 @@ macro_rules! impl_from {
 
 impl_from!(io::Error, Io);
 impl_from!(ReadError, Read);
-impl_from!(CompressionError, Compression);
+impl_from!(CompressionUnsupported, Compression);
 impl_from!(ParseError, Parse);
 impl_from!(ValidateError, Validate);
-impl_from!(RuneFsError, RuneFs);
 
-impl From<nom::Err<()>> for CacheError {
+impl From<nom::Err<()>> for RuneFsError {
     #[inline]
     fn from(_: nom::Err<()>) -> Self {
         Self::Parse(ParseError::Unknown)
     }
 }
 
-impl Error for CacheError {
+impl Error for RuneFsError {
     #[inline]
     fn source(&self) -> Option<&(dyn Error + 'static)> {
         match self {
@@ -76,12 +73,11 @@ impl Error for CacheError {
             Self::Compression(err) => Some(err),
             Self::Parse(err) => Some(err),
             Self::Validate(err) => Some(err),
-            Self::RuneFs(err) => Some(err),
         }
     }
 }
 
-impl fmt::Display for CacheError {
+impl fmt::Display for RuneFsError {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
@@ -90,7 +86,6 @@ impl fmt::Display for CacheError {
             Self::Compression(err) => err.fmt(f),
             Self::Parse(err) => err.fmt(f),
             Self::Validate(err) => err.fmt(f),
-            Self::RuneFs(err) => err.fmt(f),
         }
     }
 }
@@ -148,20 +143,13 @@ impl fmt::Display for ReadError {
 }
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-pub enum CompressionError {
-    Unsupported(u8),
-}
+pub struct CompressionUnsupported;
+impl Error for CompressionUnsupported {}
 
-impl Error for CompressionError {}
-
-impl fmt::Display for CompressionError {
+impl fmt::Display for CompressionUnsupported {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::Unsupported(compression) => {
-                write!(f, "Invalid compression: {} is unsupported.", compression)
-            }
-        }
+        write!(f, "unsupported compression type")
     }
 }
 
