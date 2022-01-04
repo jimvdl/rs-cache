@@ -33,11 +33,11 @@ impl Dat2 {
     where
         W: Write,
     {
-        let mut current_sector = archive.sector;
-        let (header_size, chunks) = archive.chunks();
+        let mut current = archive.sector;
+        let header_size = SectorHeaderSize::from(archive);
 
-        for (chunk, data_len) in chunks.enumerate() {
-            let offset = current_sector * SECTOR_SIZE;
+        for (chunk, data_len) in archive.data_blocks().enumerate() {
+            let offset = current * SECTOR_SIZE;
 
             let data_block = &self.0[offset..offset + data_len];
             match Sector::new(data_block, &header_size) {
@@ -45,7 +45,7 @@ impl Dat2 {
                     sector
                         .header
                         .validate(archive.id, chunk, archive.index_id)?;
-                    current_sector = sector.header.next;
+                    current = sector.header.next;
                     writer.write_all(sector.data_block)?;
                 }
                 Err(_) => return Err(ParseError::Sector(archive.sector).into()),
@@ -54,4 +54,11 @@ impl Dat2 {
 
         Ok(())
     }
+}
+
+#[cfg(test)]
+fn is_normal<T: Send + Sync + Sized + Unpin>() {}
+#[test]
+fn normal_types() {
+    is_normal::<Dat2>();
 }

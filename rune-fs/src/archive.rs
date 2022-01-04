@@ -19,7 +19,10 @@ use nom::{
 };
 
 use crate::parse::be_u32_smart;
-use crate::sector::{DataSize, HeaderSize, SectorHeaderSize};
+use crate::sector::{
+    SectorHeaderSize, SECTOR_DATA_SIZE, SECTOR_EXPANDED_DATA_SIZE, SECTOR_EXPANDED_HEADER_SIZE,
+    SECTOR_HEADER_SIZE,
+};
 
 pub const ARCHIVE_REF_LEN: usize = 6;
 
@@ -45,34 +48,33 @@ impl ArchiveRef {
         })
     }
 
-    pub fn chunks(&self) -> (SectorHeaderSize, Chunks) {
-        let header_size = SectorHeaderSize::from_archive(self);
-        let (header_len, data_len) = header_size.clone().into();
+    pub fn data_blocks(&self) -> DataBlocks {
+        let (header_len, data_len) = match SectorHeaderSize::from(self) {
+            SectorHeaderSize::Normal => (SECTOR_HEADER_SIZE, SECTOR_DATA_SIZE),
+            SectorHeaderSize::Expanded => (SECTOR_EXPANDED_HEADER_SIZE, SECTOR_EXPANDED_DATA_SIZE),
+        };
 
         let n = self.length / data_len;
         let rem = self.length % data_len;
         let n = if rem > 0 { n + 1 } else { n };
 
-        (
-            header_size,
-            Chunks {
-                count: n,
-                remainder: rem,
-                header_len,
-                data_len,
-            },
-        )
+        DataBlocks {
+            count: n,
+            remainder: rem,
+            header_len,
+            data_len,
+        }
     }
 }
 
-pub struct Chunks {
+pub struct DataBlocks {
     count: usize,
     remainder: usize,
-    header_len: HeaderSize,
-    data_len: DataSize,
+    header_len: usize,
+    data_len: usize,
 }
 
-impl Iterator for Chunks {
+impl Iterator for DataBlocks {
     type Item = usize;
 
     fn next(&mut self) -> Option<Self::Item> {

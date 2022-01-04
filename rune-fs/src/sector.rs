@@ -13,9 +13,6 @@ pub const SECTOR_DATA_SIZE: usize = 512;
 pub const SECTOR_EXPANDED_DATA_SIZE: usize = 510;
 pub const SECTOR_SIZE: usize = SECTOR_HEADER_SIZE + SECTOR_DATA_SIZE;
 
-pub type HeaderSize = usize;
-pub type DataSize = usize;
-
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Sector<'a> {
@@ -69,17 +66,9 @@ impl<'a> SectorHeader {
     }
 
     // TODO: fix error handling and add back const
-    pub fn validate(
-        &self,
-        archive_id: u32,
-        chunk: usize,
-        index_id: u8,
-    ) -> crate::Result<()> {
+    pub fn validate(&self, archive_id: u32, chunk: usize, index_id: u8) -> crate::Result<()> {
         if self.archive_id != archive_id {
-            return Err(ReadError::SectorArchiveMismatch(
-                self.archive_id,
-                archive_id,
-            ).into());
+            return Err(ReadError::SectorArchiveMismatch(self.archive_id, archive_id).into());
         }
 
         if self.chunk != chunk {
@@ -107,22 +96,12 @@ pub enum SectorHeaderSize {
     Expanded,
 }
 
-impl SectorHeaderSize {
-    pub fn from_archive(archive: &ArchiveRef) -> Self {
+impl From<&ArchiveRef> for SectorHeaderSize {
+    fn from(archive: &ArchiveRef) -> Self {
         if archive.id > std::u16::MAX.into() {
             Self::Expanded
         } else {
             Self::Normal
-        }
-    }
-}
-
-impl From<SectorHeaderSize> for (HeaderSize, DataSize) {
-    #[inline]
-    fn from(header_size: SectorHeaderSize) -> Self {
-        match header_size {
-            SectorHeaderSize::Normal => (SECTOR_HEADER_SIZE, SECTOR_DATA_SIZE),
-            SectorHeaderSize::Expanded => (SECTOR_EXPANDED_HEADER_SIZE, SECTOR_EXPANDED_DATA_SIZE),
         }
     }
 }
@@ -135,7 +114,7 @@ fn header_size_normal() -> crate::Result<()> {
         sector: 0,
         length: 0,
     };
-    let header_size = SectorHeaderSize::from_archive(&archive);
+    let header_size = SectorHeaderSize::from(&archive);
 
     assert_eq!(header_size, SectorHeaderSize::Normal);
 
@@ -150,7 +129,7 @@ fn header_size_expanded() -> crate::Result<()> {
         sector: 0,
         length: 0,
     };
-    let header_size = SectorHeaderSize::from_archive(&archive);
+    let header_size = SectorHeaderSize::from(&archive);
 
     assert_eq!(header_size, SectorHeaderSize::Expanded);
 
