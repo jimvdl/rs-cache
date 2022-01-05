@@ -87,8 +87,9 @@ pub mod loader;
 #[doc(inline)]
 pub use error::{CacheError, Result};
 
-use crate::error::ReadError;
-use runefs::{MAIN_DATA, ArchiveRef, Indices, Dat2};
+// use crate::error::ReadError;
+use runefs::error::{ReadError, RuneFsError};
+use runefs::{ArchiveRef, Dat2, Indices, MAIN_DATA};
 use std::{io::Write, path::Path};
 
 /// A parsed Jagex cache.
@@ -133,12 +134,15 @@ impl Cache {
         let index = self
             .indices
             .get(&index_id)
-            .ok_or(ReadError::IndexNotFound(index_id))?;
+            .ok_or(RuneFsError::Read(ReadError::IndexNotFound(index_id)))?;
 
         let archive = index
             .archive_refs
             .get(&archive_id)
-            .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
+            .ok_or(RuneFsError::Read(ReadError::ArchiveNotFound {
+                idx: index_id,
+                arc: archive_id,
+            }))?;
 
         let mut buffer = Vec::with_capacity(archive.length);
         self.data.read(archive, &mut buffer)?;
@@ -172,12 +176,15 @@ impl Cache {
         let index = self
             .indices
             .get(&index_id)
-            .ok_or(ReadError::IndexNotFound(index_id))?;
+            .ok_or(RuneFsError::Read(ReadError::IndexNotFound(index_id)))?;
 
         let archive = index
             .archive_refs
             .get(&archive_id)
-            .ok_or(ReadError::ArchiveNotFound(index_id, archive_id))?;
+            .ok_or(RuneFsError::Read(ReadError::ArchiveNotFound {
+                idx: index_id,
+                arc: archive_id,
+            }))?;
         Ok(self.data.read(archive, writer)?)
     }
 
@@ -202,22 +209,35 @@ impl Cache {
         let index = self
             .indices
             .get(&index_id)
-            .ok_or(ReadError::IndexNotFound(index_id))?;
+            .ok_or(RuneFsError::Read(ReadError::IndexNotFound(index_id)))?;
         let hash = util::djd2::hash(&name);
 
         let archive = index
             .archives
             .iter()
             .find(|archive| archive.name_hash == hash)
-            .ok_or_else(|| ReadError::NameNotInArchive(hash, name.as_ref().into(), index_id))?;
+            .ok_or_else(|| crate::error::NameHashMismatch {
+                hash,
+                name: name.as_ref().into(),
+                idx: index_id,
+            })?;
 
         let archive_ref = index
             .archive_refs
             .get(&archive.id)
-            .ok_or(ReadError::ArchiveNotFound(index_id, archive.id))?;
+            .ok_or(RuneFsError::Read(ReadError::ArchiveNotFound {
+                idx: index_id,
+                arc: archive.id,
+            }))?;
 
         Ok(archive_ref)
     }
+}
+
+#[test]
+fn t() {
+    let cache = Cache::new("./data/osrs_cache").unwrap();
+    panic!("{}", cache.archive_by_name(0, "t").err().unwrap());
 }
 
 #[cfg(test)]

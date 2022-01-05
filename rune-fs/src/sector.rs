@@ -65,18 +65,25 @@ impl<'a> SectorHeader {
         ))
     }
 
-    // TODO: fix error handling and add back const
-    pub fn validate(&self, archive_id: u32, chunk: usize, index_id: u8) -> crate::Result<()> {
+    pub const fn validate(
+        &self,
+        archive_id: u32,
+        chunk: usize,
+        index_id: u8,
+    ) -> Result<(), ReadError> {
         if self.archive_id != archive_id {
-            return Err(ReadError::SectorArchiveMismatch(self.archive_id, archive_id).into());
+            return Err(ReadError::SectorArchiveMismatch(
+                self.archive_id,
+                archive_id,
+            ));
         }
 
         if self.chunk != chunk {
-            return Err(ReadError::SectorChunkMismatch(self.chunk, chunk).into());
+            return Err(ReadError::SectorChunkMismatch(self.chunk, chunk));
         }
 
         if self.index_id != index_id {
-            return Err(ReadError::SectorIndexMismatch(self.index_id, index_id).into());
+            return Err(ReadError::SectorIndexMismatch(self.index_id, index_id));
         }
 
         Ok(())
@@ -154,25 +161,25 @@ fn parse_header() -> crate::Result<()> {
     Ok(())
 }
 
-// #[test]
-// fn header_validation() {
-//     let header = SectorHeader {
-//         archive_id: 0,
-//         chunk: 0,
-//         next: 2,
-//         index_id: 255,
-//     };
+#[test]
+fn header_validation() {
+    let header = SectorHeader {
+        archive_id: 0,
+        chunk: 0,
+        next: 2,
+        index_id: 255,
+    };
 
-//     assert_eq!(
-//         header.validate(1, 0, 255),
-//         Err(ReadError::SectorArchiveMismatch(header.archive_id, 1))
-//     );
-//     assert_eq!(
-//         header.validate(0, 1, 255),
-//         Err(ReadError::SectorChunkMismatch(header.chunk, 1))
-//     );
-//     assert_eq!(
-//         header.validate(0, 0, 0),
-//         Err(ReadError::SectorIndexMismatch(header.index_id, 0))
-//     );
-// }
+    assert_eq!(
+        header.validate(1, 0, 255),
+        Err(ReadError::SectorArchiveMismatch(header.archive_id, 1))
+    );
+    assert_eq!(
+        header.validate(0, 1, 255),
+        Err(ReadError::SectorChunkMismatch(header.chunk, 1))
+    );
+    assert_eq!(
+        header.validate(0, 0, 0),
+        Err(ReadError::SectorIndexMismatch(header.index_id, 0))
+    );
+}

@@ -38,6 +38,7 @@ serde-big-array = { version = "0.3", optional = true }
 lzma-rs = { version = "0.2", optional = true }
 flate2 = "1.0"
 memmap2 = "0.5"
+thiserror = "1.0.30"
 
 [dependencies.rune-fs]
 path = "rune-fs"

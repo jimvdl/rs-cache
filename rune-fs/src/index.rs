@@ -40,10 +40,12 @@ impl Indices {
             if path.exists() {
                 let mut index = Index::from_path(index_id, path)?;
 
-                let archive_ref = ref_index
-                    .archive_refs
-                    .get(&(index_id as u32))
-                    .ok_or(ReadError::ArchiveNotFound(REFERENCE_TABLE, index_id as u32))?;
+                let archive_ref = ref_index.archive_refs.get(&(index_id as u32)).ok_or(
+                    ReadError::ArchiveNotFound {
+                        idx: REFERENCE_TABLE,
+                        arc: index_id as u32,
+                    },
+                )?;
                 if archive_ref.length != 0 {
                     let mut buffer = Vec::with_capacity(archive_ref.length);
                     data.read(archive_ref, &mut buffer)?;

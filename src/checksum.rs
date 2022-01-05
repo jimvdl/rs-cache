@@ -19,10 +19,10 @@
 use std::iter::IntoIterator;
 use std::slice::Iter;
 
-use runefs::{codec, codec::Compression, REFERENCE_TABLE};
 use crate::{error::ValidateError, Cache};
 use crc::{Crc, CRC_32_ISO_HDLC};
 use nom::{combinator::cond, number::complete::be_u32};
+use runefs::{codec, codec::Compression, REFERENCE_TABLE};
 
 #[cfg(feature = "rs3")]
 use num_bigint::{BigInt, Sign};
@@ -163,7 +163,12 @@ impl<'a> Checksum<'a> {
             .enumerate()
         {
             if internal != external {
-                return Err(ValidateError::InvalidCrc(*internal, *external, index).into());
+                return Err(ValidateError::InvalidCrc {
+                    idx: index,
+                    internal: *internal,
+                    external: *external,
+                }
+                .into());
             }
         }
 
