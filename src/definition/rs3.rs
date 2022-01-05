@@ -4,11 +4,8 @@ mod item_def;
 pub use item_def::*;
 
 use std::collections::HashMap;
-
-use crate::{
-    archive::{Archive, ArchiveFileGroup},
-    codec, Cache, REFERENCE_TABLE,
-};
+use runefs::{Archive, ArchiveFileGroup, codec, REFERENCE_TABLE};
+use crate::Cache;
 
 pub(crate) const ID_BLOCK_SIZE: usize = 256;
 
