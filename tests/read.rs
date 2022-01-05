@@ -4,7 +4,7 @@ mod osrs {
     use super::common;
 
     #[test]
-    fn read_from_ref_table() -> rscache::Result<()> {
+    fn read_from_ref_table() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         
         let archive = cache.read(255, 10)?;
@@ -17,7 +17,7 @@ mod osrs {
     }
     
     #[test]
-    fn read_from_0_16() -> rscache::Result<()> {
+    fn read_from_0_16() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         
         let archive = cache.read(0, 16)?;
@@ -30,7 +30,7 @@ mod osrs {
     }
     
     #[test]
-    fn read_from_0_191() -> rscache::Result<()> {
+    fn read_from_0_191() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         
         let archive = cache.read(0, 191)?;
@@ -43,7 +43,7 @@ mod osrs {
     }
     
     #[test]
-    fn read_from_2_10() -> rscache::Result<()> {
+    fn read_from_2_10() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         
         let archive = cache.read(2, 10)?;
@@ -56,7 +56,7 @@ mod osrs {
     }
     
     #[test]
-    fn read_from_7_24918() -> rscache::Result<()> {
+    fn read_from_7_24918() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         
         let archive = cache.read(7, 24918)?;
@@ -69,7 +69,7 @@ mod osrs {
     }
 
     #[test]
-    fn read_from_3_278() -> rscache::Result<()> {
+    fn read_from_3_278() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         
         let archive = cache.read(3, 278)?;
@@ -80,7 +80,7 @@ mod osrs {
     }
 
     #[test]
-    fn read_from_0_1077() -> rscache::Result<()> {
+    fn read_from_0_1077() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         
         let archive = cache.read(0, 1077)?;
@@ -92,7 +92,7 @@ mod osrs {
 
 
     #[test]
-    fn read_from_2_25000_fails() -> rscache::Result<()> {
+    fn read_from_2_25000_fails() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         
         assert!(cache.read(2, 25_000).is_err());
@@ -106,7 +106,7 @@ mod rs3 {
     use super::common;
 
     #[test]
-    fn read_from_0_25() -> rscache::Result<()> {
+    fn read_from_0_25() -> common::Result<()> {
         let cache = common::rs3::setup()?;
         
         let archive = cache.read(0, 25)?;
@@ -119,7 +119,7 @@ mod rs3 {
     }
 
     #[test]
-    fn read_from_7_0() -> rscache::Result<()> {
+    fn read_from_7_0() -> common::Result<()> {
         let cache = common::rs3::setup()?;
         
         let archive = cache.read(7, 0)?;
@@ -132,7 +132,7 @@ mod rs3 {
     }
 
     #[test]
-    fn read_from_2_25000_fails() -> rscache::Result<()> {
+    fn read_from_2_25000_fails() -> common::Result<()> {
         let cache = common::rs3::setup()?;
         
         assert!(cache.read(2, 25_000).is_err());

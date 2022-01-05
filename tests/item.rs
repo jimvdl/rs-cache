@@ -4,7 +4,7 @@ mod osrs {
     use super::common;
     
     #[test]
-    fn load_item_blue_partyhat() -> rscache::Result<()> {
+    fn load_item_blue_partyhat() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         let item_loader = common::osrs::load_items(&cache)?;
         
@@ -18,7 +18,7 @@ mod osrs {
     }
     
     #[test]
-    fn load_item_magic_logs() -> rscache::Result<()> {
+    fn load_item_magic_logs() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         let item_loader = common::osrs::load_items(&cache)?;
         
@@ -32,7 +32,7 @@ mod osrs {
     }
     
     #[test]
-    fn load_item_logs_noted() -> rscache::Result<()> {
+    fn load_item_logs_noted() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         let item_loader = common::osrs::load_items(&cache)?;
         
@@ -45,7 +45,7 @@ mod osrs {
     }
     
     #[test]
-    fn incorrect_item_id() -> rscache::Result<()> {
+    fn incorrect_item_id() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         let item_loader = common::osrs::load_items(&cache)?;
         
@@ -62,7 +62,7 @@ mod rs3 {
     use super::common;
     
     #[test]
-    fn load_item_blue_partyhat() -> rscache::Result<()> {
+    fn load_item_blue_partyhat() -> common::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
         
@@ -76,7 +76,7 @@ mod rs3 {
     }
 
     #[test]
-    fn load_item_master_mining_cape() -> rscache::Result<()> {
+    fn load_item_master_mining_cape() -> common::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
 
@@ -92,7 +92,7 @@ mod rs3 {
     }
 
     #[test]
-    fn load_item_luminite_stone_spirit() -> rscache::Result<()> {
+    fn load_item_luminite_stone_spirit() -> common::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
 
@@ -107,7 +107,7 @@ mod rs3 {
     }
 
     #[test]
-    fn load_item_light_animica() -> rscache::Result<()> {
+    fn load_item_light_animica() -> common::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
 
@@ -122,7 +122,7 @@ mod rs3 {
     }
 
     #[test]
-    fn load_item_elder_rune_pickaxe_5() -> rscache::Result<()> {
+    fn load_item_elder_rune_pickaxe_5() -> common::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
 
@@ -138,7 +138,7 @@ mod rs3 {
     }
 
     #[test]
-    fn load_item_wergali_incense_sticks() -> rscache::Result<()> {
+    fn load_item_wergali_incense_sticks() -> common::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
 
@@ -154,7 +154,7 @@ mod rs3 {
     }
 
     #[test]
-    fn incorrect_item_id() -> rscache::Result<()> {
+    fn incorrect_item_id() -> common::Result<()> {
         let cache = common::rs3::setup()?;
         let item_loader = common::rs3::load_items(&cache)?;
         

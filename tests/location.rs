@@ -5,7 +5,7 @@ mod osrs {
 
     use rscache::loader::osrs::LocationLoader;
     #[test]
-    fn load_locations() -> rscache::Result<()> {
+    fn load_locations() -> common::Result<()> {
         let cache = common::osrs::setup()?;
 
         let keys: [u32; 4] = [3030157619, 2364842415, 3297319647, 1973582566];

@@ -1,3 +1,13 @@
+// #![deny(missing_docs)]
+// #![deny(
+//     clippy::all,
+//     clippy::correctness,
+//     clippy::suspicious,
+//     clippy::style,
+//     clippy::complexity,
+//     clippy::perf
+// )]
+
 mod archive;
 pub mod codec;
 pub mod error;
@@ -6,6 +16,8 @@ pub mod parse;
 mod sector;
 mod xtea;
 
+#[doc(inline)]
+pub use error::Error;
 use error::Result;
 
 pub const MAIN_DATA: &str = "main_file_cache.dat2";

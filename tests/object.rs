@@ -4,7 +4,7 @@ mod osrs {
     use super::common;
     
     #[test]
-    fn load_law_rift() -> rscache::Result<()> {
+    fn load_law_rift() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         let obj_loader = common::osrs::load_objects(&cache)?;
         
@@ -19,7 +19,7 @@ mod osrs {
     }
     
     #[test]
-    fn load_furnace() -> rscache::Result<()> {
+    fn load_furnace() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         let obj_loader = common::osrs::load_objects(&cache)?;
         
@@ -33,7 +33,7 @@ mod osrs {
     }
     
     #[test]
-    fn load_bank_table() -> rscache::Result<()> {
+    fn load_bank_table() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         let obj_loader = common::osrs::load_objects(&cache)?;
         
@@ -48,7 +48,7 @@ mod osrs {
     }
     
     #[test]
-    fn load_dungeon_door() -> rscache::Result<()> {
+    fn load_dungeon_door() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         let obj_loader = common::osrs::load_objects(&cache)?;
         

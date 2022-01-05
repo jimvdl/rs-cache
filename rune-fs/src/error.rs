@@ -27,11 +27,11 @@ use thiserror::Error;
 ///     Ok(buffer)
 /// }
 /// ```
-pub type Result<T> = std::result::Result<T, RuneFsError>;
+pub(crate) type Result<T> = std::result::Result<T, Error>;
 
 /// Super error type for all sub cache errors
 #[derive(Error, Debug)]
-pub enum RuneFsError {
+pub enum Error {
     /// Wrapper for the std::io::Error type.
     #[error(transparent)]
     Io(#[from] io::Error),
@@ -44,7 +44,7 @@ pub enum RuneFsError {
     Parse(#[from] ParseError),
 }
 
-impl From<nom::Err<()>> for RuneFsError {
+impl From<nom::Err<()>> for Error {
     #[inline]
     fn from(_: nom::Err<()>) -> Self {
         Self::Parse(ParseError::Unknown)

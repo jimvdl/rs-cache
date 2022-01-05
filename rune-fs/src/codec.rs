@@ -29,7 +29,7 @@ use nom::{
 };
 
 use crate::{
-    error::{RuneFsError, CompressionUnsupported},
+    error::{Error as RuneFsError, CompressionUnsupported},
     xtea,
 };
 

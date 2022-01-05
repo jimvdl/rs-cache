@@ -85,10 +85,11 @@ pub mod extension;
 pub mod loader;
 
 #[doc(inline)]
-pub use error::{CacheError, Result};
+pub use error::Error;
+use error::Result;
 
 // use crate::error::ReadError;
-use runefs::error::{ReadError, RuneFsError};
+use runefs::error::{ReadError, Error as RuneFsError};
 use runefs::{ArchiveRef, Dat2, Indices, MAIN_DATA};
 use std::{io::Write, path::Path};
 

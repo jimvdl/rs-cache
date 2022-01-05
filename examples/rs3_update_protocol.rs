@@ -15,7 +15,7 @@ struct IncomingUpdatePacket {
 
 // This example illustrates the rs3 update protocol.
 // You can use this to handle client requests for cache data.
-fn main() -> rscache::Result<()> {
+fn main() -> Result<(), rscache::Error> {
     let cache = Cache::new("./data/rs3_cache")?;
     let packet = IncomingUpdatePacket {
         index_id: 255,

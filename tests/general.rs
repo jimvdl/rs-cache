@@ -5,7 +5,7 @@ mod osrs {
     use rscache::{checksum::Checksum, util::Huffman, Cache};
 
     #[test]
-    fn setup_cache() -> rscache::Result<()> {
+    fn setup_cache() -> common::Result<()> {
         let cache = common::osrs::setup();
 
         assert!(cache.is_ok());
@@ -14,7 +14,7 @@ mod osrs {
     }
 
     #[test]
-    fn setup_cache_fails() -> rscache::Result<()> {
+    fn setup_cache_fails() -> common::Result<()> {
         let result = Cache::new("./wrong/path");
 
         assert!(result.is_err());
@@ -23,7 +23,7 @@ mod osrs {
     }
 
     #[test]
-    fn create_checksum() -> rscache::Result<()> {
+    fn create_checksum() -> common::Result<()> {
         let cache = common::osrs::setup()?;
 
         assert!(Checksum::new(&cache).is_ok());
@@ -32,7 +32,7 @@ mod osrs {
     }
 
     #[test]
-    fn encode_checksum() -> rscache::Result<()> {
+    fn encode_checksum() -> common::Result<()> {
         let cache = common::osrs::setup()?;
 
         let buffer = Checksum::new(&cache)?.encode()?;
@@ -45,7 +45,7 @@ mod osrs {
     }
 
     #[test]
-    fn validate_checksum() -> rscache::Result<()> {
+    fn validate_checksum() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         let checksum = Checksum::new(&cache)?;
 
@@ -61,7 +61,7 @@ mod osrs {
     }
 
     #[test]
-    fn get_huffman_table() -> rscache::Result<()> {
+    fn get_huffman_table() -> common::Result<()> {
         let cache = common::osrs::setup()?;
 
         let huffman_table = cache.huffman_table()?;
@@ -74,7 +74,7 @@ mod osrs {
     }
 
     #[test]
-    fn huffman_decompress() -> rscache::Result<()> {
+    fn huffman_decompress() -> common::Result<()> {
         let cache = common::osrs::setup()?;
 
         let huffman_table = cache.huffman_table()?;
@@ -103,7 +103,7 @@ mod rs3 {
     };
 
     #[test]
-    fn setup_cache() -> rscache::Result<()> {
+    fn setup_cache() -> common::Result<()> {
         let cache = common::rs3::setup();
 
         assert!(cache.is_ok());
@@ -112,7 +112,7 @@ mod rs3 {
     }
 
     #[test]
-    fn setup_cache_fails() -> rscache::Result<()> {
+    fn setup_cache_fails() -> common::Result<()> {
         let result = Cache::new("./wrong/path");
 
         assert!(result.is_err());
@@ -121,7 +121,7 @@ mod rs3 {
     }
 
     #[test]
-    fn create_checksum() -> rscache::Result<()> {
+    fn create_checksum() -> common::Result<()> {
         let cache = common::rs3::setup()?;
 
         assert!(Checksum::with_rsa(&cache, RsaKeys::new(EXPONENT, MODULUS)).is_ok());
@@ -130,7 +130,7 @@ mod rs3 {
     }
 
     #[test]
-    fn encode_checksum() -> rscache::Result<()> {
+    fn encode_checksum() -> common::Result<()> {
         let cache = common::rs3::setup()?;
 
         let buffer = Checksum::with_rsa(&cache, RsaKeys::new(EXPONENT, MODULUS))?.encode()?;
@@ -143,7 +143,7 @@ mod rs3 {
     }
 
     #[test]
-    fn get_huffman_table() -> rscache::Result<()> {
+    fn get_huffman_table() -> common::Result<()> {
         let cache = common::rs3::setup()?;
 
         let huffman_table = cache.huffman_table()?;
@@ -156,7 +156,7 @@ mod rs3 {
     }
 
     #[test]
-    fn huffman_decompress() -> rscache::Result<()> {
+    fn huffman_decompress() -> common::Result<()> {
         let cache = common::rs3::setup()?;
 
         let huffman_table = cache.huffman_table()?;

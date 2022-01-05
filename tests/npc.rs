@@ -4,7 +4,7 @@ mod osrs {
     use super::common;
     
     #[test]
-    fn load_woodsman_tutor() -> rscache::Result<()> {
+    fn load_woodsman_tutor() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         let npc_loader = common::osrs::load_npcs(&cache)?;
         
@@ -17,7 +17,7 @@ mod osrs {
     }
     
     #[test]
-    fn load_last_npc() -> rscache::Result<()> {
+    fn load_last_npc() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         let npc_loader = common::osrs::load_npcs(&cache)?;
         
@@ -30,7 +30,7 @@ mod osrs {
     }
     
     #[test]
-    fn incorrect_npc_id() -> rscache::Result<()> {
+    fn incorrect_npc_id() -> common::Result<()> {
         let cache = common::osrs::setup()?;
         let npc_loader = common::osrs::load_npcs(&cache)?;
         

@@ -1,6 +1,6 @@
 //! Error management.
 
-use runefs::error::RuneFsError;
+use runefs::Error as RuneFsError;
 use std::io;
 use thiserror::Error;
 
@@ -28,11 +28,11 @@ use thiserror::Error;
 ///     Ok(buffer)
 /// }
 /// ```
-pub type Result<T> = std::result::Result<T, CacheError>;
+pub(crate) type Result<T> = std::result::Result<T, Error>;
 
 /// Super error type for all sub cache errors
 #[derive(Error, Debug)]
-pub enum CacheError {
+pub enum Error {
     /// Wrapper for the std::io::Error type.
     #[error(transparent)]
     Io(#[from] io::Error),
