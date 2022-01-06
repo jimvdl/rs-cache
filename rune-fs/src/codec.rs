@@ -347,7 +347,7 @@ impl TryFrom<u8> for Compression {
             2 => Ok(Self::Gzip),
             #[cfg(feature = "rs3")]
             3 => Ok(Self::Lzma),
-            _ => Err(CompressionUnsupported),
+            _ => Err(CompressionUnsupported(compression)),
         }
     }
 }

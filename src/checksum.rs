@@ -38,10 +38,10 @@ const CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(not(feature = "rs3"), derive(Default))]
 pub struct Entry {
-    pub crc: u32,
-    pub version: u32,
+    pub(crate) crc: u32,
+    pub(crate) version: u32,
     #[cfg(feature = "rs3")]
-    pub hash: Vec<u8>,
+    pub(crate) hash: Vec<u8>,
 }
 
 // TODO: fix documentation
@@ -54,25 +54,20 @@ pub struct Entry {
 /// called on `Cache`.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub struct Checksum<'a> {
+pub struct Checksum {
     index_count: usize,
     entries: Vec<Entry>,
-    rsa_keys: Option<RsaKeys<'a>>,
 }
 
-impl<'a> Checksum<'a> {
-    #[inline]
+impl Checksum {
     pub fn new(cache: &Cache) -> crate::Result<Self> {
-        Self::new_internal(cache, None)
+        Ok(Self {
+            index_count: cache.indices.len(),
+            entries: Self::entries(cache)?,
+        })
     }
 
-    #[cfg(any(feature = "rs3", doc))]
-    #[inline]
-    pub fn with_rsa(cache: &Cache, rsa_keys: RsaKeys<'a>) -> crate::Result<Self> {
-        Self::new_internal(cache, Some(rsa_keys))
-    }
-
-    fn new_internal(cache: &Cache, rsa_keys: Option<RsaKeys<'a>>) -> crate::Result<Self> {
+    fn entries(cache: &Cache) -> crate::Result<Vec<Entry>> {
         let entries: Vec<Entry> = (0..cache.indices.len())
             .into_iter()
             .filter_map(|idx_id| cache.read(REFERENCE_TABLE, idx_id as u32).ok())
@@ -81,6 +76,11 @@ impl<'a> Checksum<'a> {
                 if buffer.is_empty() || idx_id == 47 {
                     Ok(Entry::default())
                 } else {
+                    // let (buffer, size) = if with_rsa {
+                    //     be_u8(buffer.as_slice())?
+                    // } else {
+                    //     (buffer.as_slice(), (buffer.len() / 8) as u8)
+                    // };
                     let data = codec::decode(&buffer)?;
                     let (_, version) = cond(data[0] >= 6, be_u32)(&data[1..5])?;
                     let version = version.unwrap_or(0);
@@ -106,11 +106,7 @@ impl<'a> Checksum<'a> {
             .filter_map(crate::Result::ok)
             .collect();
 
-        Ok(Self {
-            index_count: cache.indices.len(),
-            entries,
-            rsa_keys,
-        })
+        Ok(entries)
     }
 
     /// Consumes the `Checksum` and encodes it into a byte buffer.
@@ -128,15 +124,35 @@ impl<'a> Checksum<'a> {
     /// Returns a `CacheError` if the encoding fails.
     #[inline]
     pub fn encode(self) -> crate::Result<Vec<u8>> {
-        match self.rsa_keys {
-            Some(_) => {
-                #[cfg(feature = "rs3")]
-                return self.encode_rs3();
-                #[cfg(not(feature = "rs3"))]
-                unreachable!()
-            }
-            None => self.encode_osrs(),
+        let mut buffer = Vec::with_capacity(self.entries.len() * 8);
+
+        for entry in self.entries {
+            buffer.extend(&u32::to_be_bytes(entry.crc));
+            buffer.extend(&u32::to_be_bytes(entry.version));
         }
+
+        // let mut buffer = codec::encode(Compression::None, &buffer, None)?;
+
+        // #[cfg(feature = "whirlpool")]
+        // {
+        //     let mut hasher = Whirlpool::new();
+        //     hasher.update(&buffer);
+        //     let mut hash = hasher.finalize().as_slice().to_vec();
+        //     hash.insert(0, 0);
+
+        //     let rsa_keys = self.rsa_keys.as_ref().unwrap();
+        //     let exp = BigInt::parse_bytes(rsa_keys.exponent, 10).unwrap_or_default();
+        //     let mud = BigInt::parse_bytes(rsa_keys.modulus, 10).unwrap_or_default();
+        //     let rsa = BigInt::from_bytes_be(Sign::Plus, &hash)
+        //         .modpow(&exp, &mud)
+        //         .to_bytes_be()
+        //         .1;
+
+        //     buffer.extend(rsa);
+        // }
+
+        // Ok(buffer)
+        Ok(codec::encode(Compression::None, &buffer, None)?)
     }
 
     // TODO: documentation and write fail tests for this. (also fix the rs3 tests)
@@ -175,51 +191,6 @@ impl<'a> Checksum<'a> {
         Ok(())
     }
 
-    fn encode_osrs(self) -> crate::Result<Vec<u8>> {
-        let mut buffer = Vec::with_capacity(self.entries.len() * 8);
-
-        for entry in self.entries {
-            buffer.extend(&u32::to_be_bytes(entry.crc));
-            buffer.extend(&u32::to_be_bytes(entry.version));
-        }
-
-        Ok(codec::encode(Compression::None, &buffer, None)?)
-    }
-
-    #[cfg(feature = "rs3")]
-    fn encode_rs3(self) -> crate::Result<Vec<u8>> {
-        let index_count = self.index_count - 1;
-        let mut buffer = vec![0; 81 * index_count];
-
-        buffer[0] = index_count as u8;
-        for (index, entry) in self.entries.iter().enumerate() {
-            let offset = index * 80;
-            buffer[offset + 1..=offset + 4].copy_from_slice(&u32::to_be_bytes(entry.crc));
-            buffer[offset + 5..=offset + 8].copy_from_slice(&u32::to_be_bytes(entry.version));
-            buffer[offset + 9..=offset + 12].copy_from_slice(&u32::to_be_bytes(0));
-            buffer[offset + 13..=offset + 16].copy_from_slice(&u32::to_be_bytes(0));
-            buffer[offset + 17..=offset + 80].copy_from_slice(&entry.hash);
-        }
-
-        let mut hasher = Whirlpool::new();
-        hasher.update(&buffer);
-        let mut hash = hasher.finalize().as_slice().to_vec();
-        hash.insert(0, 0);
-
-        // unwrap here is safe because this function never executes if self.rsa_keys is not `Some`.
-        let rsa_keys = self.rsa_keys.as_ref().unwrap();
-        let exp = BigInt::parse_bytes(rsa_keys.exponent, 10).unwrap_or_default();
-        let mud = BigInt::parse_bytes(rsa_keys.modulus, 10).unwrap_or_default();
-        let rsa = BigInt::from_bytes_be(Sign::Plus, &hash)
-            .modpow(&exp, &mud)
-            .to_bytes_be()
-            .1;
-
-        buffer.extend(rsa);
-
-        Ok(buffer)
-    }
-
     #[inline]
     pub const fn index_count(&self) -> usize {
         self.index_count
@@ -234,15 +205,65 @@ impl<'a> Checksum<'a> {
 // TODO: documentation
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg(feature = "rs3")]
 pub struct RsaKeys<'a> {
     pub(crate) exponent: &'a [u8],
     pub(crate) modulus: &'a [u8],
 }
 
+#[cfg(feature = "rs3")]
 impl<'a> RsaKeys<'a> {
-    #[inline]
     pub const fn new(exponent: &'a [u8], modulus: &'a [u8]) -> Self {
         Self { exponent, modulus }
+    }
+
+    pub fn encrypt(&self, hash: &[u8]) -> Vec<u8> {
+        let exp = BigInt::parse_bytes(self.exponent, 10).unwrap_or_default();
+        let mud = BigInt::parse_bytes(self.modulus, 10).unwrap_or_default();
+        BigInt::from_bytes_be(Sign::Plus, hash)
+            .modpow(&exp, &mud)
+            .to_bytes_be()
+            .1
+    }
+}
+
+#[cfg(feature = "rs3")]
+pub struct Rs3Checksum<'a> {
+    checksum: Checksum,
+    rsa_keys: RsaKeys<'a>,
+}
+
+#[cfg(feature = "rs3")]
+impl<'a> Rs3Checksum<'a> {
+    pub fn with_rsa(cache: &Cache, rsa_keys: RsaKeys<'a>) -> crate::Result<Self> {
+        Ok(Self {
+            checksum: Checksum::new(cache)?,
+            rsa_keys,
+        })
+    }
+
+    pub fn encode(self) -> crate::Result<Vec<u8>> {
+        let index_count = self.checksum.index_count - 1;
+        let mut buffer = vec![0; 81 * index_count];
+
+        buffer[0] = index_count as u8;
+        for (index, entry) in self.checksum.entries.iter().enumerate() {
+            let offset = index * 80;
+            buffer[offset + 1..=offset + 4].copy_from_slice(&u32::to_be_bytes(entry.crc));
+            buffer[offset + 5..=offset + 8].copy_from_slice(&u32::to_be_bytes(entry.version));
+            buffer[offset + 9..=offset + 12].copy_from_slice(&u32::to_be_bytes(0));
+            buffer[offset + 13..=offset + 16].copy_from_slice(&u32::to_be_bytes(0));
+            buffer[offset + 17..=offset + 80].copy_from_slice(&entry.hash);
+        }
+
+        let mut hasher = Whirlpool::new();
+        hasher.update(&buffer);
+        let mut hash = hasher.finalize().as_slice().to_vec();
+        hash.insert(0, 0);
+
+        buffer.extend(self.rsa_keys.encrypt(&hash));
+
+        Ok(buffer)
     }
 }
 

@@ -235,12 +235,6 @@ impl Cache {
     }
 }
 
-#[test]
-fn t() {
-    let cache = Cache::new("./data/osrs_cache").unwrap();
-    panic!("{}", cache.archive_by_name(0, "t").err().unwrap());
-}
-
 #[cfg(test)]
 fn is_normal<T: Send + Sync + Sized + Unpin>() {}
 #[test]

@@ -97,7 +97,7 @@ mod rs3 {
         rs3::{EXPONENT, MODULUS},
     };
     use rscache::{
-        checksum::{Checksum, RsaKeys},
+        checksum::{Rs3Checksum, RsaKeys},
         util::Huffman,
         Cache,
     };
@@ -124,7 +124,7 @@ mod rs3 {
     fn create_checksum() -> common::Result<()> {
         let cache = common::rs3::setup()?;
 
-        assert!(Checksum::with_rsa(&cache, RsaKeys::new(EXPONENT, MODULUS)).is_ok());
+        assert!(Rs3Checksum::with_rsa(&cache, RsaKeys::new(EXPONENT, MODULUS)).is_ok());
 
         Ok(())
     }
@@ -133,7 +133,7 @@ mod rs3 {
     fn encode_checksum() -> common::Result<()> {
         let cache = common::rs3::setup()?;
 
-        let buffer = Checksum::with_rsa(&cache, RsaKeys::new(EXPONENT, MODULUS))?.encode()?;
+        let buffer = Rs3Checksum::with_rsa(&cache, RsaKeys::new(EXPONENT, MODULUS))?.encode()?;
 
         let hash = common::hash(&buffer);
         assert_eq!(&hash, "118e0146af6cf288630357eec6298c34a2430065");

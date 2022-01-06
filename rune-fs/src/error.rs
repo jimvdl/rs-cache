@@ -70,8 +70,8 @@ pub enum ReadError {
 }
 
 #[derive(Error, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-#[error("unsupported compression type")]
-pub struct CompressionUnsupported;
+#[error("unsupported compression type {0}")]
+pub struct CompressionUnsupported(pub(crate) u8);
 
 #[derive(Error, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum ParseError {

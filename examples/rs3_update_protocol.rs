@@ -1,5 +1,5 @@
 use rscache::{
-    checksum::{Checksum, RsaKeys},
+    checksum::{Rs3Checksum, RsaKeys},
     Cache,
 };
 
@@ -24,7 +24,7 @@ fn main() -> Result<(), rscache::Error> {
     };
 
     let buf = if packet.index_id == 255 && packet.archive_id == 255 {
-        Checksum::with_rsa(&cache, RsaKeys::new(EXPONENT, MODULUS))?.encode()?
+        Rs3Checksum::with_rsa(&cache, RsaKeys::new(EXPONENT, MODULUS))?.encode()?
     } else {
         let buf = cache.read(packet.index_id, packet.archive_id)?;
         format_buffer(buf, packet.index_id)

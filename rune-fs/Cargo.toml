@@ -14,6 +14,9 @@ categories = ["development-tools", "filesystem"]
 [badges]
 maintenance = { status = "experimental" }
 
+[features]
+rs3 = ["whirlpool", "num-bigint", "lzma-rs"]
+
 [lib]
 name = "runefs"
 path = "src/lib.rs"
@@ -25,3 +28,8 @@ flate2 = "1.0"
 bzip2 = "0.4"
 memmap2 = "0.5"
 thiserror = "1.0.30"
+whirlpool = { version = "0.9", optional = true }
+num-bigint = { version = "0.4", optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
+serde-big-array = { version = "0.3", optional = true }
+lzma-rs = { version = "0.2", optional = true }
