@@ -228,14 +228,14 @@ impl<'a> RsaKeys<'a> {
 }
 
 #[cfg(feature = "rs3")]
-pub struct Rs3Checksum<'a> {
+pub struct RsaChecksum<'a> {
     checksum: Checksum,
     rsa_keys: RsaKeys<'a>,
 }
 
 #[cfg(feature = "rs3")]
-impl<'a> Rs3Checksum<'a> {
-    pub fn with_rsa(cache: &Cache, rsa_keys: RsaKeys<'a>) -> crate::Result<Self> {
+impl<'a> RsaChecksum<'a> {
+    pub fn with_keys(cache: &Cache, rsa_keys: RsaKeys<'a>) -> crate::Result<Self> {
         Ok(Self {
             checksum: Checksum::new(cache)?,
             rsa_keys,
@@ -264,6 +264,14 @@ impl<'a> Rs3Checksum<'a> {
         buffer.extend(self.rsa_keys.encrypt(&hash));
 
         Ok(buffer)
+    }
+}
+
+// check if you want this
+#[cfg(feature = "rs3")]
+impl<'a> From<(&'a [u8], &'a [u8])> for RsaKeys<'a> {
+    fn from(keys: (&'a [u8], &'a [u8])) -> Self {
+        RsaKeys::new(keys.0, keys.1)
     }
 }
 
