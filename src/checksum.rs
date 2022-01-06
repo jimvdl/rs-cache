@@ -205,13 +205,13 @@ impl Checksum {
 // TODO: documentation
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg(feature = "rs3")]
+#[cfg(any(feature = "rs3", doc))]
 pub struct RsaKeys<'a> {
     pub(crate) exponent: &'a [u8],
     pub(crate) modulus: &'a [u8],
 }
 
-#[cfg(feature = "rs3")]
+#[cfg(any(feature = "rs3", doc))]
 impl<'a> RsaKeys<'a> {
     pub const fn new(exponent: &'a [u8], modulus: &'a [u8]) -> Self {
         Self { exponent, modulus }
@@ -227,13 +227,13 @@ impl<'a> RsaKeys<'a> {
     }
 }
 
-#[cfg(feature = "rs3")]
+#[cfg(any(feature = "rs3", doc))]
 pub struct RsaChecksum<'a> {
     checksum: Checksum,
     rsa_keys: RsaKeys<'a>,
 }
 
-#[cfg(feature = "rs3")]
+#[cfg(any(feature = "rs3", doc))]
 impl<'a> RsaChecksum<'a> {
     pub fn with_keys(cache: &Cache, rsa_keys: RsaKeys<'a>) -> crate::Result<Self> {
         Ok(Self {
@@ -268,7 +268,7 @@ impl<'a> RsaChecksum<'a> {
 }
 
 // check if you want this
-#[cfg(feature = "rs3")]
+#[cfg(any(feature = "rs3", doc))]
 impl<'a> From<(&'a [u8], &'a [u8])> for RsaKeys<'a> {
     fn from(keys: (&'a [u8], &'a [u8])) -> Self {
         RsaKeys::new(keys.0, keys.1)

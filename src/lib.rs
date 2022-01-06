@@ -89,7 +89,10 @@ pub use error::Error;
 use error::Result;
 
 // use crate::error::ReadError;
-use runefs::error::{ReadError, Error as RuneFsError};
+use checksum::Checksum;
+#[cfg(any(feature = "rs3", doc))]
+use checksum::{RsaChecksum, RsaKeys};
+use runefs::error::{Error as RuneFsError, ReadError};
 use runefs::{ArchiveRef, Dat2, Indices, MAIN_DATA};
 use std::{io::Write, path::Path};
 
@@ -117,6 +120,15 @@ impl Cache {
             data: Dat2::new(path.as_ref().join(MAIN_DATA))?,
             indices: Indices::new(path)?,
         })
+    }
+
+    pub fn checksum(&self) -> crate::Result<Checksum> {
+        Checksum::new(self)
+    }
+
+    #[cfg(any(feature = "rs3", doc))]
+    pub fn checksum_with_keys<'a>(&self, keys: RsaKeys<'a>) -> crate::Result<RsaChecksum<'a>> {
+        RsaChecksum::with_keys(self, keys)
     }
 
     /// Reads from the internal data.
