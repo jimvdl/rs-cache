@@ -33,7 +33,6 @@ pub struct MapData {
 }
 
 impl Definition for MapDefinition {
-    #[inline]
     fn new(id: u16, buffer: &[u8]) -> crate::Result<Self> {
         let x = id >> 8;
         let y = id & 0xFF;
@@ -46,7 +45,6 @@ impl Definition for MapDefinition {
 }
 
 impl MapDefinition {
-    #[inline]
     pub fn map_data(&self, x: usize, y: usize, z: usize) -> &MapData {
         &self.data[z][x][y]
     }
@@ -56,7 +54,6 @@ impl MapDefinition {
         (self.region_x << 6, self.region_y << 6)
     }
 
-    #[inline]
     pub fn blocked_tiles(&self) -> Vec<(u16, u16, u16)> {
         let region_base_x = self.region_x << 6;
         let region_base_y = self.region_y << 6;

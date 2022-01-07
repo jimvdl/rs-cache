@@ -199,10 +199,12 @@ impl ArchiveFileGroup {
         Ok(Self(data))
     }
 
+    #[inline]
     pub fn iter(&self) -> Iter<'_, ArchiveFileData> {
         self.0.iter()
     }
 
+    #[inline]
     pub fn iter_mut(&mut self) -> IterMut<'_, ArchiveFileData> {
         self.0.iter_mut()
     }

@@ -29,7 +29,6 @@ use nom::{
 /// # Ok(())
 /// # }
 /// ```
-#[inline]
 pub fn rs_string<'a, E: ParseError<&'a [u8]>>(buffer: &'a [u8]) -> IResult<&'a [u8], String, E> {
     let (buffer, string) = terminated(take_while(|byte| byte != 0), tag([0]))(buffer)?;
 
@@ -66,7 +65,6 @@ pub fn be_u32_smart_compat<'a, E: ParseError<&'a [u8]>>(
 /// # Errors
 ///
 /// Parser can reach EOF early if not enough bytes are supplied.
-#[inline]
 pub fn be_i16_smart<'a, E: ParseError<&'a [u8]>>(buffer: &'a [u8]) -> IResult<&'a [u8], u16, E> {
     if buffer[0] < 128 {
         let (buffer, value) = be_u8(buffer)?;
@@ -100,7 +98,6 @@ pub fn be_i16_smart<'a, E: ParseError<&'a [u8]>>(buffer: &'a [u8]) -> IResult<&'
 /// # Ok(())
 /// # }
 /// ```
-#[inline]
 pub fn be_u16_smart<'a, E: ParseError<&'a [u8]>>(buffer: &'a [u8]) -> IResult<&'a [u8], u16, E> {
     if buffer[0] < 128 {
         let (buffer, value) = be_u8(buffer)?;
@@ -134,7 +131,6 @@ pub fn be_u16_smart<'a, E: ParseError<&'a [u8]>>(buffer: &'a [u8]) -> IResult<&'
 /// # Ok(())
 /// # }
 /// ```
-#[inline]
 pub fn be_u32_smart<'a, E: ParseError<&'a [u8]>>(buffer: &'a [u8]) -> IResult<&'a [u8], u32, E> {
     if (buffer[0] ^ 0xff) as i8 <= -1 {
         let (buffer, value) = be_u16(buffer)?;

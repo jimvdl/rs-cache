@@ -49,7 +49,6 @@ impl<'cache> MapLoader<'cache> {
     /// This takes a `Cache` by references with a `'cache` lifetime.
     /// All the map definitions are loaded lazily where the `&'cache Cache` is used
     /// to cache them internally on load.
-    #[inline]
     pub fn new(cache: &'cache Cache) -> Self {
         Self {
             cache,
@@ -57,7 +56,6 @@ impl<'cache> MapLoader<'cache> {
         }
     }
 
-    #[inline]
     pub fn load(&mut self, id: u16) -> crate::Result<&MapDefinition> {
         if let Entry::Vacant(entry) = self.maps.entry(id) {
             let x = id >> 8;
@@ -87,7 +85,6 @@ impl<'cache> LocationLoader<'cache> {
     /// This takes a `Cache` by references with a `'cache` lifetime.
     /// All the location definitions are loaded lazily where the `&'cache Cache` is used
     /// to cache them internally on load.
-    #[inline]
     pub fn new(cache: &'cache Cache) -> Self {
         Self {
             cache,
@@ -99,7 +96,6 @@ impl<'cache> LocationLoader<'cache> {
     /// 
     /// Also takes a `keys: [u32; 4]` because the location archive is encrypted
     /// with XTEA. The buffer is automatically decoded with the given keys. 
-    #[inline]
     pub fn load(&mut self, id: u16, keys: &[u32; 4]) -> crate::Result<&LocationDefinition> {
         if let Entry::Vacant(entry) = self.locations.entry(id) {
             let x = id >> 8;

@@ -34,7 +34,6 @@ impl Huffman {
     /// The sizes can be found in the cache.
     /// Call the [`huffman_table()`](../struct.Cache.html#method.huffman_table) function to get the huffman table which
     /// contains the sizes needed to initialize this struct.
-    #[inline]
     pub fn new(sizes: &[u8]) -> Self {
         let i_2 = sizes.len();
         let mut masks: Vec<i32> = vec![0; i_2];
@@ -129,7 +128,6 @@ impl Huffman {
     /// # Panics
     ///
     /// Panics if the decompressed length == 0
-    #[inline]
     pub fn decompress(&self, compressed: &[u8], decompressed_len: usize) -> Vec<u8> {
         let mut decompressed = vec![0; decompressed_len];
 

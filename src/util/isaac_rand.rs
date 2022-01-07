@@ -54,7 +54,6 @@ pub struct IsaacRand {
 
 impl IsaacRand {
     /// Initializes the randomizer with the given seed.
-    #[inline]
     pub fn new(seed: &[u32]) -> Self {
         let mem = vec![0; SIZE];
         let mut rsl = vec![0; SIZE];
@@ -319,7 +318,6 @@ impl IsaacRand {
 impl Iterator for IsaacRand {
     type Item = u32;
 
-    #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         if self.count == 0 {
             self.isaac();

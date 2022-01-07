@@ -58,7 +58,6 @@ pub struct ModelData {
 }
 
 impl Definition for ItemDefinition {
-    #[inline]
     fn new(id: u32, buffer: &[u8]) -> crate::Result<Self> {
         let mut reader = BufReader::new(buffer);
         let item_def = decode_buffer(id, &mut reader)?;

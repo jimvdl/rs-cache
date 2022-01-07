@@ -33,7 +33,6 @@ pub struct Location {
 }
 
 impl Definition for LocationDefinition {
-    #[inline]
     fn new(id: u16, buffer: &[u8]) -> crate::Result<Self> {
         let loc_def = decode_buffer(id, buffer)?;
 

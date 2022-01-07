@@ -124,7 +124,6 @@ impl DecodedBuffer {
 /// # Errors
 ///
 /// Returns an error if the data couldn't be compressed or is invalid.
-#[inline]
 pub fn encode(
     compression: Compression,
     data: &[u8],
@@ -136,7 +135,6 @@ pub fn encode(
 /// Encodes the buffer with the given XTEA keys.
 ///
 /// For more details see [`encode`](encode)
-#[inline]
 pub fn encode_with_keys(
     compression: Compression,
     data: &[u8],
@@ -190,7 +188,6 @@ fn encode_internal(
 /// # Errors
 ///
 /// Returns an error if the remaining bytes couldn't be decompressed.
-#[inline]
 pub fn decode(buffer: &[u8]) -> crate::Result<Vec<u8>> {
     Ok(DecodedBuffer::try_from(buffer)?.into_vec())
 }
@@ -198,7 +195,6 @@ pub fn decode(buffer: &[u8]) -> crate::Result<Vec<u8>> {
 /// Decodes the buffer with the given XTEA keys.
 ///
 /// For more details see [`decode`](decode)
-#[inline]
 pub fn decode_with_keys(buffer: &[u8], keys: &[u32; 4]) -> crate::Result<Vec<u8>> {
     Ok(decode_internal(buffer, Some(keys))?.into_vec())
 }
@@ -324,7 +320,6 @@ impl Default for Compression {
 }
 
 impl From<Compression> for u8 {
-    #[inline]
     fn from(compression: Compression) -> Self {
         match compression {
             Compression::None => 0,
@@ -339,7 +334,6 @@ impl From<Compression> for u8 {
 impl TryFrom<u8> for Compression {
     type Error = CompressionUnsupported;
 
-    #[inline]
     fn try_from(compression: u8) -> Result<Self, Self::Error> {
         match compression {
             0 => Ok(Self::None),
@@ -355,7 +349,6 @@ impl TryFrom<u8> for Compression {
 impl TryFrom<&[u8]> for DecodedBuffer {
     type Error = RuneFsError;
 
-    #[inline]
     fn try_from(buffer: &[u8]) -> Result<Self, Self::Error> {
         decode_internal(buffer, None)
     }

@@ -114,7 +114,6 @@ impl Cache {
     ///
     /// If this function encounters any form of I/O or other error, a `CacheError`
     /// is returned which wraps the underlying error.
-    #[inline]
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         Ok(Self {
             data: Dat2::new(path.as_ref().join(MAIN_DATA))?,
@@ -142,7 +141,6 @@ impl Cache {
     ///
     /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
     /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
-    #[inline]
     pub fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
         let index = self
             .indices
@@ -179,7 +177,6 @@ impl Cache {
     ///
     /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
     /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
-    #[inline]
     pub fn read_into_writer<W: Write>(
         &self,
         index_id: u8,
@@ -204,7 +201,6 @@ impl Cache {
     /// Tries to return the huffman table from the cache.
     ///
     /// This can be used to decompress chat messages, see [`Huffman`](crate::util::Huffman).
-    #[inline]
     pub fn huffman_table(&self) -> crate::Result<Vec<u8>> {
         let index_id = 10;
 
@@ -213,7 +209,6 @@ impl Cache {
         Ok(runefs::codec::decode(&buffer)?)
     }
 
-    #[inline]
     pub(crate) fn archive_by_name<T: AsRef<str>>(
         &self,
         index_id: u8,

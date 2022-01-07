@@ -24,7 +24,6 @@ pub trait ReadExt: Read {
 }
 
 impl<T: Read> ReadExt for T {
-    #[inline]
     fn read_u8(&mut self) -> io::Result<u8> {
         let mut buffer = [0; 1];
         self.read_exact(&mut buffer)?;
@@ -32,12 +31,10 @@ impl<T: Read> ReadExt for T {
         Ok(u8::from_be_bytes(buffer))
     }
 
-    #[inline]
     fn read_i8(&mut self) -> io::Result<i8> {
         Ok(self.read_u8()? as i8)
     }
     
-    #[inline]
     fn read_u16(&mut self) -> io::Result<u16> {
         let mut buffer = [0; 2];
         self.read_exact(&mut buffer)?;
@@ -45,12 +42,10 @@ impl<T: Read> ReadExt for T {
         Ok(u16::from_be_bytes(buffer))
     }
 
-    #[inline]
     fn read_i16(&mut self) -> io::Result<i16> {
         Ok(self.read_u16()? as i16)
     }
 
-    #[inline]
     fn read_smart_u16(&mut self) -> io::Result<u16> {
         let byte = self.read_u8()?;
 
@@ -66,7 +61,6 @@ impl<T: Read> ReadExt for T {
             Ok(value - 0xC000)
         }
     }
-    #[inline]
     fn read_u24(&mut self) -> io::Result<u32> {
         let mut buffer = [0; 3];
         self.read_exact(&mut buffer)?;
@@ -74,12 +68,10 @@ impl<T: Read> ReadExt for T {
         Ok(((buffer[0] as u32) << 16) | ((buffer[1] as u32) << 8) | (buffer[2] as u32))
     }
 
-    #[inline]
     fn read_i24(&mut self) -> io::Result<i32> {
         Ok(self.read_u24()? as i32)
     }
 
-    #[inline]
     fn read_u32(&mut self) -> io::Result<u32> {
         let mut buffer = [0; 4];
         self.read_exact(&mut buffer)?;
@@ -87,12 +79,10 @@ impl<T: Read> ReadExt for T {
         Ok(u32::from_be_bytes(buffer))
     }
     
-    #[inline]
     fn read_i32(&mut self) -> io::Result<i32> {
         Ok(self.read_u32()? as i32)
     }
 
-    #[inline]
     fn read_u64(&mut self) -> io::Result<u64> {
         let mut buffer = [0; 8];
         self.read_exact(&mut buffer)?;
@@ -100,12 +90,10 @@ impl<T: Read> ReadExt for T {
         Ok(u64::from_be_bytes(buffer))
     }
 
-    #[inline]
     fn read_i64(&mut self) -> io::Result<i64> {
         Ok(self.read_u64()? as i64)
     }
 
-    #[inline]
     fn read_u128(&mut self) -> io::Result<u128> {
         let mut buffer = [0; 16];
         self.read_exact(&mut buffer)?;
@@ -113,7 +101,6 @@ impl<T: Read> ReadExt for T {
         Ok(u128::from_be_bytes(buffer))
     }
 
-    #[inline]
     fn read_i128(&mut self) -> io::Result<i128> {
         Ok(self.read_u128()? as i128)
     }
@@ -121,7 +108,6 @@ impl<T: Read> ReadExt for T {
     // clean this up.
     // can't find a way to peek the first byte, even
     // an iterator reads the first byte...
-    #[inline]
     fn read_smart(&mut self) -> io::Result<u32> {
         let byte = self.read_u8()?;
 
@@ -145,7 +131,6 @@ impl<T: Read> ReadExt for T {
         Ok(u32::from_be_bytes(arr) & 0x7fffffff)
     }
 
-    #[inline]
     fn read_string(&mut self) -> io::Result<String> {
         let mut bytes = Vec::new();
         loop {

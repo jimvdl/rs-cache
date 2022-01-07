@@ -122,7 +122,6 @@ impl Checksum {
     /// # Errors
     ///
     /// Returns a `CacheError` if the encoding fails.
-    #[inline]
     pub fn encode(self) -> crate::Result<Vec<u8>> {
         let mut buffer = Vec::with_capacity(self.entries.len() * 8);
 
@@ -160,7 +159,6 @@ impl Checksum {
     ///
     /// Only returns `true` if both the length of the iterators are the same
     /// and all of its elements are `eq`.
-    #[inline]
     pub fn validate<'b, I>(&self, crcs: I) -> crate::Result<()>
     where
         I: IntoIterator<Item = &'b u32>,

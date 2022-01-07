@@ -40,7 +40,6 @@ pub trait FetchDefinition: Definition {
     /// # Errors
     ///
     /// Can return multiple errors: if reading, decoding or parsing definition buffers fail.
-    #[inline]
     fn fetch_from_index<D>(cache: &Cache, index_id: u8) -> crate::Result<HashMap<u16, D>>
     where
         D: Definition,
@@ -87,7 +86,6 @@ pub trait FetchDefinition: Definition {
     /// # Ok(())
     /// # }
     /// ```
-    #[inline]
     fn fetch_from_archive<D>(
         cache: &Cache,
         index_id: u8,
