@@ -22,7 +22,10 @@ use std::slice::Iter;
 use crate::{error::ValidateError, Cache};
 use crc::{Crc, CRC_32_ISO_HDLC};
 use nom::{combinator::cond, number::complete::be_u32};
-use runefs::{codec, codec::Compression, REFERENCE_TABLE};
+use runefs::{
+    codec::{Buffer, Encoded},
+    REFERENCE_TABLE,
+};
 
 #[cfg(feature = "rs3")]
 use num_bigint::{BigInt, Sign};
@@ -81,9 +84,9 @@ impl Checksum {
                     // } else {
                     //     (buffer.as_slice(), (buffer.len() / 8) as u8)
                     // };
-                    let data = codec::decode(&buffer)?;
-                    let (_, version) = cond(data[0] >= 6, be_u32)(&data[1..5])?;
-                    let version = version.unwrap_or(0);
+
+                    let mut digest = CRC.digest();
+                    digest.update(&buffer);
 
                     #[cfg(feature = "rs3")]
                     let hash = {
@@ -92,8 +95,9 @@ impl Checksum {
                         hasher.finalize().as_slice().to_vec()
                     };
 
-                    let mut digest = CRC.digest();
-                    digest.update(&buffer);
+                    let data = buffer.decode()?;
+                    let (_, version) = cond(data[0] >= 6, be_u32)(&data[1..5])?;
+                    let version = version.unwrap_or(0);
 
                     Ok(Entry {
                         crc: digest.finalize(),
@@ -122,7 +126,7 @@ impl Checksum {
     /// # Errors
     ///
     /// Returns a `CacheError` if the encoding fails.
-    pub fn encode(self) -> crate::Result<Vec<u8>> {
+    pub fn encode(self) -> crate::Result<Buffer<Encoded>> {
         let mut buffer = Vec::with_capacity(self.entries.len() * 8);
 
         for entry in self.entries {
@@ -151,7 +155,8 @@ impl Checksum {
         // }
 
         // Ok(buffer)
-        Ok(codec::encode(Compression::None, &buffer, None)?)
+        // Ok(codec::encode(Compression::None, &buffer, None)?)
+        Ok(Buffer::from(buffer).encode()?)
     }
 
     // TODO: documentation and write fail tests for this. (also fix the rs3 tests)
@@ -215,6 +220,7 @@ impl<'a> RsaKeys<'a> {
         Self { exponent, modulus }
     }
 
+    // TODO: maybe make this panic if the exponent or modulus not line up
     pub fn encrypt(&self, hash: &[u8]) -> Vec<u8> {
         let exp = BigInt::parse_bytes(self.exponent, 10).unwrap_or_default();
         let mud = BigInt::parse_bytes(self.modulus, 10).unwrap_or_default();
@@ -240,7 +246,7 @@ impl<'a> RsaChecksum<'a> {
         })
     }
 
-    pub fn encode(self) -> crate::Result<Vec<u8>> {
+    pub fn encode(self) -> crate::Result<Buffer<Encoded>> {
         let index_count = self.checksum.index_count - 1;
         let mut buffer = vec![0; 81 * index_count];
 
@@ -261,7 +267,7 @@ impl<'a> RsaChecksum<'a> {
 
         buffer.extend(self.rsa_keys.encrypt(&hash));
 
-        Ok(buffer)
+        Ok(Buffer::from(buffer))
     }
 }
 

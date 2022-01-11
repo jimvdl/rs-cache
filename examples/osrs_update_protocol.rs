@@ -30,7 +30,8 @@ fn main() -> Result<(), rscache::Error> {
             archive_id,
         } => cache.read(index_id, archive_id as u32).map(|mut buffer| {
             if index_id != 255 {
-                buffer.truncate(buffer.len() - 2);
+                let len = buffer.len();
+                buffer.truncate(len - 2);
             }
             buffer
         })?,

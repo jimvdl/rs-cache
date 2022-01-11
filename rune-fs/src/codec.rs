@@ -28,12 +28,11 @@ use nom::{
     number::complete::{be_i16, be_u32, be_u8},
 };
 
-use crate::{
-    error::{Error as RuneFsError, CompressionUnsupported},
-    xtea,
-};
+use crate::{error::CompressionUnsupported, xtea};
 
-/// Supported compression types for RuneScape.
+use std::marker::PhantomData;
+
+/// Supported compression types.
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum Compression {
     None,
@@ -44,184 +43,178 @@ pub enum Compression {
     Lzma,
 }
 
-/// Decodes a cache buffer with some additional data.
-///
-/// This struct can be useful if you need more details then just the decoded data.
-///
-/// # Examples
-///
-/// `TryFrom<&[u8]> -> DecodedBuffer`:  
-/// ```
-/// # use rscache::Cache;
-/// # use rscache::codec::Compression;
-/// use rscache::codec::DecodedBuffer;
-/// use std::convert::TryFrom;
-///
-/// # fn main() -> rscache::Result<()> {
-/// # let cache = Cache::new("./data/osrs_cache")?;
-/// let buffer = cache.read(2, 10)?;
-/// let decoded = DecodedBuffer::try_from(buffer.as_slice())?;
-///
-/// assert_eq!(decoded.compression, Compression::Bzip2);
-/// assert_eq!(decoded.len, 886570);
-/// assert_eq!(decoded.version, Some(12609));
-/// # Ok(())
-/// # }
-/// ```
-///
-/// Getting the inner buffer:
-/// This conversion is free.
-/// ```
-/// # use rscache::Cache;
-/// # use rscache::codec::Compression;
-/// # use rscache::codec::DecodedBuffer;
-/// # use std::convert::TryFrom;
-/// # fn main() -> rscache::Result<()> {
-/// # let cache = Cache::new("./data/osrs_cache")?;
-/// let buffer = cache.read(2, 10)?;
-/// let decoded = DecodedBuffer::try_from(buffer.as_slice())?;
-///
-/// let inner_buffer: Vec<u8> = decoded.into_vec();
-/// # Ok(())
-/// # }
-/// ```
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-pub struct DecodedBuffer {
-    pub compression: Compression,
-    pub len: usize,
-    pub version: Option<i16>,
+/// Marker struct conveying `State` of a [`Buffer`](Buffer).
+pub struct Encoded;
+/// Marker struct conveying `State` of a [`Buffer`](Buffer).
+pub struct Decoded;
+
+pub struct Buffer<State> {
+    compression: Compression,
     buffer: Vec<u8>,
+    version: Option<i16>,
+    keys: Option<[u32; 4]>,
+    _state: PhantomData<State>,
 }
 
-impl DecodedBuffer {
-    /// Free conversion from `DecodedBuffer` into `Vec<u8>`.
-    // False positive, issue already open but not being worked on atm.
-    #[allow(clippy::missing_const_for_fn)]
+impl Buffer<Decoded> {
+    pub fn encode(self) -> crate::Result<Buffer<Encoded>> {
+        let decompressed_len = self.buffer.len();
+        let mut compressed_data = match self.compression {
+            Compression::None => self.buffer,
+            Compression::Bzip2 => compress_bzip2(&self.buffer)?,
+            Compression::Gzip => compress_gzip(&self.buffer)?,
+            #[cfg(feature = "rs3")]
+            Compression::Lzma => compress_lzma(&self.buffer)?,
+        };
+        if let Some(keys) = &self.keys {
+            compressed_data = xtea::encipher(&compressed_data, keys);
+        }
+        let mut buffer = Vec::with_capacity(compressed_data.len() + 11);
+        buffer.push(self.compression as u8);
+        buffer.extend(&u32::to_be_bytes(compressed_data.len() as u32));
+        if self.compression != Compression::None {
+            buffer.extend(&u32::to_be_bytes(decompressed_len as u32));
+        }
+        buffer.extend(compressed_data);
+        if let Some(version) = self.version {
+            buffer.extend(&i16::to_be_bytes(version));
+        }
+
+        Ok(Buffer {
+            compression: self.compression,
+            buffer,
+            version: self.version,
+            keys: self.keys,
+            _state: PhantomData,
+        })
+    }
+}
+
+impl Buffer<Encoded> {
+    pub fn decode(self) -> crate::Result<Buffer<Decoded>> {
+        let buffer = self.buffer.as_slice();
+        let (buffer, compression) = be_u8(buffer)?;
+        let compression = Compression::try_from(compression)?;
+
+        let (buffer, compressed_len) = be_u32(buffer)?;
+        let compressed_len = compressed_len as usize;
+
+        let buffer = self
+            .keys
+            .map_or_else(|| buffer.to_vec(), |keys| xtea::decipher(buffer, &keys));
+
+        let (version, buffer) = match compression {
+            Compression::None => decompress_none(&buffer, compressed_len)?,
+            Compression::Bzip2 => decompress_bzip2(&buffer, compressed_len)?,
+            Compression::Gzip => decompress_gzip(&buffer, compressed_len)?,
+            #[cfg(feature = "rs3")]
+            Compression::Lzma => decompress_lzma(&buffer, compressed_len)?,
+        };
+
+        Ok(Buffer {
+            compression,
+            buffer,
+            version,
+            keys: self.keys,
+            _state: PhantomData,
+        })
+    }
+}
+
+impl<State> Buffer<State> {
+    pub fn with_compression(mut self, compression: Compression) -> Self {
+        self.compression = compression;
+        self
+    }
+
+    pub fn with_version(mut self, version: i16) -> Self {
+        self.version = Some(version);
+        self
+    }
+
+    pub fn with_xtea_keys(mut self, keys: [u32; 4]) -> Self {
+        self.keys = Some(keys);
+        self
+    }
+
     #[inline]
-    pub fn into_vec(self) -> Vec<u8> {
+    pub fn finalize(self) -> Vec<u8> {
         self.buffer
     }
 }
 
-/// Encodes a buffer, with the selected `Compression` format. version is an optional argument
-/// that encodes the version of this buffer into it, if no version should be encoded
-/// pass None.
-///
-/// The following process takes place when encoding:
-/// 1. Compress the buffer with the selected compression format.
-/// 2. Allocate a new buffer.
-/// 3. Push the compression type as a byte into the new buffer.
-/// 4. Push the length (u32) into the buffer of the compressed data from step 1.
-/// 5. If a compression type was selected (and not `Compression::None`) insert the uncompressed length as u32.
-/// 6. Extend the buffer with the compressed data.
-/// 7. Add the `version` as i16 if present.
-/// 8. Encode complete.
-///
-/// **NOTE: When compressing with gzip the header is removed
-/// before the compressed data is returned.
-/// The encoded buffer will not contain the gzip header.**
-///
-/// # Errors
-///
-/// Returns an error if the data couldn't be compressed or is invalid.
-pub fn encode(
-    compression: Compression,
-    data: &[u8],
-    version: Option<i16>,
-) -> crate::Result<Vec<u8>> {
-    encode_internal(compression, data, version, None)
+impl<State> Default for Buffer<State> {
+    fn default() -> Self {
+        Self {
+            compression: Compression::None,
+            buffer: Vec::new(),
+            version: None,
+            keys: None,
+            _state: PhantomData,
+        }
+    }
 }
 
-/// Encodes the buffer with the given XTEA keys.
-///
-/// For more details see [`encode`](encode)
-pub fn encode_with_keys(
-    compression: Compression,
-    data: &[u8],
-    version: Option<i16>,
-    keys: &[u32; 4],
-) -> crate::Result<Vec<u8>> {
-    encode_internal(compression, data, version, Some(keys))
+impl<State> std::fmt::Debug for Buffer<State> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Buffer")
+            .field("compression", &self.compression)
+            .field("keys", &self.keys)
+            .field("version", &self.version)
+            .field("buffer", &self.buffer)
+            .finish()
+    }
 }
 
-fn encode_internal(
-    compression: Compression,
-    data: &[u8],
-    version: Option<i16>,
-    keys: Option<&[u32; 4]>,
-) -> crate::Result<Vec<u8>> {
-    let mut compressed_data = match compression {
-        Compression::None => data.to_owned(),
-        Compression::Bzip2 => compress_bzip2(data)?,
-        Compression::Gzip => compress_gzip(data)?,
-        #[cfg(feature = "rs3")]
-        Compression::Lzma => compress_lzma(data)?,
-    };
+impl<State> From<&[u8]> for Buffer<State> {
+    fn from(buffer: &[u8]) -> Self {
+        Self {
+            buffer: Vec::from(buffer),
+            ..Self::default()
+        }
+    }
+}
 
-    if let Some(keys) = keys {
-        compressed_data = xtea::encipher(&compressed_data, keys);
+impl<State> From<Vec<u8>> for Buffer<State> {
+    fn from(buffer: Vec<u8>) -> Self {
+        Self {
+            buffer: buffer,
+            ..Self::default()
+        }
+    }
+}
+
+impl<State> std::ops::Deref for Buffer<State> {
+    type Target = Vec<u8>;
+
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        &self.buffer
+    }
+}
+
+impl<State> std::ops::DerefMut for Buffer<State> {
+    #[inline]
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.buffer
+    }
+}
+
+impl<State> std::convert::AsRef<[u8]> for Buffer<State> {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        self.buffer.as_slice()
+    }
+}
+
+impl<State> std::io::Write for Buffer<State> {
+    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+        self.buffer.write(buffer)
     }
 
-    let mut buffer = Vec::with_capacity(compressed_data.len() + 11);
-    buffer.push(compression as u8);
-    buffer.extend(&u32::to_be_bytes(compressed_data.len() as u32));
-    if compression != Compression::None {
-        buffer.extend(&u32::to_be_bytes(data.len() as u32));
+    fn flush(&mut self) -> io::Result<()> {
+        self.buffer.flush()
     }
-
-    buffer.extend(compressed_data);
-
-    if let Some(version) = version {
-        buffer.extend(&i16::to_be_bytes(version));
-    }
-
-    Ok(buffer)
-}
-
-/// Decodes the buffer.
-///
-/// The following process takes place when decoding:
-/// 1. Read the first byte to determine which compression type should be used to decompress.
-/// 2. Read the length of the rest of the buffer.
-/// 3. Decompress the remaining bytes.
-///
-/// # Errors
-///
-/// Returns an error if the remaining bytes couldn't be decompressed.
-pub fn decode(buffer: &[u8]) -> crate::Result<Vec<u8>> {
-    Ok(DecodedBuffer::try_from(buffer)?.into_vec())
-}
-
-/// Decodes the buffer with the given XTEA keys.
-///
-/// For more details see [`decode`](decode)
-pub fn decode_with_keys(buffer: &[u8], keys: &[u32; 4]) -> crate::Result<Vec<u8>> {
-    Ok(decode_internal(buffer, Some(keys))?.into_vec())
-}
-
-fn decode_internal(buffer: &[u8], keys: Option<&[u32; 4]>) -> crate::Result<DecodedBuffer> {
-    let (buffer, compression) = be_u8(buffer)?;
-    let compression = Compression::try_from(compression)?;
-
-    let (buffer, compressed_len) = be_u32(buffer)?;
-    let compressed_len = compressed_len as usize;
-
-    let buffer = keys.map_or_else(|| buffer.to_vec(), |keys| xtea::decipher(buffer, keys));
-
-    let (decompressed_len, version, buffer) = match compression {
-        Compression::None => decompress_none(&buffer, compressed_len)?,
-        Compression::Bzip2 => decompress_bzip2(&buffer, compressed_len)?,
-        Compression::Gzip => decompress_gzip(&buffer, compressed_len)?,
-        #[cfg(feature = "rs3")]
-        Compression::Lzma => decompress_lzma(&buffer, compressed_len)?,
-    };
-
-    Ok(DecodedBuffer {
-        compression,
-        len: decompressed_len,
-        version,
-        buffer,
-    })
 }
 
 fn compress_bzip2(data: &[u8]) -> io::Result<Vec<u8>> {
@@ -254,16 +247,16 @@ fn compress_lzma(data: &[u8]) -> io::Result<Vec<u8>> {
     Ok(output)
 }
 
-fn decompress_none(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i16>, Vec<u8>)> {
+fn decompress_none(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Vec<u8>)> {
     let mut compressed_data = vec![0; len];
     compressed_data.copy_from_slice(buffer);
 
     let (_, version) = cond(buffer.len() - len >= 2, be_i16)(buffer)?;
 
-    Ok((len, version, compressed_data))
+    Ok((version, compressed_data))
 }
 
-fn decompress_bzip2(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i16>, Vec<u8>)> {
+fn decompress_bzip2(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Vec<u8>)> {
     let (buffer, decompressed_len) = be_u32(buffer)?;
     let mut compressed_data = vec![0; len];
     compressed_data[4..len].copy_from_slice(&buffer[..len - 4]);
@@ -275,10 +268,10 @@ fn decompress_bzip2(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i
     let mut decompressed_data = vec![0; decompressed_len as usize];
     decompressor.read_exact(&mut decompressed_data)?;
 
-    Ok((decompressed_len as usize, version, decompressed_data))
+    Ok((version, decompressed_data))
 }
 
-fn decompress_gzip(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i16>, Vec<u8>)> {
+fn decompress_gzip(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Vec<u8>)> {
     let (buffer, decompressed_len) = be_u32(buffer)?;
     let mut compressed_data = vec![0; len];
     compressed_data.copy_from_slice(&buffer[..len]);
@@ -289,11 +282,11 @@ fn decompress_gzip(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i1
     let mut decompressed_data = vec![0; decompressed_len as usize];
     decompressor.read_exact(&mut decompressed_data)?;
 
-    Ok((decompressed_len as usize, version, decompressed_data))
+    Ok((version, decompressed_data))
 }
 
 #[cfg(feature = "rs3")]
-fn decompress_lzma(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i16>, Vec<u8>)> {
+fn decompress_lzma(buffer: &[u8], len: usize) -> crate::Result<(Option<i16>, Vec<u8>)> {
     let (buffer, decompressed_len) = be_u32(buffer)?;
     let mut compressed_data = vec![0; len - 4];
     compressed_data.copy_from_slice(&buffer[..len - 4]);
@@ -309,7 +302,7 @@ fn decompress_lzma(buffer: &[u8], len: usize) -> crate::Result<(usize, Option<i1
 
     lzma_decompress_with_options(&mut wrapper, &mut decompressed_data, &options).unwrap();
 
-    Ok((decompressed_len as usize, version, decompressed_data))
+    Ok((version, decompressed_data))
 }
 
 impl Default for Compression {
@@ -331,7 +324,7 @@ impl From<Compression> for u8 {
     }
 }
 
-impl TryFrom<u8> for Compression {
+impl std::convert::TryFrom<u8> for Compression {
     type Error = CompressionUnsupported;
 
     fn try_from(compression: u8) -> Result<Self, Self::Error> {
@@ -343,13 +336,5 @@ impl TryFrom<u8> for Compression {
             3 => Ok(Self::Lzma),
             _ => Err(CompressionUnsupported(compression)),
         }
-    }
-}
-
-impl TryFrom<&[u8]> for DecodedBuffer {
-    type Error = RuneFsError;
-
-    fn try_from(buffer: &[u8]) -> Result<Self, Self::Error> {
-        decode_internal(buffer, None)
     }
 }

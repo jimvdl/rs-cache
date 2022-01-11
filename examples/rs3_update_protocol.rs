@@ -23,23 +23,35 @@ fn main() -> Result<(), rscache::Error> {
         priority: 0,
     };
 
-    let buf = if packet.index_id == 255 && packet.archive_id == 255 {
-        RsaChecksum::with_keys(&cache, RsaKeys::new(EXPONENT, MODULUS))?.encode()?
-    } else {
-        let buf = cache.read(packet.index_id, packet.archive_id)?;
-        format_buffer(buf, packet.index_id)
+    let buffer = match packet {
+        IncomingUpdatePacket {
+            index_id: 255,
+            archive_id: 255,
+            .. // the priority is not really relevant for this example
+        } => RsaChecksum::with_keys(&cache, RsaKeys::new(EXPONENT, MODULUS))?.encode()?,
+        IncomingUpdatePacket {
+            index_id,
+            archive_id,
+            ..
+        } => cache.read(index_id, archive_id as u32).map(|mut buffer| {
+            if index_id != 255 {
+                let len = buffer.len();
+                buffer.truncate(len - 2);
+            }
+            buffer
+        })?,
     };
 
-    for data_block in buf.chunks(102395) {
+    for data_block in buffer.chunks(102395) {
         let mut data = allocate_buffer(packet.index_id, packet.archive_id, data_block.len());
 
         encode_index_id(&mut data, packet.index_id);
         encode_archive_id(&mut data, packet.archive_id, packet.priority);
         if packet.index_id == 255 && packet.archive_id == 255 {
-            encode_length(&mut data, buf.len() as u32);
-            encode_remaining(&mut data[10..], &buf);
+            encode_length(&mut data, buffer.len() as u32);
+            encode_remaining(&mut data[10..], &buffer);
         } else {
-            encode_remaining(&mut data[5..], &buf);
+            encode_remaining(&mut data[5..], &buffer);
         }
         // write data to the client
         // stream.write_all(&data)?;
@@ -47,15 +59,6 @@ fn main() -> Result<(), rscache::Error> {
         println!("{:?}", data);
     }
     Ok(())
-}
-
-fn format_buffer(mut buffer: Vec<u8>, index_id: u8) -> Vec<u8> {
-    if index_id != 255 {
-        buffer.truncate(buffer.len() - 2);
-        buffer
-    } else {
-        buffer
-    }
 }
 
 fn allocate_buffer(index_id: u8, archive_id: u32, len: usize) -> Vec<u8> {

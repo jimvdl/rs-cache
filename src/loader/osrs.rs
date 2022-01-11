@@ -6,7 +6,6 @@ use std::collections::{
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-use runefs::codec;
 use crate::{
     definition::osrs::{
         Definition, FetchDefinition, ItemDefinition, LocationDefinition, MapDefinition,
@@ -45,7 +44,7 @@ pub struct MapLoader<'cache> {
 
 impl<'cache> MapLoader<'cache> {
     /// Make a new `MapLoader`.
-    /// 
+    ///
     /// This takes a `Cache` by references with a `'cache` lifetime.
     /// All the map definitions are loaded lazily where the `&'cache Cache` is used
     /// to cache them internally on load.
@@ -62,8 +61,7 @@ impl<'cache> MapLoader<'cache> {
             let y = id & 0xFF;
 
             let map_archive = self.cache.archive_by_name(5, format!("m{}_{}", x, y))?;
-            let buffer = self.cache.read_archive(map_archive)?;
-            let buffer = codec::decode(&buffer)?;
+            let buffer = self.cache.read_archive(map_archive)?.decode()?;
 
             entry.insert(MapDefinition::new(id, &buffer)?);
         }
@@ -81,7 +79,7 @@ pub struct LocationLoader<'cache> {
 
 impl<'cache> LocationLoader<'cache> {
     /// Make a new `LocationLoader`.
-    /// 
+    ///
     /// This takes a `Cache` by references with a `'cache` lifetime.
     /// All the location definitions are loaded lazily where the `&'cache Cache` is used
     /// to cache them internally on load.
@@ -93,17 +91,20 @@ impl<'cache> LocationLoader<'cache> {
     }
 
     /// Loads the location data for a particular region.
-    /// 
+    ///
     /// Also takes a `keys: [u32; 4]` because the location archive is encrypted
-    /// with XTEA. The buffer is automatically decoded with the given keys. 
+    /// with XTEA. The buffer is automatically decoded with the given keys.
     pub fn load(&mut self, id: u16, keys: &[u32; 4]) -> crate::Result<&LocationDefinition> {
         if let Entry::Vacant(entry) = self.locations.entry(id) {
             let x = id >> 8;
             let y = id & 0xFF;
 
             let loc_archive = self.cache.archive_by_name(5, format!("l{}_{}", x, y))?;
-            let buffer = self.cache.read_archive(loc_archive)?;
-            let buffer = codec::decode_with_keys(&buffer, keys)?;
+            let buffer = self
+                .cache
+                .read_archive(loc_archive)?
+                .with_xtea_keys(*keys)
+                .decode()?;
 
             entry.insert(LocationDefinition::new(id, &buffer)?);
         }

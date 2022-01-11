@@ -3,9 +3,9 @@ mod item_def;
 
 pub use item_def::*;
 
-use std::collections::HashMap;
-use runefs::{Archive, ArchiveFileGroup, codec, REFERENCE_TABLE};
 use crate::Cache;
+use runefs::{Archive, ArchiveFileGroup, REFERENCE_TABLE};
+use std::collections::HashMap;
 
 pub(crate) const ID_BLOCK_SIZE: usize = 256;
 
@@ -28,16 +28,14 @@ pub trait FetchDefinition: Definition {
     where
         D: Definition,
     {
-        let buffer = cache.read(REFERENCE_TABLE, index_id as u32)?;
-        let buffer = codec::decode(&buffer)?;
+        let buffer = cache.read(REFERENCE_TABLE, index_id as u32)?.decode()?;
 
         let archives = Archive::parse(&buffer)?;
         let mut definitions = std::collections::HashMap::new();
         let mut base_id = 0;
 
         for archive in &archives {
-            let buffer = cache.read(index_id, archive.id as u32)?;
-            let buffer = codec::decode(&buffer)?;
+            let buffer = cache.read(index_id, archive.id as u32)?.decode()?;
 
             let archive_group = ArchiveFileGroup::parse(&buffer, archive.entry_count)?;
 

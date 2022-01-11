@@ -92,6 +92,7 @@ use error::Result;
 use checksum::Checksum;
 #[cfg(any(feature = "rs3", doc))]
 use checksum::{RsaChecksum, RsaKeys};
+use runefs::codec::{Buffer, Decoded, Encoded};
 use runefs::error::{Error as RuneFsError, ReadError};
 use runefs::{ArchiveRef, Dat2, Indices, MAIN_DATA};
 use std::{io::Write, path::Path};
@@ -141,7 +142,7 @@ impl Cache {
     ///
     /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
     /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
-    pub fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Vec<u8>> {
+    pub fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Buffer<Encoded>> {
         let index = self
             .indices
             .get(&index_id)
@@ -155,15 +156,14 @@ impl Cache {
                 arc: archive_id,
             }))?;
 
-        let mut buffer = Vec::with_capacity(archive.length);
-        self.data.read(archive, &mut buffer)?;
+        let buffer = self.data.read(archive)?;
 
         assert_eq!(buffer.len(), archive.length);
 
         Ok(buffer)
     }
 
-    pub(crate) fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Vec<u8>> {
+    pub(crate) fn read_archive(&self, archive: &ArchiveRef) -> crate::Result<Buffer<Encoded>> {
         self.read(archive.index_id, archive.id)
     }
 
@@ -195,18 +195,19 @@ impl Cache {
                 idx: index_id,
                 arc: archive_id,
             }))?;
-        Ok(self.data.read(archive, writer)?)
+        Ok(self.data.read_into_writer(archive, writer)?)
     }
 
     /// Tries to return the huffman table from the cache.
     ///
     /// This can be used to decompress chat messages, see [`Huffman`](crate::util::Huffman).
-    pub fn huffman_table(&self) -> crate::Result<Vec<u8>> {
+    pub fn huffman_table(&self) -> crate::Result<Buffer<Decoded>> {
         let index_id = 10;
 
         let archive = self.archive_by_name(index_id, "huffman")?;
         let buffer = self.read_archive(archive)?;
-        Ok(runefs::codec::decode(&buffer)?)
+        // Ok(runefs::codec::decode(&buffer)?)
+        Ok(buffer.decode()?)
     }
 
     pub(crate) fn archive_by_name<T: AsRef<str>>(

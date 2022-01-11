@@ -27,6 +27,7 @@ pub use archive::*;
 pub use index::*;
 pub use sector::*;
 
+use crate::codec::{Buffer, Encoded};
 use error::ParseError;
 use memmap2::Mmap;
 use std::fs::File;
@@ -41,7 +42,13 @@ impl Dat2 {
         Ok(Self(unsafe { Mmap::map(&File::open(path.as_ref())?)? }))
     }
 
-    pub fn read<W>(&self, archive: &ArchiveRef, writer: &mut W) -> crate::Result<()>
+    pub fn read(&self, archive: &ArchiveRef) -> crate::Result<Buffer<Encoded>> {
+        let mut buffer = Buffer::from(Vec::with_capacity(archive.length));
+        self.read_into_writer(archive, &mut buffer)?;
+        Ok(buffer)
+    }
+
+    pub fn read_into_writer<W>(&self, archive: &ArchiveRef, writer: &mut W) -> crate::Result<()>
     where
         W: Write,
     {

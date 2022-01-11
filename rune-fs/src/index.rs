@@ -10,7 +10,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     archive::{Archive, ArchiveRef, ARCHIVE_REF_LEN},
-    codec,
     error::{ParseError, ReadError},
     Dat2, REFERENCE_TABLE,
 };
@@ -47,9 +46,7 @@ impl Indices {
                     },
                 )?;
                 if archive_ref.length != 0 {
-                    let mut buffer = Vec::with_capacity(archive_ref.length);
-                    data.read(archive_ref, &mut buffer)?;
-                    let buffer = codec::decode(&buffer)?;
+                    let buffer = data.read(archive_ref)?.decode()?;
                     index.archives = Archive::parse(&buffer)?;
                 }
                 indices.insert(index_id, index);
