@@ -70,14 +70,14 @@ impl Buffer<Decoded> {
             xtea::encipher(&mut compressed_data, keys);
         }
         let mut buffer = Vec::with_capacity(compressed_data.len() + 11);
-        buffer.write(&[self.compression as u8])?;
-        buffer.write(&u32::to_be_bytes(compressed_data.len() as u32))?;
+        buffer.write_all(&[self.compression as u8])?;
+        buffer.write_all(&u32::to_be_bytes(compressed_data.len() as u32))?;
         if self.compression != Compression::None {
-            buffer.write(&u32::to_be_bytes(decompressed_len as u32))?;
+            buffer.write_all(&u32::to_be_bytes(decompressed_len as u32))?;
         }
         buffer.extend(compressed_data);
         if let Some(version) = self.version {
-            buffer.write(&i16::to_be_bytes(version))?;
+            buffer.write_all(&i16::to_be_bytes(version))?;
         }
 
         Ok(Buffer {
@@ -179,7 +179,7 @@ impl<State> From<&[u8]> for Buffer<State> {
 impl<State> From<Vec<u8>> for Buffer<State> {
     fn from(buffer: Vec<u8>) -> Self {
         Self {
-            buffer: buffer,
+            buffer,
             ..Self::default()
         }
     }

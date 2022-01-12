@@ -1,12 +1,12 @@
 // #![deny(missing_docs)]
-// #![deny(
-//     clippy::all,
-//     clippy::correctness,
-//     clippy::suspicious,
-//     clippy::style,
-//     clippy::complexity,
-//     clippy::perf
-// )]
+#![deny(
+    clippy::all,
+    clippy::correctness,
+    clippy::suspicious,
+    clippy::style,
+    clippy::complexity,
+    clippy::perf
+)]
 
 mod archive;
 pub mod codec;
