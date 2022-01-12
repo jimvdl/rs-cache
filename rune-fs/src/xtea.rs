@@ -1,10 +1,9 @@
 const ROUNDS: u32 = 32;
 const RATIO: u32 = 0x9E3779B9;
 
-/// Enciphers the data with the given XTEA keys. Defaults to 32 rounds.
-pub fn encipher(data: &[u8], keys: &[u32; 4]) -> Vec<u8> {
+/// Enciphers the data in-place with the given XTEA keys. Defaults to 32 rounds.
+pub fn encipher(data: &mut [u8], keys: &[u32; 4]) {
     let blocks = data.len() / 8;
-    let mut buf = data.to_vec();
 
     let mut index = 0;
     for _ in 0..blocks {
@@ -32,29 +31,30 @@ pub fn encipher(data: &[u8], keys: &[u32; 4]) -> Vec<u8> {
                     ^ (sum.wrapping_add(keys[((sum >> 11) & 3) as usize])),
             );
         }
-        buf[index..index + 4].copy_from_slice(&v0.to_be_bytes());
-        buf[index + 4..index + 8].copy_from_slice(&v1.to_be_bytes());
+        data[index..index + 4].copy_from_slice(&v0.to_be_bytes());
+        data[index + 4..index + 8].copy_from_slice(&v1.to_be_bytes());
 
         index += 8;
     }
-
-    buf
 }
 
-/// Deciphers the data with the given XTEA keys. Defaults to 32 rounds.
-pub fn decipher(data: &[u8], keys: &[u32; 4]) -> Vec<u8> {
+/// Deciphers the data in-place with the given XTEA keys. Defaults to 32 rounds.
+pub fn decipher(data: &mut [u8], keys: &[u32; 4]) {
     let blocks = data.len() / 8;
-    let mut buf = data.to_vec();
 
     let mut index = 0;
     for _ in 0..blocks {
-        let mut v0 =
-            u32::from_be_bytes([buf[index], buf[index + 1], buf[index + 2], buf[index + 3]]);
+        let mut v0 = u32::from_be_bytes([
+            data[index],
+            data[index + 1],
+            data[index + 2],
+            data[index + 3],
+        ]);
         let mut v1 = u32::from_be_bytes([
-            buf[index + 4],
-            buf[index + 5],
-            buf[index + 6],
-            buf[index + 7],
+            data[index + 4],
+            data[index + 5],
+            data[index + 6],
+            data[index + 7],
         ]);
         let mut sum = ROUNDS.wrapping_mul(RATIO);
         for _ in 0..ROUNDS {
@@ -68,11 +68,9 @@ pub fn decipher(data: &[u8], keys: &[u32; 4]) -> Vec<u8> {
                     ^ (sum.wrapping_add(keys[(sum & 3) as usize])),
             );
         }
-        buf[index..index + 4].copy_from_slice(&v0.to_be_bytes());
-        buf[index + 4..index + 8].copy_from_slice(&v1.to_be_bytes());
+        data[index..index + 4].copy_from_slice(&v0.to_be_bytes());
+        data[index + 4..index + 8].copy_from_slice(&v1.to_be_bytes());
 
         index += 8;
     }
-
-    buf
 }
