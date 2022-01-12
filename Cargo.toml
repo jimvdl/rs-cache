@@ -16,7 +16,7 @@ categories = ["development-tools", "filesystem"]
 maintenance = { status = "experimental" }
 
 [features]
-rs3 = ["whirlpool", "num-bigint", "lzma-rs"]
+rs3 = ["whirlpool", "num-bigint"]
 
 [[example]]
 name = "rs3_update_protocol"
@@ -28,16 +28,10 @@ path = "src/lib.rs"
 
 [dependencies]
 crc = "2.1"
-bzip2 = "0.4"
 nom = "7.0"
-itertools = "0.10"
 whirlpool = { version = "0.9", optional = true }
 num-bigint = { version = "0.4", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
-serde-big-array = { version = "0.3", optional = true }
-lzma-rs = { version = "0.2", optional = true }
-flate2 = "1.0"
-memmap2 = "0.5"
 thiserror = "1.0.30"
 rune-fs = { path = "./rune-fs" }
 
