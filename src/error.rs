@@ -56,8 +56,11 @@ pub struct NameHashMismatch {
 
 #[derive(Error, Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum ValidateError {
-    #[error("expected crc length of {0} but was {1}")]
-    InvalidLength(usize, usize),
+    #[error("expected crc length of {expected} but was {actual}")]
+    InvalidLength {
+        expected: usize, 
+        actual: usize,
+    },
     #[error("mismatch crc at index {idx}, expected {internal} but was {external}")]
     InvalidCrc {
         idx: usize,
