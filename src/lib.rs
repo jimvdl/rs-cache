@@ -134,10 +134,10 @@ impl Cache {
     /// Generate a checksum based on the current cache with RSA encryption.
     /// 
     /// `RsaChecksum` wraps a regular `Checksum` with the added benefit of encrypting
-    /// the whirlpool hash into the checksum buffer. (currently only supported for RS3)
+    /// the whirlpool hash into the checksum buffer.
     #[cfg(feature = "rs3")]
     #[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
-    pub fn checksum_with_keys<'a>(&self, keys: RsaKeys<'a>) -> crate::Result<RsaChecksum<'a>> {
+    pub fn checksum_with<'a>(&self, keys: RsaKeys<'a>) -> crate::Result<RsaChecksum<'a>> {
         RsaChecksum::with_keys(self, keys)
     }
 

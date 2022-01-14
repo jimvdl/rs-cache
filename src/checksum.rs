@@ -3,12 +3,19 @@
 //! # Example
 //!
 //! ```
-//! # use rscache::Cache;
-//! use rscache::checksum::{Checksum};
+//! # use rscache::{Cache, error::Error};
+//! use rscache::checksum::Checksum;
 //!
-//! # fn main() -> rscache::Result<()> {
+//! # fn main() -> Result<(), Error> {
 //! # let cache = Cache::new("./data/osrs_cache")?;
+//! # let client_crcs = vec![1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 686540367,
+//! #                     4262755489, 2208636505, 3047082366, 586413816, 2890424900, 3411535427, 3178880569,
+//! #                     153718440, 3849392898, 3628627685, 2813112885, 1461700456, 2751169400, 2927815226];
+//! // Either one works
+//! let checksum = cache.checksum()?;
 //! let checksum = Checksum::new(&cache)?;
+//!
+//! checksum.validate(&client_crcs)?;
 //!
 //! // Encode the checksum with the OSRS protocol.
 //! let buffer = checksum.encode()?;
@@ -36,7 +43,7 @@ use whirlpool::{Digest, Whirlpool};
 
 const CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
-/// Contains index validation data.
+/// Each entry in the checksum is mapped to an [`Index`](runefs::Index).
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(not(feature = "rs3"), derive(Default))]
@@ -51,9 +58,8 @@ pub struct Entry {
 ///
 /// Used to validate cache index files. It contains a list of entries, one entry for each index file.
 ///
-/// In order to create the `Checksum` the
-/// [create_checksum()](../struct.Cache.html#method.create_checksum) function has to be
-/// called on `Cache`.
+/// In order to create a `Checksum` you can either use the [`checksum`](crate::Cache::checksum) function on `Cache` or
+/// use [`new`](Checksum::new) and pass in a reference to an exisiting cache. They both achieve the same result.
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct Checksum {
@@ -62,6 +68,11 @@ pub struct Checksum {
 }
 
 impl Checksum {
+    /// Generate a checksum based on the given cache.
+    /// 
+    /// # Errors
+    /// 
+    /// Decoding of a index buffer fails, this is considered a bug.
     pub fn new(cache: &Cache) -> crate::Result<Self> {
         Ok(Self {
             index_count: cache.indices.len(),
@@ -114,17 +125,16 @@ impl Checksum {
 
     /// Consumes the `Checksum` and encodes it into a byte buffer.
     ///
-    ///
+    /// 
     /// Note: It defaults to OSRS. RS3 clients use RSA to encrypt
     /// network traffic, which includes the checksum. When encoding for RS3 clients
-    /// first call [`with_rsa_keys`](struct.Checksum.html#method.with_rsa_keys) to make
-    /// the checksum aware of the clients keys.
+    /// use [`RsaChecksum`](RsaChecksum) instead.
     ///
     /// After encoding the checksum it can be sent to the client.
     ///
     /// # Errors
     ///
-    /// Returns a `CacheError` if the encoding fails.
+    /// Encoding of the formatted buffer fails, this is considered a bug.
     pub fn encode(self) -> crate::Result<Buffer<Encoded>> {
         let mut buffer = Vec::with_capacity(self.entries.len() * 8);
 
@@ -158,6 +168,12 @@ impl Checksum {
         Ok(Buffer::from(buffer).encode()?)
     }
 
+    /// Validates the given crcs from the client with the internal crcs of this cache.
+    /// 
+    /// # Errors
+    /// 
+    /// When the lengths of the crc iterators don't match up because too many or too few indices 
+    /// were shared between the client and the server, or if a crc value mismatches.
     pub fn validate<'b, I>(&self, crcs: I) -> Result<(), ValidateError>
     where
         I: IntoIterator<Item = &'b u32>,
@@ -190,11 +206,13 @@ impl Checksum {
         Ok(())
     }
 
+    #[allow(missing_docs)]
     #[inline]
     pub const fn index_count(&self) -> usize {
         self.index_count
     }
 
+    #[allow(missing_docs)]
     #[inline]
     pub fn iter(&self) -> Iter<'_, Entry> {
         self.entries.iter()
@@ -205,6 +223,7 @@ impl Checksum {
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg(feature = "rs3")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
+/// A struct that holds both keys for RSA encryption.
 pub struct RsaKeys<'a> {
     pub(crate) exponent: &'a [u8],
     pub(crate) modulus: &'a [u8],
@@ -213,10 +232,12 @@ pub struct RsaKeys<'a> {
 #[cfg(feature = "rs3")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
 impl<'a> RsaKeys<'a> {
+    /// Generate a RSA key set with the given keys.
     pub const fn new(exponent: &'a [u8], modulus: &'a [u8]) -> Self {
         Self { exponent, modulus }
     }
 
+    /// Encrypts the given hash.
     // TODO: maybe make this panic if the exponent or modulus not line up
     pub fn encrypt(&self, hash: &[u8]) -> Vec<u8> {
         let exp = BigInt::parse_bytes(self.exponent, 10).unwrap_or_default();
@@ -230,6 +251,27 @@ impl<'a> RsaKeys<'a> {
 
 #[cfg(feature = "rs3")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
+/// Wraps a general `Checksum` with the added benefit of encrypting
+/// the whirlpool hash into the checksum buffer.
+/// 
+/// # Example
+/// 
+/// ```
+/// # use rscache::{Cache, error::Error};
+/// use rscache::checksum::{RsaChecksum, RsaKeys};
+///
+/// # fn main() -> Result<(), Error> {
+/// # let cache = Cache::new("./data/osrs_cache")?;
+/// # const EXPONENT: &'static [u8] = b"5206580307236375668350588432916871591810765290737810323990754121164270399789630501436083337726278206128394461017374810549461689174118305784406140446740993";
+/// # const MODULUS: &'static [u8] = b"6950273013450460376345707589939362735767433035117300645755821424559380572176824658371246045200577956729474374073582306250298535718024104420271215590565201";
+/// let keys = RsaKeys::new(EXPONENT, MODULUS);
+/// 
+/// // Either one works
+/// let checksum = cache.checksum_with(keys)?;
+/// // let checksum = RsaChecksum::with_keys(&cache, keys)?;
+/// # Ok(())
+/// # }
+/// ```
 pub struct RsaChecksum<'a> {
     checksum: Checksum,
     rsa_keys: RsaKeys<'a>,
@@ -237,6 +279,7 @@ pub struct RsaChecksum<'a> {
 
 #[cfg(feature = "rs3")]
 impl<'a> RsaChecksum<'a> {
+    /// Generate a checksum with RSA encryption support.
     pub fn with_keys(cache: &Cache, rsa_keys: RsaKeys<'a>) -> crate::Result<Self> {
         Ok(Self {
             checksum: Checksum::new(cache)?,
@@ -244,6 +287,7 @@ impl<'a> RsaChecksum<'a> {
         })
     }
 
+    /// Same as [`Checksum::encode`](Checksum::encode) but for RS3.
     pub fn encode(self) -> crate::Result<Buffer<Encoded>> {
         let index_count = self.checksum.index_count - 1;
         let mut buffer = vec![0; 81 * index_count];
@@ -297,6 +341,28 @@ impl<'a> IntoIterator for &'a Checksum {
 }
 
 #[cfg(feature = "rs3")]
+impl<'a> IntoIterator for RsaChecksum<'a> {
+    type Item = Entry;
+    type IntoIter = std::vec::IntoIter<Entry>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.checksum.entries.into_iter()
+    }
+}
+
+#[cfg(feature = "rs3")]
+impl<'a> IntoIterator for &'a RsaChecksum<'a> {
+    type Item = &'a Entry;
+    type IntoIter = Iter<'a, Entry>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.checksum.entries.iter()
+    }
+}
+
+#[cfg(feature = "rs3")]
 impl Default for Entry {
     #[inline]
     fn default() -> Self {
@@ -339,9 +405,9 @@ fn validate() -> crate::Result<()> {
     let checksum = Checksum::new(&cache)?;
 
     let crcs = [
-        1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 686540367,
-        4262755489, 2208636505, 3047082366, 586413816, 2890424900, 3411535427, 3178880569,
-        153718440, 3849392898, 3628627685, 2813112885, 1461700456, 2751169400, 2927815226,
+        1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 686540367, 4262755489,
+        2208636505, 3047082366, 586413816, 2890424900, 3411535427, 3178880569, 153718440,
+        3849392898, 3628627685, 2813112885, 1461700456, 2751169400, 2927815226,
     ];
 
     assert!(checksum.validate(&crcs).is_ok());
@@ -357,9 +423,9 @@ fn invalid_crc() -> crate::Result<()> {
     let checksum = Checksum::new(&cache)?;
 
     let crcs = [
-        1593884597, 1029608590, 16840364, 4209098954, 3716821437, 165713182, 686540367,
-        4262755489, 2208636505, 3047082366, 586413816, 2890424900, 3411535427, 3178880569,
-        153718440, 3849392898, 3628627685, 2813112885, 1461700456, 2751169400, 2927815226,
+        1593884597, 1029608590, 16840364, 4209098954, 3716821437, 165713182, 686540367, 4262755489,
+        2208636505, 3047082366, 586413816, 2890424900, 3411535427, 3178880569, 153718440,
+        3849392898, 3628627685, 2813112885, 1461700456, 2751169400, 2927815226,
     ];
 
     assert_eq!(
@@ -382,15 +448,15 @@ fn invalid_len() -> crate::Result<()> {
     let checksum = Checksum::new(&cache)?;
 
     let crcs = [
-        1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 686540367,
-        4262755489, 2208636505, 3047082366, 586413816, 2890424900, 3411535427, 3178880569,
-        153718440, 3849392898, 3628627685, 2813112885, 1461700456, 2751169400,
+        1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 686540367, 4262755489,
+        2208636505, 3047082366, 586413816, 2890424900, 3411535427, 3178880569, 153718440,
+        3849392898, 3628627685, 2813112885, 1461700456, 2751169400,
     ];
 
     assert_eq!(
         checksum.validate(&crcs),
-        Err(ValidateError::InvalidLength{
-            expected: 21, 
+        Err(ValidateError::InvalidLength {
+            expected: 21,
             actual: 20
         })
     );
@@ -400,9 +466,8 @@ fn invalid_len() -> crate::Result<()> {
 
 #[cfg(all(test, feature = "rs3"))]
 mod rsa {
-    use crate::test_util;
     use super::{RsaChecksum, RsaKeys};
-    
+    use crate::test_util;
     pub const EXPONENT: &'static [u8] = b"5206580307236375668350588432916871591810765290737810323990754121164270399789630501436083337726278206128394461017374810549461689174118305784406140446740993";
     pub const MODULUS: &'static [u8] = b"6950273013450460376345707589939362735767433035117300645755821424559380572176824658371246045200577956729474374073582306250298535718024104420271215590565201";
 
