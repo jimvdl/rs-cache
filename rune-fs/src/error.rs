@@ -57,8 +57,6 @@ pub enum ReadError {
     IndexNotFound(u8),
     #[error("index {idx} does not contain archive group {arc}")]
     ArchiveNotFound { idx: u8, arc: u32 },
-    #[error("reference table (index 255) not found")]
-    ReferenceTableNotFound,
     #[error("sector archive id was {0} but expected {1}")]
     SectorArchiveMismatch(u32, u32),
     #[error("sector chunk was {0} but expected {1}")]

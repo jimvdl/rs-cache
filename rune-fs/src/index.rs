@@ -25,32 +25,34 @@ impl Indices {
         let path = path.as_ref();
         let mut indices = HashMap::new();
 
-        let ref_tbl_path = path.join(format!("{}{}", IDX_PREFIX, REFERENCE_TABLE));
-        let ref_index = if ref_tbl_path.exists() {
-            Index::from_path(REFERENCE_TABLE, ref_tbl_path)?
-        } else {
-            return Err(ReadError::ReferenceTableNotFound.into());
-        };
+        let ref_index = Index::from_path(
+            REFERENCE_TABLE,
+            path.join(format!("{}{}", IDX_PREFIX, REFERENCE_TABLE)),
+        )?;
 
         let data = Dat2::new(path.join(crate::MAIN_DATA))?;
 
         for index_id in 0..REFERENCE_TABLE {
             let path = path.join(format!("{}{}", IDX_PREFIX, index_id));
-            if path.exists() {
-                let mut index = Index::from_path(index_id, path)?;
 
-                let archive_ref = ref_index.archive_refs.get(&(index_id as u32)).ok_or(
-                    ReadError::ArchiveNotFound {
-                        idx: REFERENCE_TABLE,
-                        arc: index_id as u32,
-                    },
-                )?;
-                if archive_ref.length != 0 {
-                    let buffer = data.read(archive_ref)?.decode()?;
-                    index.archives = Archive::parse(&buffer)?;
-                }
-                indices.insert(index_id, index);
+            if !path.exists() {
+                continue;
             }
+            let mut index = Index::from_path(index_id, path)?;
+
+            let archive_ref = ref_index.archive_refs.get(&(index_id as u32)).ok_or(
+                ReadError::ArchiveNotFound {
+                    idx: REFERENCE_TABLE,
+                    arc: index_id as u32,
+                },
+            )?;
+
+            if archive_ref.length != 0 {
+                let buffer = data.read(archive_ref)?.decode()?;
+                index.archives = Archive::parse(&buffer)?;
+            }
+
+            indices.insert(index_id, index);
         }
 
         indices.insert(REFERENCE_TABLE, ref_index);

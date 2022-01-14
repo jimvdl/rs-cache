@@ -1,4 +1,4 @@
-//! An immutable, high-level API for the RuneScape cache file system.
+//! A read-only, high-level, virtual file API for the RuneScape cache.
 //!
 //! This crate provides high performant data reads into the [Oldschool RuneScape] and [RuneScape 3] cache file systems.
 //! It can read the necessary data to synchronize the client's cache with the server. There are also some
@@ -44,7 +44,7 @@
 //! let index_id = 2; // Config index.
 //! let archive_id = 10; // Archive containing item definitions.
 //!
-//! let buffer: Vec<u8> = cache.read(index_id, archive_id)?;
+//! let buffer = cache.read(index_id, archive_id)?;
 //! # Ok(())
 //! # }
 //! ```
@@ -66,7 +66,7 @@
 //! [memmap2]: https://crates.io/crates/memmap2
 //! [`Huffman`]: crate::util::Huffman
 //! [`IsaacRand`]: crate::util::IsaacRand
-
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![deny(
     clippy::all,
     clippy::correctness,
@@ -88,16 +88,15 @@ pub mod loader;
 pub use error::Error;
 use error::Result;
 
-// use crate::error::ReadError;
 use checksum::Checksum;
-#[cfg(any(feature = "rs3", doc))]
+#[cfg(feature = "rs3")]
 use checksum::{RsaChecksum, RsaKeys};
 use runefs::codec::{Buffer, Decoded, Encoded};
 use runefs::error::{Error as RuneFsError, ReadError};
 use runefs::{ArchiveRef, Dat2, Indices, MAIN_DATA};
 use std::{io::Write, path::Path};
 
-/// A parsed Jagex cache.
+/// A complete virtual representation of the RuneScape cache file system.
 #[derive(Debug)]
 pub struct Cache {
     data: Dat2,
@@ -105,16 +104,17 @@ pub struct Cache {
 }
 
 impl Cache {
-    /// Constructs a new `Cache`.
-    ///
-    /// Each valid index is parsed and stored, and in turn all archive references as well.
-    /// If an index is not present it will simply be skipped.
-    /// However, the main data file and reference table both are required.
+    /// Creates a high level virtual memory map over the cache directory.
+    /// 
+    /// All files are isolated on allocation by keeping them as in-memory files.
     ///
     /// # Errors
     ///
-    /// If this function encounters any form of I/O or other error, a `CacheError`
-    /// is returned which wraps the underlying error.
+    /// The bulk of the errors which might occur are mostely I/O related due to acquiring 
+    /// file handles.
+    /// 
+    /// Other errors might include protocol changes in newer caches.
+    /// Any error unrelated to I/O at this stage should be considered a bug.
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         Ok(Self {
             data: Dat2::new(path.as_ref().join(MAIN_DATA))?,
@@ -122,26 +122,34 @@ impl Cache {
         })
     }
 
+    /// Generate a checksum based on the current cache.
+    /// 
+    /// The `Checksum` acts as a validator for individual cache files.
+    /// Any RuneScape client will request a list of crc's to check the validity
+    /// of all of the file data that was transferred.
     pub fn checksum(&self) -> crate::Result<Checksum> {
         Checksum::new(self)
     }
 
-    #[cfg(any(feature = "rs3", doc))]
+    /// Generate a checksum based on the current cache with RSA encryption.
+    /// 
+    /// `RsaChecksum` wraps a regular `Checksum` with the added benefit of encrypting
+    /// the whirlpool hash into the checksum buffer. (currently only supported for RS3)
+    #[cfg(feature = "rs3")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
     pub fn checksum_with_keys<'a>(&self, keys: RsaKeys<'a>) -> crate::Result<RsaChecksum<'a>> {
         RsaChecksum::with_keys(self, keys)
     }
 
-    /// Reads from the internal data.
-    ///
-    /// A lookup is performed on the specified index to find the sector id and the total length
-    /// of the buffer that needs to be read from the `main_file_cache.dat2`.
-    ///
-    /// If the lookup is successfull the data is gathered into a `Vec<u8>`.
+    /// Retrieves and constructs data corresponding to the given index and archive.
     ///
     /// # Errors
     ///
-    /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
-    /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
+    /// When trying to retrieve data from an index or an archive that does not exist 
+    /// the `IndexNotFound` or `ArchiveNotFound` errors are returned, respectively.
+    /// 
+    /// Any other errors such as sector validation failures or failed parsers should
+    /// be considered a bug.
     pub fn read(&self, index_id: u8, archive_id: u32) -> crate::Result<Buffer<Encoded>> {
         let index = self
             .indices
@@ -167,16 +175,11 @@ impl Cache {
         self.read(archive.index_id, archive.id)
     }
 
-    /// Reads bytes from the cache into the given writer.
-    ///
-    /// For read-heavy workloads it is recommended to use this version of read to prevent
-    /// multiple buffer allocations, instead it will not allocate a buffer but use the writer
-    /// instead, see [`read`](Cache::read).
+    /// Retrieves and writes data corresponding to the given index and archive into `W`.
     ///
     /// # Errors
     ///
-    /// Returns an `IndexNotFound` error if the specified `index_id` is not a valid `Index`.\
-    /// Returns an `ArchiveNotFound` error if the specified `archive_id` is not a valid `Archive`.
+    /// See the error section on [`read`](Cache::read) for more details.
     pub fn read_into_writer<W: Write>(
         &self,
         index_id: u8,
@@ -198,9 +201,9 @@ impl Cache {
         Ok(self.data.read_into_writer(archive, writer)?)
     }
 
-    /// Tries to return the huffman table from the cache.
+    /// Retrieves the huffman table.
     ///
-    /// This can be used to decompress chat messages, see [`Huffman`](crate::util::Huffman).
+    /// Required when decompressing chat messages, see [`Huffman`](crate::util::Huffman).
     pub fn huffman_table(&self) -> crate::Result<Buffer<Decoded>> {
         let index_id = 10;
 

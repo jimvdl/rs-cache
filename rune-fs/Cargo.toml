@@ -11,9 +11,6 @@ readme = "README.md"
 keywords = ["runescape", "osrs", "rs3"]
 categories = ["development-tools", "filesystem"]
 
-[badges]
-maintenance = { status = "experimental" }
-
 [features]
 rs3 = ["lzma-rs"]
 
@@ -31,3 +28,7 @@ thiserror = "1.0.30"
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde-big-array = { version = "0.3", optional = true }
 lzma-rs = { version = "0.2", optional = true }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

@@ -38,8 +38,8 @@ pub enum Compression {
     None,
     Bzip2,
     Gzip,
-    /// Lzma only supported with the `rs3` feature flag.
-    #[cfg(any(feature = "rs3", doc))]
+    #[cfg(feature = "rs3")]
+    #[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
     Lzma,
 }
 

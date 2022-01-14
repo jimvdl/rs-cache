@@ -3,5 +3,6 @@
 /// OSRS definitions.
 pub mod osrs;
 /// RS3 definitions.
-#[cfg(any(feature = "rs3", doc))]
+#[cfg(feature = "rs3")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
 pub mod rs3;

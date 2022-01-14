@@ -40,7 +40,7 @@ macro_rules! impl_osrs_loader {
     };
 }
 
-#[cfg(any(feature = "rs3", doc))]
+#[cfg(feature = "rs3")]
 macro_rules! impl_rs3_loader {
     ($ldr:ident, $def:ty, index_id: $idx_id:expr) => {
         impl $ldr {

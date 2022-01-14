@@ -1,4 +1,5 @@
 // #![deny(missing_docs)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 #![deny(
     clippy::all,
     clippy::correctness,
