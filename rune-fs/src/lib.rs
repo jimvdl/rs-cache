@@ -14,7 +14,7 @@ pub mod error;
 mod index;
 pub mod parse;
 mod sector;
-mod xtea;
+pub mod xtea;
 
 #[doc(inline)]
 pub use error::Error;
@@ -23,9 +23,12 @@ use error::Result;
 pub const MAIN_DATA: &str = "main_file_cache.dat2";
 pub const REFERENCE_TABLE: u8 = 255;
 
-pub use archive::*;
-pub use index::*;
-pub use sector::*;
+pub use archive::{Archive, ArchiveFileData, ArchiveFileGroup, ArchiveRef, ARCHIVE_REF_LEN};
+pub use index::{Index, Indices};
+pub use sector::{
+    Sector, SectorHeader, SectorHeaderSize, SECTOR_DATA_SIZE, SECTOR_EXPANDED_DATA_SIZE,
+    SECTOR_EXPANDED_HEADER_SIZE, SECTOR_HEADER_SIZE, SECTOR_SIZE,
+};
 
 use crate::codec::{Buffer, Encoded};
 use error::ParseError;

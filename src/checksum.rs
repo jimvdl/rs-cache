@@ -47,7 +47,6 @@ pub struct Entry {
     pub(crate) hash: Vec<u8>,
 }
 
-// TODO: fix documentation
 /// Validator for the `Cache`.
 ///
 /// Used to validate cache index files. It contains a list of entries, one entry for each index file.
@@ -159,11 +158,6 @@ impl Checksum {
         Ok(Buffer::from(buffer).encode()?)
     }
 
-    // TODO: documentation and write fail tests for this. (also fix the rs3 tests)
-    /// Validates crcs with internal crcs.
-    ///
-    /// Only returns `true` if both the length of the iterators are the same
-    /// and all of its elements are `eq`.
     pub fn validate<'b, I>(&self, crcs: I) -> Result<(), ValidateError>
     where
         I: IntoIterator<Item = &'b u32>,
@@ -207,7 +201,6 @@ impl Checksum {
     }
 }
 
-// TODO: documentation
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg(any(feature = "rs3", doc))]
@@ -273,7 +266,6 @@ impl<'a> RsaChecksum<'a> {
     }
 }
 
-// check if you want this
 #[cfg(any(feature = "rs3", doc))]
 impl<'a> From<(&'a [u8], &'a [u8])> for RsaKeys<'a> {
     fn from(keys: (&'a [u8], &'a [u8])) -> Self {
@@ -281,25 +273,25 @@ impl<'a> From<(&'a [u8], &'a [u8])> for RsaKeys<'a> {
     }
 }
 
-// impl IntoIterator for Checksum {
-//     type Item = Entry;
-//     type IntoIter = std::vec::IntoIter<Entry>;
+impl IntoIterator for Checksum {
+    type Item = Entry;
+    type IntoIter = std::vec::IntoIter<Entry>;
 
-//     #[inline]
-//     fn into_iter(self) -> Self::IntoIter {
-//         self.entries.into_iter()
-//     }
-// }
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.entries.into_iter()
+    }
+}
 
-// impl<'a> IntoIterator for &'a Checksum {
-//     type Item = &'a Entry;
-//     type IntoIter = Iter<'a, Entry>;
+impl<'a> IntoIterator for &'a Checksum {
+    type Item = &'a Entry;
+    type IntoIter = Iter<'a, Entry>;
 
-//     #[inline]
-//     fn into_iter(self) -> Self::IntoIter {
-//         self.entries.iter()
-//     }
-// }
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.entries.iter()
+    }
+}
 
 #[cfg(feature = "rs3")]
 impl Default for Entry {
@@ -313,7 +305,6 @@ impl Default for Entry {
     }
 }
 
-// TODO: add RsaChecksum tests
 #[cfg(test)]
 use crate::test_util;
 
@@ -404,3 +395,24 @@ fn invalid_len() -> crate::Result<()> {
     Ok(())
 }
 
+#[cfg(all(test, feature = "rs3"))]
+mod rsa {
+    use crate::test_util;
+    use super::{RsaChecksum, RsaKeys};
+    
+    pub const EXPONENT: &'static [u8] = b"5206580307236375668350588432916871591810765290737810323990754121164270399789630501436083337726278206128394461017374810549461689174118305784406140446740993";
+    pub const MODULUS: &'static [u8] = b"6950273013450460376345707589939362735767433035117300645755821424559380572176824658371246045200577956729474374073582306250298535718024104420271215590565201";
+
+    #[test]
+    fn with_keys() -> crate::Result<()> {
+        let cache = test_util::rs3_cache()?;
+        let keys = RsaKeys::new(EXPONENT, MODULUS);
+        let buffer = RsaChecksum::with_keys(&cache, keys)?.encode()?;
+
+        let hash = test_util::hash(&buffer);
+        assert_eq!(&hash, "118e0146af6cf288630357eec6298c34a2430065");
+        assert_eq!(buffer.len(), 4681);
+
+        Ok(())
+    }
+}

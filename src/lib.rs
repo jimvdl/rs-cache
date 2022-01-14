@@ -206,7 +206,9 @@ impl Cache {
 
         let archive = self.archive_by_name(index_id, "huffman")?;
         let buffer = self.read_archive(archive)?;
-        // Ok(runefs::codec::decode(&buffer)?)
+
+        assert_eq!(buffer.len(), archive.length);
+
         Ok(buffer.decode()?)
     }
 
@@ -281,47 +283,36 @@ mod read {
         fn ref_table() -> crate::Result<()> {
             let cache = test_util::osrs_cache()?;
             let buffer = cache.read(255, 10)?;
-            
             let hash = test_util::hash(&buffer);
             assert_eq!(&hash, "64fb9fcf381a547bb7beafbc3b7ba4fd847f21ef");
             assert_eq!(buffer.len(), 77);
-            
             Ok(())
         }
-        
         #[test]
         fn random_read() -> crate::Result<()> {
             let cache = test_util::osrs_cache()?;
             let buffer = cache.read(0, 191)?;
-            
             let hash = test_util::hash(&buffer);
             assert_eq!(&hash, "cd459f6ccfbd81c1e3bfadf899624f2519e207a9");
             assert_eq!(buffer.len(), 2055);
-            
             Ok(())
         }
-        
         #[test]
         fn large_read() -> crate::Result<()> {
             let cache = test_util::osrs_cache()?;
             let buffer = cache.read(2, 10)?;
-            
             let hash = test_util::hash(&buffer);
             assert_eq!(&hash, "c6ee1518e9a39a42ecaf946c6c84a942cb3102f4");
             assert_eq!(buffer.len(), 260_537);
-            
             Ok(())
         }
-        
         #[test]
         fn deep_archive() -> crate::Result<()> {
             let cache = test_util::osrs_cache()?;
             let buffer = cache.read(7, 24918)?;
-            
             let hash = test_util::hash(&buffer);
             assert_eq!(&hash, "fe91e9e9170a5a05ed2684c1db1169aa7ef4906e");
             assert_eq!(buffer.len(), 803);
-            
             Ok(())
         }
 
@@ -333,7 +324,6 @@ mod read {
             let hash = test_util::hash(&buffer);
             assert_eq!(&hash, "036abb64d3f1734d892f69b1253a87639b7bcb44");
             assert_eq!(buffer.len(), 512);
-            
             Ok(())
         }
 
@@ -345,7 +335,6 @@ mod read {
             let hash = test_util::hash(&buffer);
             assert_eq!(&hash, "fbe9d365cf0c3efa94e0d4a2c5e607b28a1279b9");
             assert_eq!(buffer.len(), 1024);
-            
             Ok(())
         }
 
@@ -365,11 +354,9 @@ mod read {
         fn random_0_read() -> crate::Result<()> {
             let cache = test_util::rs3_cache()?;
             let buffer = cache.read(0, 25)?;
-            
             let hash = test_util::hash(&buffer);
             assert_eq!(&hash, "81e455fc58fe5ac98fee4df5b78600bbf43e83f7");
             assert_eq!(buffer.len(), 1576);
-            
             Ok(())
         }
 
@@ -381,7 +368,6 @@ mod read {
             let hash = test_util::hash(&buffer);
             assert_eq!(&hash, "b33919c6e4677abc6ec1c0bdd9557f820a163559");
             assert_eq!(buffer.len(), 529);
-            
             Ok(())
         }
 
@@ -396,8 +382,8 @@ mod read {
 
 #[cfg(test)]
 mod osrs {
-    use super::Cache;
     use super::test_util;
+    use super::Cache;
 
     #[test]
     fn new() {
@@ -412,7 +398,6 @@ mod osrs {
     #[test]
     fn huffman_table() -> crate::Result<()> {
         let cache = test_util::osrs_cache()?;
-
         let buffer = cache.huffman_table()?;
 
         let hash = test_util::hash(&buffer);
@@ -425,8 +410,8 @@ mod osrs {
 
 #[cfg(all(test, feature = "rs3"))]
 mod rs3 {
-    use super::Cache;
     use super::test_util;
+    use super::Cache;
 
     #[test]
     fn new() {
@@ -441,7 +426,6 @@ mod rs3 {
     #[test]
     fn huffman_table() -> crate::Result<()> {
         let cache = test_util::rs3_cache()?;
-
         let buffer = cache.huffman_table()?;
 
         let hash = test_util::hash(&buffer);

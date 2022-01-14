@@ -48,7 +48,7 @@ impl ArchiveRef {
         })
     }
 
-    pub fn data_blocks(&self) -> DataBlocks {
+    pub(crate) fn data_blocks(&self) -> DataBlocks {
         let (header_len, data_len) = match SectorHeaderSize::from(self) {
             SectorHeaderSize::Normal => (SECTOR_HEADER_SIZE, SECTOR_DATA_SIZE),
             SectorHeaderSize::Expanded => (SECTOR_EXPANDED_HEADER_SIZE, SECTOR_EXPANDED_DATA_SIZE),
@@ -67,7 +67,7 @@ impl ArchiveRef {
     }
 }
 
-pub struct DataBlocks {
+pub(crate) struct DataBlocks {
     count: usize,
     remainder: usize,
     header_len: usize,
