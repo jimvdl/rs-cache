@@ -8,8 +8,8 @@ use crate::{extension::ReadExt, util};
 
 /// Contains all the information about a certain object fetched from the cache through
 /// the [ObjectLoader](../../loader/osrs/struct.ObjectLoader.html).
-#[derive(Clone, Eq, PartialEq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ObjectDefinition {
     pub id: u16,
     pub name: String,
@@ -33,8 +33,8 @@ pub struct ObjectDefinition {
     pub model_data: ObjectModelData,
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ObjectModelData {
     pub models: Vec<u16>,
     pub types: Vec<u8>,

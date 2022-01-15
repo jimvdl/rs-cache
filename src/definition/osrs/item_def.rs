@@ -8,8 +8,8 @@ use crate::{extension::ReadExt, util};
 
 /// Contains all the information about a certain item fetched from the cache through
 /// the [ItemLoader](../../loader/osrs/struct.ItemLoader.html).
-#[derive(Clone, Eq, PartialEq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ItemDefinition {
     pub id: u16,
     pub name: String,
@@ -32,8 +32,8 @@ pub struct ItemDefinition {
     pub character_model_data: CharacterModelData,
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct InventoryModelData {
     pub inventory_model: u16,
     pub zoom2d: u16,
@@ -53,8 +53,8 @@ pub struct InventoryModelData {
     pub contrast: i8,
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct CharacterModelData {
     pub male_model10: Option<u16>,
     pub male_model_offset: u8,

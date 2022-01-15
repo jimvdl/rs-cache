@@ -31,7 +31,7 @@ use crc::{Crc, CRC_32_ISO_HDLC};
 use nom::{combinator::cond, number::complete::be_u32};
 use runefs::{
     codec::{Buffer, Encoded},
-    REFERENCE_TABLE,
+    REFERENCE_TABLE_ID,
 };
 
 #[cfg(feature = "rs3")]
@@ -44,9 +44,9 @@ use whirlpool::{Digest, Whirlpool};
 const CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
 /// Each entry in the checksum is mapped to an [`Index`](runefs::Index).
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(not(feature = "rs3"), derive(Default))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub struct Entry {
     pub(crate) crc: u32,
     pub(crate) version: u32,
@@ -60,8 +60,8 @@ pub struct Entry {
 ///
 /// In order to create a `Checksum` you can either use the [`checksum`](crate::Cache::checksum) function on `Cache` or
 /// use [`new`](Checksum::new) and pass in a reference to an exisiting cache. They both achieve the same result.
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Checksum {
     index_count: usize,
     entries: Vec<Entry>,
@@ -83,7 +83,7 @@ impl Checksum {
     fn entries(cache: &Cache) -> crate::Result<Vec<Entry>> {
         let entries: Vec<Entry> = (0..cache.indices.len())
             .into_iter()
-            .filter_map(|idx_id| cache.read(REFERENCE_TABLE, idx_id as u32).ok())
+            .filter_map(|idx_id| cache.read(REFERENCE_TABLE_ID, idx_id as u32).ok())
             .enumerate()
             .map(|(idx_id, buffer)| -> crate::Result<Entry> {
                 if buffer.is_empty() || idx_id == 47 {
@@ -219,11 +219,11 @@ impl Checksum {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+/// A struct that holds both keys for RSA encryption.
 #[cfg(feature = "rs3")]
 #[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
-/// A struct that holds both keys for RSA encryption.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct RsaKeys<'a> {
     pub(crate) exponent: &'a [u8],
     pub(crate) modulus: &'a [u8],
@@ -249,8 +249,6 @@ impl<'a> RsaKeys<'a> {
     }
 }
 
-#[cfg(feature = "rs3")]
-#[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
 /// Wraps a general `Checksum` with the added benefit of encrypting
 /// the whirlpool hash into the checksum buffer.
 /// 
@@ -272,8 +270,13 @@ impl<'a> RsaKeys<'a> {
 /// # Ok(())
 /// # }
 /// ```
+#[cfg(feature = "rs3")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct RsaChecksum<'a> {
     checksum: Checksum,
+    #[serde(borrow)]
     rsa_keys: RsaKeys<'a>,
 }
 

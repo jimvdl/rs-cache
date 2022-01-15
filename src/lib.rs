@@ -227,7 +227,7 @@ impl Cache {
         let hash = util::djd2::hash(&name);
 
         let archive = index
-            .archives
+            .metadata
             .iter()
             .find(|archive| archive.name_hash == hash)
             .ok_or_else(|| crate::error::NameHashMismatch {

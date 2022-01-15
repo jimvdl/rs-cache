@@ -15,7 +15,7 @@ pub use obj_def::*;
 use std::collections::HashMap;
 
 use crate::Cache;
-use runefs::{Archive, ArchiveFileGroup, REFERENCE_TABLE};
+use runefs::{ArchiveFileGroup, IndexMetadata, REFERENCE_TABLE_ID};
 
 /// Marker trait for definitions.
 pub trait Definition: Sized {
@@ -41,8 +41,8 @@ pub trait FetchDefinition: Definition {
     where
         D: Definition,
     {
-        let buffer = cache.read(REFERENCE_TABLE, index_id as u32)?.decode()?;
-        let archives = Archive::parse(&buffer)?;
+        let buffer = cache.read(REFERENCE_TABLE_ID, index_id as u32)?.decode()?;
+        let archives = IndexMetadata::try_from(buffer)?;
         let mut definitions = HashMap::new();
         for archive in &archives {
             let buffer = cache.read(index_id, archive.id)?.decode()?;
@@ -89,8 +89,8 @@ pub trait FetchDefinition: Definition {
     where
         D: Definition,
     {
-        let buffer = cache.read(REFERENCE_TABLE, index_id as u32)?.decode()?;
-        let archives = Archive::parse(&buffer)?;
+        let buffer = cache.read(REFERENCE_TABLE_ID, index_id as u32)?.decode()?;
+        let archives = IndexMetadata::try_from(buffer)?;
         let entry_count = archives[archive_id as usize - 1].entry_count;
         let buffer = cache.read(index_id, archive_id)?.decode()?;
 

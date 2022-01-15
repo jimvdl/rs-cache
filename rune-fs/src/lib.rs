@@ -22,14 +22,12 @@ pub use error::Error;
 use error::Result;
 
 pub const MAIN_DATA: &str = "main_file_cache.dat2";
-pub const REFERENCE_TABLE: u8 = 255;
+// pub const REFERENCE_TABLE: &str = "main_file_cache.idx255";
+pub const REFERENCE_TABLE_ID: u8 = 255;
 
-pub use archive::{Archive, ArchiveFileData, ArchiveFileGroup, ArchiveRef, ARCHIVE_REF_LEN};
-pub use index::{Index, Indices};
-pub use sector::{
-    Sector, SectorHeader, SectorHeaderSize, SECTOR_DATA_SIZE, SECTOR_EXPANDED_DATA_SIZE,
-    SECTOR_EXPANDED_HEADER_SIZE, SECTOR_HEADER_SIZE, SECTOR_SIZE,
-};
+pub use archive::*;
+pub use index::*;
+pub use sector::*;
 
 use crate::codec::{Buffer, Encoded};
 use error::ParseError;
@@ -78,6 +76,29 @@ impl Dat2 {
         Ok(())
     }
 }
+
+// #[derive(Debug)]
+// pub struct ReferenceTable(Index);
+
+// impl ReferenceTable {
+//     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
+//         let data = unsafe { Mmap::map(&File::open(path.as_ref())?)? };
+
+//         Ok(Self(Index::from_buffer(REFERENCE_TABLE_ID, &data)?))
+//     }
+
+//     // pub fn metadata(&self, index_id: u8) -> ArchiveMetadataGroup {
+
+//     // }
+// }
+
+// impl std::ops::Deref for ReferenceTable {
+//     type Target = Index;
+
+//     fn deref(&self) -> &Self::Target {
+//         &self.0
+//     }
+// }
 
 #[cfg(test)]
 fn is_normal<T: Send + Sync + Sized + Unpin>() {}

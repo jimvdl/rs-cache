@@ -13,8 +13,8 @@ pub const SECTOR_DATA_SIZE: usize = 512;
 pub const SECTOR_EXPANDED_DATA_SIZE: usize = 510;
 pub const SECTOR_SIZE: usize = SECTOR_HEADER_SIZE + SECTOR_DATA_SIZE;
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Sector<'a> {
     pub header: SectorHeader,
     pub data_block: &'a [u8],
@@ -29,8 +29,8 @@ impl<'a> Sector<'a> {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct SectorHeader {
     pub archive_id: u32,
     pub chunk: usize,
@@ -96,8 +96,8 @@ impl Default for SectorHeaderSize {
     }
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum SectorHeaderSize {
     Normal,
     Expanded,

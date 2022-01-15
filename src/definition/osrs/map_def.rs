@@ -12,16 +12,16 @@ const Z: usize = 4;
 
 /// Contains all the information about a certain map fetched from the cache through
 /// the [MapLoader](../../loader/osrs/struct.MapLoader.html).
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct MapDefinition {
     pub region_x: u16,
     pub region_y: u16,
     pub data: Vec<Vec<Vec<MapData>>>,
 }
 
-#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct MapData {
     pub height: u8,
     pub attr_opcode: u8,

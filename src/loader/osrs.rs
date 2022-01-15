@@ -15,22 +15,22 @@ use crate::{
 };
 
 /// Loads all item definitions from the current cache.
-#[derive(Clone, Eq, PartialEq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ItemLoader(HashMap<u16, ItemDefinition>);
 
 impl_osrs_loader!(ItemLoader, ItemDefinition, index_id: 2, archive_id: 10);
 
 /// Loads all npc definitions from the current cache.
-#[derive(Clone, Eq, PartialEq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct NpcLoader(HashMap<u16, NpcDefinition>);
 
 impl_osrs_loader!(NpcLoader, NpcDefinition, index_id: 2, archive_id: 9);
 
 /// Loads all object definitions from the current cache.
-#[derive(Clone, Eq, PartialEq, Debug, Default)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Debug, Default)]
 pub struct ObjectLoader(HashMap<u16, ObjectDefinition>);
 
 impl_osrs_loader!(ObjectLoader, ObjectDefinition, index_id: 2, archive_id: 6);
