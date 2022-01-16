@@ -22,7 +22,7 @@ pub use error::Error;
 use error::Result;
 
 pub const MAIN_DATA: &str = "main_file_cache.dat2";
-// pub const REFERENCE_TABLE: &str = "main_file_cache.idx255";
+pub const REFERENCE_TABLE: &str = "main_file_cache.idx255";
 pub const REFERENCE_TABLE_ID: u8 = 255;
 
 pub use archive::*;
@@ -36,20 +36,27 @@ use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 
+/// A virtual file type for the `.dat2` file.
 #[derive(Debug)]
 pub struct Dat2(Mmap);
 
 impl Dat2 {
+    /// Initializes a memory map over the specified `.dat2` file.
     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
         Ok(Self(unsafe { Mmap::map(&File::open(path.as_ref())?)? }))
     }
 
+    /// Read all the data that belongs to the `ArchiveRef`.
     pub fn read(&self, archive: &ArchiveRef) -> crate::Result<Buffer<Encoded>> {
         let mut buffer = Buffer::from(Vec::with_capacity(archive.length));
         self.read_into_writer(archive, &mut buffer)?;
+
+        assert_eq!(buffer.len(), archive.length);
+
         Ok(buffer)
     }
 
+    /// Read all the data that belongs to the `ArchiveRef` into the given writer.
     pub fn read_into_writer<W>(&self, archive: &ArchiveRef, writer: &mut W) -> crate::Result<()>
     where
         W: Write,
@@ -76,29 +83,6 @@ impl Dat2 {
         Ok(())
     }
 }
-
-// #[derive(Debug)]
-// pub struct ReferenceTable(Index);
-
-// impl ReferenceTable {
-//     pub fn new<P: AsRef<Path>>(path: P) -> crate::Result<Self> {
-//         let data = unsafe { Mmap::map(&File::open(path.as_ref())?)? };
-
-//         Ok(Self(Index::from_buffer(REFERENCE_TABLE_ID, &data)?))
-//     }
-
-//     // pub fn metadata(&self, index_id: u8) -> ArchiveMetadataGroup {
-
-//     // }
-// }
-
-// impl std::ops::Deref for ReferenceTable {
-//     type Target = Index;
-
-//     fn deref(&self) -> &Self::Target {
-//         &self.0
-//     }
-// }
 
 #[cfg(test)]
 fn is_normal<T: Send + Sync + Sized + Unpin>() {}

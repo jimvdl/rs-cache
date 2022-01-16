@@ -34,8 +34,6 @@ pub struct ArchiveRef {
 impl ArchiveRef {
     /// Transforms an [`Index`](crate::Index) sub-buffer into an archive reference.
     /// 
-    /// See [`Index::from_buffer`](crate::Index::from_buffer) for more details.
-    /// 
     /// # Errors
     /// 
     /// Will fail if the buffer is not exactly 6 bytes in length.
@@ -103,8 +101,25 @@ impl Iterator for DataBlocks {
     }
 }
 
-#[cfg(feature = "rs3")]
-#[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
+/// Metadata on every archive.
+/// 
+/// # Example
+/// 
+/// TODO
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
+pub struct ArchiveMetadata {
+    pub id: u32,
+    pub name_hash: i32,
+    pub crc: u32,
+    pub hash: i32,
+    #[cfg_attr(feature = "serde", serde(with = "BigArray"))]
+    pub whirlpool: [u8; 64],
+    pub version: u32,
+    pub entry_count: usize,
+    pub valid_ids: Vec<u32>,
+}
+
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ArchiveFileData {
@@ -112,8 +127,6 @@ pub struct ArchiveFileData {
     pub data: Vec<u8>,
 }
 
-#[cfg(feature = "rs3")]
-#[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ArchiveFileGroup(Vec<ArchiveFileData>);
@@ -163,6 +176,8 @@ impl ArchiveFileGroup {
     }
 }
 
+#[cfg(feature = "rs3")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
 impl IntoIterator for ArchiveFileGroup {
     type Item = ArchiveFileData;
     type IntoIter = std::vec::IntoIter<ArchiveFileData>;
@@ -173,6 +188,8 @@ impl IntoIterator for ArchiveFileGroup {
     }
 }
 
+#[cfg(feature = "rs3")]
+#[cfg_attr(docsrs, doc(cfg(feature = "rs3")))]
 impl<'a> IntoIterator for &'a ArchiveFileGroup {
     type Item = &'a ArchiveFileData;
     type IntoIter = Iter<'a, ArchiveFileData>;
