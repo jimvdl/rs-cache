@@ -94,7 +94,7 @@ pub trait FetchDefinition: Definition {
         let entry_count = archives[archive_id as usize - 1].entry_count;
         let buffer = cache.read(index_id, archive_id)?.decode()?;
 
-        let archive_group = ArchiveFileGroup::parse(&buffer, entry_count)?;
+        let archive_group = ArchiveFileGroup::from_buffer(&buffer, entry_count);
 
         let mut definitions = HashMap::new();
         for archive_file in archive_group {

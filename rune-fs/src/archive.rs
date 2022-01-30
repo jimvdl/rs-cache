@@ -1,7 +1,4 @@
-use std::{
-    io,
-    slice::{Iter, IterMut},
-};
+use std::slice::{Iter, IterMut};
 
 #[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
@@ -120,6 +117,7 @@ pub struct ArchiveMetadata {
     pub valid_ids: Vec<u32>,
 }
 
+/// Holds an archive file id with its data.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ArchiveFileData {
@@ -127,15 +125,21 @@ pub struct ArchiveFileData {
     pub data: Vec<u8>,
 }
 
+/// Holds all of the archive files that belong to a single archive.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct ArchiveFileGroup(Vec<ArchiveFileData>);
 
 impl ArchiveFileGroup {
-    pub fn parse(buffer: &[u8], entry_count: usize) -> io::Result<Self> {
+    /// Format a raw buffer into a list of `ArchiveFileData`'s.
+    /// 
+    /// # Panics
+    /// 
+    /// Whenever the buffer has a wrong format no files can be constructed.
+    pub fn from_buffer(buffer: &[u8], entry_count: usize) -> Self {
         let chunks = buffer[buffer.len() - 1] as usize;
         let mut data = Vec::with_capacity(chunks);
-        let mut cached_chunks = Vec::new();
+        let mut cached_chunks = Vec::with_capacity(chunks);
         let mut read_ptr = buffer.len() - 1 - chunks * entry_count * 4;
 
         for _ in 0..chunks {
@@ -162,7 +166,7 @@ impl ArchiveFileGroup {
             read_ptr += chunk_size;
         }
 
-        Ok(Self(data))
+        Self(data)
     }
 
     #[inline]
