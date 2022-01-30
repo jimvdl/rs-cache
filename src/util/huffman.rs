@@ -6,7 +6,7 @@
 /// # use rscache::Cache;
 /// use rscache::util::Huffman;
 ///
-/// # fn main() -> rscache::Result<()> {
+/// # fn main() -> Result<(), rscache::Error> {
 /// # let cache = Cache::new("./data/osrs_cache")?;
 /// let huffman_tbl = cache.huffman_table()?;
 /// let huffman = Huffman::new(&huffman_tbl);

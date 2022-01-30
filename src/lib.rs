@@ -38,7 +38,7 @@
 //! ```
 //! use rscache::Cache;
 //!
-//! # fn main() -> rscache::Result<()> {
+//! # fn main() -> Result<(), rscache::Error> {
 //! let cache = Cache::new("./data/osrs_cache")?;
 //!
 //! let index_id = 2; // Config index.

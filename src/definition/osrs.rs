@@ -71,7 +71,7 @@ pub trait FetchDefinition: Definition {
     ///     ItemDefinition,
     /// };
     ///
-    /// # fn main() -> rscache::Result<()> {
+    /// # fn main() -> Result<(), rscache::Error> {
     /// # let cache = Cache::new("./data/osrs_cache")?;
     /// let index_id = 2; // Config index.
     /// let archive_id = 10; // Archive containing item definitions.

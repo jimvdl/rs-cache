@@ -12,7 +12,7 @@
 //!     definition::osrs::{ Definition, FetchDefinition },
 //! };
 //! 
-//! fn main() -> rscache::Result<()> {
+//! fn main() -> Result<(), rscache::Error> {
 //!     let cache = Cache::new("./data/osrs_cache")?;
 //!     let custom_loader = CustomLoader::new(&cache)?;
 //!     let definition = custom_loader.load(1042);
@@ -28,7 +28,7 @@
 //! struct CustomLoader(HashMap<u16, CustomDefinition>);
 //! 
 //! impl CustomLoader {
-//!     fn new(cache: &Cache) -> rscache::Result<Self> {
+//!     fn new(cache: &Cache) -> Result<Self, rscache::Error> {
 //!         // Some definitions are all contained within one archive.
 //!         // Other times one archive only contains one definition, but in most cases
 //!         // for OSRS they are stored as multiple definitions per archive.
@@ -55,7 +55,7 @@
 //! }
 //!
 //! impl Definition for CustomDefinition {
-//!     fn new(id: u16, buffer: &[u8]) -> rscache::Result<Self> {
+//!     fn new(id: u16, buffer: &[u8]) -> Result<Self, rscache::Error> {
 //!         let mut reader = BufReader::new(buffer);
 //!         let def = decode_buffer(id, &mut reader)?;
 //!
