@@ -3,33 +3,9 @@
 use std::io;
 use thiserror::Error;
 
-/// A specialized result type for cache operations.
-///
-/// This type is broadly used across rscache for any operation which may produce a
-/// [RuneFsError](enum.RuneFsError.html).
-///
-/// # Examples
-///
-/// A convenience function that bubbles an `rscache::Result` to its caller:
-///
-/// ```
-/// use rscache::Cache;
-/// use rscache::codec;
-///
-/// // Same result as Result<Vec<u8>, RuneFsError>
-/// fn item_def_data(cache: &Cache) -> rscache::Result<Vec<u8>> {
-///     let index_id = 2;
-///     let archive_id = 10;
-///
-///     let buffer = cache.read(index_id, archive_id)?;
-///     let buffer = codec::decode(&buffer)?;
-///
-///     Ok(buffer)
-/// }
-/// ```
 pub(crate) type Result<T> = std::result::Result<T, Error>;
 
-/// Super error type for all sub cache errors
+/// Super error type for all runefs errors.
 #[derive(Error, Debug)]
 pub enum Error {
     /// Wrapper for the std::io::Error type.
