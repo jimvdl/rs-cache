@@ -7,7 +7,7 @@
 [![OSRS Version](https://img.shields.io/badge/OSRS-180-blue)]()
 [![RS3 Version](https://img.shields.io/badge/RS3-904-blue)]()
 
-An immutable, high-level API for the RuneScape cache file system.
+A read-only, high-level, virtual file API for the RuneScape cache.
 
 This crate provides high performant data reads into the [Oldschool RuneScape](https://oldschool.runescape.com/) and [RuneScape 3](https://www.runescape.com/) cache file systems. It can read the necessary data to synchronize the client's cache with the server. There are also some loaders that give access to definitions from the cache such as items or npcs. 
 
