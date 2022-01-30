@@ -30,11 +30,11 @@ whirlpool = { version = "0.9", optional = true }
 num-bigint = { version = "0.4", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 thiserror = "1.0.30"
-rune-fs = { path = "../rune-fs" }
+rune-fs = "0.1"
 
 [dev-dependencies]
 sha1 = "0.6"
-rune-fs = { path = "../rune-fs", features = ["rs3"] }
+rune-fs = { version = "0.1", features = ["rs3"] }
 
 [package.metadata.docs.rs]
 all-features = true
