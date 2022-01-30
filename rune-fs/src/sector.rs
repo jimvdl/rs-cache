@@ -13,6 +13,7 @@ pub const SECTOR_DATA_SIZE: usize = 512;
 pub const SECTOR_EXPANDED_DATA_SIZE: usize = 510;
 pub const SECTOR_SIZE: usize = SECTOR_HEADER_SIZE + SECTOR_DATA_SIZE;
 
+/// A section of data read from the `Dat2` file.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct Sector<'a> {
@@ -21,6 +22,13 @@ pub struct Sector<'a> {
 }
 
 impl<'a> Sector<'a> {
+    /// Creates a sector from the given buffer using the header size to correctly initiate
+    /// the root sector.
+    /// 
+    /// # Errors
+    /// 
+    /// Either a `SectorHeader` couldn't be initiated due to a wrong buffer or 
+    /// there are no more bytes after the initial header.
     pub fn new(buffer: &'a [u8], header_size: &SectorHeaderSize) -> crate::Result<Self> {
         let (buffer, header) = SectorHeader::new(buffer, header_size)?;
         let (_, data_block) = rest(buffer)?;
@@ -29,6 +37,7 @@ impl<'a> Sector<'a> {
     }
 }
 
+/// A section header containing validation and its next sector.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct SectorHeader {
@@ -39,6 +48,17 @@ pub struct SectorHeader {
 }
 
 impl<'a> SectorHeader {
+    /// Constructs a sector header from the given buffer.
+    /// 
+    /// Each sector is guaranteed to have a length of 520 bytes. The header size
+    /// will be either 8 or 10 bytes, making the data size either 512 or 510 bytes 
+    /// respectively. Only when the archive id exceeds `u16::MAX` will the header size
+    /// be expanded (meaning a 10 byte header).
+    /// 
+    /// # Errors
+    /// 
+    /// The header buffer needs to be exactly `SectorHeaderSize`, otherwise you will
+    /// get a parser error. 
     pub fn new(
         buffer: &'a [u8],
         header_size: &SectorHeaderSize,
@@ -96,10 +116,13 @@ impl Default for SectorHeaderSize {
     }
 }
 
+/// Used to convey a sector's header size when parsing from a raw buffer.
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum SectorHeaderSize {
+    /// 8 byte header length.
     Normal,
+    /// 10 byte header length.
     Expanded,
 }
 
