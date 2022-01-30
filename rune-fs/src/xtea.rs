@@ -1,7 +1,11 @@
+//! In-place XTEA en/de-ciphering.
+//! 
+//! Defaults to 32 rounds.
+
 const ROUNDS: u32 = 32;
 const RATIO: u32 = 0x9E3779B9;
 
-/// Enciphers the data in-place with the given XTEA keys. Defaults to 32 rounds.
+/// Enciphers the data in-place with the given XTEA keys.
 pub fn encipher(data: &mut [u8], keys: &[u32; 4]) {
     let blocks = data.len() / 8;
 
@@ -38,7 +42,7 @@ pub fn encipher(data: &mut [u8], keys: &[u32; 4]) {
     }
 }
 
-/// Deciphers the data in-place with the given XTEA keys. Defaults to 32 rounds.
+/// Deciphers the data in-place with the given XTEA keys.
 pub fn decipher(data: &mut [u8], keys: &[u32; 4]) {
     let blocks = data.len() / 8;
 
