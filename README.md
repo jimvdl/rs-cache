@@ -38,20 +38,20 @@ In order to read bytes in a high performant way the cache uses [memmap2](https:/
 ## Features
 
 The cache's protocol defaults to OSRS. In order to use the RS3 protocol you can enable the `rs3` feature flag.
-A lot of types derive [serde](https://crates.io/crates/serde)'s `Serialize` and `Deserialize`. The `serde-derive` feature flag can be used to enable (de)serialization on any compatible types.
+A lot of types derive [serde](https://crates.io/crates/serde)'s `Serialize` and `Deserialize`. The `serde` feature flag can be used to enable (de)serialization on any compatible types.
 
 ## Quick Start
 
 ```rust
 use rscache::Cache;
 
-fn main() -> rscache::Result<()> {
+fn main() -> Result<(), rscache::Error> {
     let cache = Cache::new("./data/osrs_cache")?;
 
     let index_id = 2; // Config index.
     let archive_id = 10; // Archive containing item definitions.
 
-    let buffer: Vec<u8> = cache.read(index_id, archive_id)?;
+    let buffer = cache.read(index_id, archive_id)?;
 
     Ok(())
 }
@@ -70,7 +70,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rs-cache = "0.7"
+rs-cache = "0.8"
 ```
 
 Examples can be found in the [examples](examples/) directory which include both update protocols.
