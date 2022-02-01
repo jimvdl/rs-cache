@@ -276,7 +276,7 @@ impl<'a> RsaKeys<'a> {
 #[derive(Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default)]
 pub struct RsaChecksum<'a> {
     checksum: Checksum,
-    #[serde(borrow)]
+    #[cfg_attr(feature = "serde", serde(borrow))]
     rsa_keys: RsaKeys<'a>,
 }
 
