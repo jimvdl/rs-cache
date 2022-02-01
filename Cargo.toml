@@ -13,7 +13,7 @@ exclude = [".gitignore", "data/*"]
 categories = ["development-tools", "filesystem"]
 
 [features]
-rs3 = ["whirlpool", "num-bigint"]
+rs3 = ["whirlpool", "num-bigint", "rune-fs/rs3"]
 
 [[example]]
 name = "rs3_update_protocol"
