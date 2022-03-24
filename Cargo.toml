@@ -19,12 +19,15 @@ rs3 = ["whirlpool", "num-bigint", "rune-fs/rs3"]
 name = "rs3_update_protocol"
 required-features = ["rs3"]
 
+[profile.release]
+debug = true
+
 [lib]
 name = "rscache"
 path = "src/lib.rs"
 
 [dependencies]
-crc = "2.1"
+crc = "2.1" # crc32fast = "1.3.2"
 nom = "7.0"
 whirlpool = { version = "0.9", optional = true }
 num-bigint = { version = "0.4", optional = true }
