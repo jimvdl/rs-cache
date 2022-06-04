@@ -27,7 +27,6 @@ use std::iter::IntoIterator;
 use std::slice::Iter;
 
 use crate::{error::ValidateError, Cache};
-use crc::{Crc, CRC_32_ISO_HDLC};
 use nom::{combinator::cond, number::complete::be_u32};
 use runefs::{
     codec::{Buffer, Encoded},
@@ -40,8 +39,6 @@ use num_bigint::{BigInt, Sign};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "rs3")]
 use whirlpool::{Digest, Whirlpool};
-
-const CRC: Crc<u32> = Crc::<u32>::new(&CRC_32_ISO_HDLC);
 
 /// Each entry in the checksum is mapped to an [`Index`](runefs::Index).
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
@@ -95,9 +92,6 @@ impl Checksum {
                     //     (buffer.as_slice(), (buffer.len() / 8) as u8)
                     // };
 
-                    let mut digest = CRC.digest();
-                    digest.update(&buffer);
-
                     #[cfg(feature = "rs3")]
                     let hash = {
                         let mut hasher = Whirlpool::new();
@@ -105,12 +99,14 @@ impl Checksum {
                         hasher.finalize().as_slice().to_vec()
                     };
 
+                    let checksum = crc32fast::hash(&buffer);
+
                     let data = buffer.decode()?;
                     let (_, version) = cond(data[0] >= 6, be_u32)(&data[1..5])?;
                     let version = version.unwrap_or(0);
 
                     Ok(Entry {
-                        crc: digest.finalize(),
+                        crc: checksum,
                         version,
                         #[cfg(feature = "rs3")]
                         hash,
