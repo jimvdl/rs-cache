@@ -1,5 +1,5 @@
 use rscache::Cache;
-use sha1::Sha1;
+use sha1_smol::Sha1;
 
 pub fn osrs_cache() -> Cache {
     Cache::new("./data/osrs_cache").unwrap()
