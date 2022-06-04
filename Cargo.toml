@@ -1,6 +1,6 @@
 [package]
 name = "rs-cache"
-version = "0.8.2" # Remember to update usage
+version = "0.8.3" # Remember to update usage
 authors = ["jimvdl <jimvdlind@gmail.com>"]
 edition = "2021"
 license = "MIT"
