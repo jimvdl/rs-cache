@@ -14,8 +14,7 @@ This crate provides high performant data reads into the [Oldschool RuneScape](ht
 For read-heavy workloads, a writer can be used to prevent continuous buffer allocations.
 By default every read will allocate a writer with the correct capacity.
 
-RuneScape's chat system uses huffman coding to compress messages. In order to decompress them this library has
-a `Huffman` implementation.
+RuneScape’s chat system uses `Huffman` encoding to compress messages; this library contains a huffman implementation to decompress these messages.
 
 When a RuneScape client sends game packets the id's are encoded and can be decoded with the `IsaacRand`
 implementation. These id's are encoded by the client in a predictable random order which can be reversed if
@@ -42,22 +41,60 @@ A lot of types derive [serde](https://crates.io/crates/serde)'s `Serialize` and 
 
 ## Quick Start
 
+For an instance that stays local to this thread you can simply use:
 ```rust
 use rscache::Cache;
 
-fn main() -> Result<(), rscache::Error> {
-    let cache = Cache::new("./data/osrs_cache")?;
+fn main() {
+    let cache = Cache::new("./data/osrs_cache").unwrap();
 
     let index_id = 2; // Config index.
     let archive_id = 10; // Archive containing item definitions.
 
-    let buffer = cache.read(index_id, archive_id)?;
+    let buffer = cache.read(index_id, archive_id).unwrap();
 
     Ok(())
 }
 ```
 
-The [osrs specifications](osrs_specifications.md) and [rs3 specifications](rs3_specifications.md) documents contain a detailed description of the design of the corresponding cache for educational purposes. Both documents are still a work in progress and are possibly incomplete.
+If you want to share the instance over multiple threads you can do so by wrapping it in an [`Arc`](https://doc.rust-lang.org/std/sync/struct.Arc.html)
+```rust
+use rscache::Cache;
+use std::sync::Arc;
+
+fn main() {
+    let cache = Arc::new(Cache::new("./data/osrs_cache").unwrap());
+    
+    let c = Arc::clone(&cache);
+    std::thread::spawn(move || {
+        c.read(0, 10).unwrap();
+    });
+
+    std::thread::spawn(move || {
+        cache.read(0, 10).unwrap();
+    });
+}
+```
+
+The recommended usage would be to wrap it using [`lazy_static`](https://docs.rs/lazy_static/latest/lazy_static/) making it the easiest way to access cache data from anywhere and at any time. No need for an `Arc` or a `Mutex` because `Cache` will always be `Send` & `Sync`.
+```rust
+use rscache::Cache;
+use lazy_static::*;
+
+lazy_static! {
+    pub static ref CACHE: Cache = Cache::new("./data/osrs_cache").unwrap();
+}
+
+fn main() {
+    std::thread::spawn(move || {
+        CACHE.read(0, 10).unwrap();
+    });
+
+    std::thread::spawn(move || {
+        CACHE.read(0, 10).unwrap();
+    });
+}
+```
 
 Integration tests are running on Oldschool RuneScape version 180, which you can run at any time because the cache is included in the `./data/osrs_cache` directory. RS3 Integration tests are running on version 904. The RS3 cache is too large to include on GitHub.
 
@@ -70,7 +107,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rs-cache = "0.8"
+rs-cache = "0.8.4"
 ```
 
 Examples can be found in the [examples](examples/) directory which include both update protocols.
