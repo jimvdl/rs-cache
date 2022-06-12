@@ -42,7 +42,7 @@ pub trait FetchDefinition: Definition {
         D: Definition,
     {
         let buffer = cache.read(REFERENCE_TABLE_ID, index_id as u32)?.decode()?;
-        let archives = IndexMetadata::try_from(buffer)?;
+        let archives = IndexMetadata::from_buffer(buffer)?;
         let mut definitions = HashMap::new();
         for archive in &archives {
             let buffer = cache.read(index_id, archive.id)?.decode()?;
@@ -90,7 +90,7 @@ pub trait FetchDefinition: Definition {
         D: Definition,
     {
         let buffer = cache.read(REFERENCE_TABLE_ID, index_id as u32)?.decode()?;
-        let archives = IndexMetadata::try_from(buffer)?;
+        let archives = IndexMetadata::from_buffer(buffer)?;
         let entry_count = archives[archive_id as usize - 1].entry_count;
         let buffer = cache.read(index_id, archive_id)?.decode()?;
 

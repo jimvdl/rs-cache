@@ -99,7 +99,7 @@ use std::{io::Write, path::Path};
 /// A complete virtual representation of the RuneScape cache file system.
 #[derive(Debug)]
 pub struct Cache {
-    data: Dat2,
+    pub(crate) data: Dat2,
     pub(crate) indices: Indices,
 }
 

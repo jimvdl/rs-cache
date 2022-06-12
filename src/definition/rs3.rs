@@ -29,7 +29,7 @@ pub trait FetchDefinition: Definition {
         D: Definition,
     {
         let buffer = cache.read(REFERENCE_TABLE_ID, index_id as u32)?.decode()?;
-        let archives = IndexMetadata::try_from(buffer)?;
+        let archives = IndexMetadata::from_buffer(buffer)?;
 
         let mut definitions = std::collections::HashMap::new();
         let mut base_id = 0;
