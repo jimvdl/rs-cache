@@ -15,6 +15,10 @@ categories = ["development-tools", "filesystem"]
 [features]
 rs3 = ["whirlpool", "num-bigint", "rune-fs/rs3"]
 
+[[bench]]
+name = "578_cache"
+harness = false
+
 [[example]]
 name = "rs3_update_protocol"
 required-features = ["rs3"]
@@ -35,6 +39,9 @@ rune-fs = "0.1.4"
 [dev-dependencies]
 sha1_smol = "1.0.0"
 rune-fs = { version = "0.1.4", features = ["rs3"] }
+lazy_static = "1.4.0"
+criterion = "0.3"
+rand = "0.8"
 
 [package.metadata.docs.rs]
 all-features = true
