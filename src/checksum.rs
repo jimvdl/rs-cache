@@ -135,8 +135,8 @@ impl Checksum {
         let mut buffer = Vec::with_capacity(self.entries.len() * 8);
 
         for entry in self.entries {
-            buffer.extend(&u32::to_be_bytes(entry.crc));
-            buffer.extend(&u32::to_be_bytes(entry.version));
+            buffer.extend(u32::to_be_bytes(entry.crc));
+            buffer.extend(u32::to_be_bytes(entry.version));
         }
 
         // let mut buffer = codec::encode(Compression::None, &buffer, None)?;

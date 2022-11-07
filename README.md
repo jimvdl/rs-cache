@@ -45,14 +45,12 @@ For an instance that stays local to this thread you can simply use:
 ```rust
 use rscache::Cache;
 
-fn main() {
-    let cache = Cache::new("./data/osrs_cache").unwrap();
+let cache = Cache::new("./data/osrs_cache").unwrap();
 
-    let index_id = 2; // Config index.
-    let archive_id = 10; // Archive containing item definitions.
+let index_id = 2; // Config index.
+let archive_id = 10; // Archive containing item definitions.
 
-    let buffer = cache.read(index_id, archive_id).unwrap();
-}
+let buffer = cache.read(index_id, archive_id).unwrap();
 ```
 
 If you want to share the instance over multiple threads you can do so by wrapping it in an [`Arc`](https://doc.rust-lang.org/std/sync/struct.Arc.html)
@@ -60,18 +58,16 @@ If you want to share the instance over multiple threads you can do so by wrappin
 use rscache::Cache;
 use std::sync::Arc;
 
-fn main() {
-    let cache = Arc::new(Cache::new("./data/osrs_cache").unwrap());
-    
-    let c = Arc::clone(&cache);
-    std::thread::spawn(move || {
-        c.read(0, 10).unwrap();
-    });
+let cache = Arc::new(Cache::new("./data/osrs_cache").unwrap());
 
-    std::thread::spawn(move || {
-        cache.read(0, 10).unwrap();
-    });
-}
+let c = Arc::clone(&cache);
+std::thread::spawn(move || {
+    c.read(0, 10).unwrap();
+});
+
+std::thread::spawn(move || {
+    cache.read(0, 10).unwrap();
+});
 ```
 
 The recommended usage would be to wrap it using [`lazy_static`](https://docs.rs/lazy_static/latest/lazy_static/) making it the easiest way to access cache data from anywhere and at any time. No need for an `Arc` or a `Mutex` because `Cache` will always be `Send` & `Sync`.
@@ -83,15 +79,13 @@ static CACHE: Lazy<Cache> = Lazy::new(|| {
     Cache::new("./data/osrs_cache").unwrap()
 });
 
-fn main() {
-    std::thread::spawn(move || {
-        CACHE.read(0, 10).unwrap();
-    });
+std::thread::spawn(move || {
+    CACHE.read(0, 10).unwrap();
+});
 
-    std::thread::spawn(move || {
-        CACHE.read(0, 10).unwrap();
-    });
-}
+std::thread::spawn(move || {
+    CACHE.read(0, 10).unwrap();
+});
 ```
 
 Integration tests are running on Oldschool RuneScape version 180, which you can run at any time because the cache is included in the `./data/osrs_cache` directory. RS3 Integration tests are running on version 904. The RS3 cache is too large to include on GitHub.

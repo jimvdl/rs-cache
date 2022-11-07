@@ -293,6 +293,6 @@ fn post(obj_def: &mut ObjectDefinition) {
     }
 
     if obj_def.supports_items.is_none() {
-        obj_def.supports_items = Some(if obj_def.interact_type != 0 { 1 } else { 0 });
+        obj_def.supports_items = Some(u8::from(obj_def.interact_type != 0));
     }
 }
