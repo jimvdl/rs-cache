@@ -52,8 +52,6 @@ fn main() {
     let archive_id = 10; // Archive containing item definitions.
 
     let buffer = cache.read(index_id, archive_id).unwrap();
-
-    Ok(())
 }
 ```
 
@@ -79,11 +77,11 @@ fn main() {
 The recommended usage would be to wrap it using [`lazy_static`](https://docs.rs/lazy_static/latest/lazy_static/) making it the easiest way to access cache data from anywhere and at any time. No need for an `Arc` or a `Mutex` because `Cache` will always be `Send` & `Sync`.
 ```rust
 use rscache::Cache;
-use lazy_static::*;
+use once_cell::sync::Lazy;
 
-lazy_static! {
-    pub static ref CACHE: Cache = Cache::new("./data/osrs_cache").unwrap();
-}
+static CACHE: Lazy<Cache> = Lazy::new(|| {
+    Cache::new("./data/osrs_cache").unwrap()
+});
 
 fn main() {
     std::thread::spawn(move || {
