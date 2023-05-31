@@ -79,7 +79,6 @@ impl Checksum {
 
     fn entries(cache: &Cache) -> crate::Result<Vec<Entry>> {
         let entries: Vec<Entry> = (0..cache.indices.count())
-            .into_iter()
             .filter_map(|idx_id| cache.read(REFERENCE_TABLE_ID, idx_id as u32).ok())
             .enumerate()
             .map(|(idx_id, buffer)| -> crate::Result<Entry> {

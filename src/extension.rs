@@ -54,7 +54,7 @@ impl<T: Read> ReadExt for T {
         } else {
             let value = self.read_u8()?;
             let mut arr = [0; 2];
-            arr[0] = byte as u8;
+            arr[0] = byte;
             arr[1] = value;
 
             let value = u16::from_be_bytes(arr);
