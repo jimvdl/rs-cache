@@ -70,7 +70,7 @@ std::thread::spawn(move || {
 });
 ```
 
-The recommended usage would be to wrap it using [`lazy_static`](https://docs.rs/lazy_static/latest/lazy_static/) making it the easiest way to access cache data from anywhere and at any time. No need for an `Arc` or a `Mutex` because `Cache` will always be `Send` & `Sync`.
+The recommended usage would be to wrap it using [`once_cell`](https://docs.rs/once_cell/latest/once_cell/) making it the easiest way to access cache data from anywhere and at any time. No need for an `Arc` or a `Mutex` because `Cache` will always be `Send` & `Sync`.
 ```rust
 use rscache::Cache;
 use once_cell::sync::Lazy;
