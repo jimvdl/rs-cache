@@ -99,7 +99,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rs-cache = "0.8.5"
+rs-cache = "0.8.6"
 ```
 
 Examples can be found in the [examples](examples/) directory which include both update protocols.
