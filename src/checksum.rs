@@ -27,7 +27,7 @@ use std::iter::IntoIterator;
 use std::slice::Iter;
 
 use crate::{error::ValidateError, Cache};
-use nom::{combinator::cond, number::complete::be_u32};
+use nom::{combinator::cond, number::complete::be_u32, Parser};
 use runefs::{
     codec::{Buffer, Encoded},
     REFERENCE_TABLE_ID,
@@ -101,7 +101,7 @@ impl Checksum {
                     let checksum = crc32fast::hash(&buffer);
 
                     let data = buffer.decode()?;
-                    let (_, version) = cond(data[0] >= 6, be_u32)(&data[1..5])?;
+                    let (_, version) = cond(data[0] >= 6, be_u32).parse(&data[1..5])?;
                     let version = version.unwrap_or(0);
 
                     Ok(Entry {

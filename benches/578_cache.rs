@@ -1,6 +1,7 @@
 use rscache::Cache;
 use once_cell::sync::Lazy;
-use criterion::{ Criterion, criterion_group, criterion_main, black_box };
+use criterion::{ Criterion, criterion_group, criterion_main };
+use std::hint::black_box;
 use rand::Rng;
 
 
@@ -15,7 +16,7 @@ fn fetch_file_idx19_u32(id: u32) {
 
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("file_fetch_idx19_u32", |b| b.iter(
-        || fetch_file_idx19_u32(black_box(rand::thread_rng().gen_range(0..=15000))))
+        || fetch_file_idx19_u32(black_box(rand::rng().random_range(0..=15000))))
     );
 }
 

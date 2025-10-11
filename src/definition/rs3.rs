@@ -35,7 +35,7 @@ pub trait FetchDefinition: Definition {
         let mut base_id = 0;
 
         for archive in &archives {
-            let buffer = cache.read(index_id, archive.id as u32)?.decode()?;
+            let buffer = cache.read(index_id, archive.id)?.decode()?;
 
             let archive_group = ArchiveFileGroup::from_buffer(&buffer, archive.entry_count);
 

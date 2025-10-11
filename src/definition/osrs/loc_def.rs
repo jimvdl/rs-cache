@@ -64,7 +64,6 @@ fn decode_buffer(id: u16, mut buffer: &[u8]) -> crate::Result<LocationDefinition
 
         loop {
             let (buf, pos_offset) = be_u16_smart(buffer)?;
-            let pos_offset = pos_offset;
             buffer = buf;
 
             if pos_offset == 0 {

@@ -28,7 +28,7 @@ fn main() -> Result<(), rscache::Error> {
         IncomingUpdatePacket {
             index_id,
             archive_id,
-        } => cache.read(index_id, archive_id as u32).map(|mut buffer| {
+        } => cache.read(index_id, archive_id).map(|mut buffer| {
             if index_id != 255 {
                 let len = buffer.len();
                 buffer.truncate(len - 2);

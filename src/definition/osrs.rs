@@ -27,7 +27,7 @@ pub trait Definition: Sized {
 /// The main difference between `fetch_from_index` and `fetch_from_archive`:
 /// - `fetch_from_index` will get only 1 definition from each archive making it a 1:1 relation.
 /// - `fetch_from_archive` will get multiple definitions from each archive making it a N:1 relation
-/// where N is atleast 1.
+///   where N is atleast 1.
 pub trait FetchDefinition: Definition {
     // TODO: finish documentation with example.
     /// Fetches multiple definitions from every archive in the index.

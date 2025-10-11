@@ -169,14 +169,14 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<NpcDefini
             }
             106 => {
                 let varbit_id = reader.read_u16()?;
-                npc_def.varbit_id = if varbit_id == std::u16::MAX {
+                npc_def.varbit_id = if varbit_id == u16::MAX {
                     None
                 } else {
                     Some(varbit_id)
                 };
 
                 let varp_index = reader.read_u16()?;
-                npc_def.varp_index = if varp_index == std::u16::MAX {
+                npc_def.varp_index = if varp_index == u16::MAX {
                     None
                 } else {
                     Some(varp_index)
@@ -193,14 +193,14 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<NpcDefini
             111 => npc_def.pet = true,
             118 => {
                 let varbit_id = reader.read_u16()?;
-                npc_def.varbit_id = if varbit_id == std::u16::MAX {
+                npc_def.varbit_id = if varbit_id == u16::MAX {
                     None
                 } else {
                     Some(varbit_id)
                 };
 
                 let varp_index = reader.read_u16()?;
-                npc_def.varp_index = if varp_index == std::u16::MAX {
+                npc_def.varp_index = if varp_index == u16::MAX {
                     None
                 } else {
                     Some(varp_index)

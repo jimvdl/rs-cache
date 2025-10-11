@@ -206,13 +206,13 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ObjectDef
             }
             77 => {
                 let varp_id = reader.read_u16()?;
-                obj_def.model_data.varp_id = if varp_id == std::u16::MAX {
+                obj_def.model_data.varp_id = if varp_id == u16::MAX {
                     None
                 } else {
                     Some(varp_id)
                 };
                 let config_id = reader.read_u16()?;
-                obj_def.config_id = if config_id == std::u16::MAX {
+                obj_def.config_id = if config_id == u16::MAX {
                     None
                 } else {
                     Some(config_id)
@@ -244,14 +244,14 @@ fn decode_buffer(id: u16, reader: &mut BufReader<&[u8]>) -> io::Result<ObjectDef
             }
             92 => {
                 let varp_id = reader.read_u16()?;
-                obj_def.model_data.varp_id = if varp_id == std::u16::MAX {
+                obj_def.model_data.varp_id = if varp_id == u16::MAX {
                     None
                 } else {
                     Some(varp_id)
                 };
 
                 let config_id = reader.read_u16()?;
-                obj_def.config_id = if config_id == std::u16::MAX {
+                obj_def.config_id = if config_id == u16::MAX {
                     None
                 } else {
                     Some(config_id)

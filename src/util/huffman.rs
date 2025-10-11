@@ -88,7 +88,7 @@ impl Huffman {
 
                 i_11 = 0;
                 while i_11 < b_6 as i32 {
-                    i_12_1 = ((i32::min_value()) as u32 >> i_11) as i32;
+                    i_12_1 = (i32::MIN as u32 >> i_11) as i32;
                     if i_8 & i_12_1 != 0 {
                         if keys[i_10 as usize] == 0 {
                             keys[i_10 as usize] = i_4;
