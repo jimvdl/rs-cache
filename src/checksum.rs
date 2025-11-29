@@ -23,7 +23,7 @@
 //! # }
 //! ```
 
-use std::iter::IntoIterator;
+use std::{borrow::Borrow, iter::IntoIterator};
 use std::slice::Iter;
 
 use crate::{error::ValidateError, Cache};
@@ -123,7 +123,7 @@ impl Checksum {
     /// 
     /// Note: It defaults to OSRS. RS3 clients use RSA to encrypt
     /// network traffic, which includes the checksum. When encoding for RS3 clients
-    /// use [`RsaChecksum`](RsaChecksum) instead.
+    /// use [`RsaChecksum`] instead.
     ///
     /// After encoding the checksum it can be sent to the client.
     ///
@@ -165,13 +165,32 @@ impl Checksum {
 
     /// Validates the given crcs from the client with the internal crcs of this cache.
     /// 
+    /// ```
+    /// # use rscache::{Cache, error::Error};
+    /// # use rscache::checksum::Checksum;
+    /// # fn main() -> Result<(), Error> {
+    /// # let cache = Cache::new("./data/osrs_cache")?;
+    /// let checksum = Checksum::new(&cache)?;
+    ///
+    /// let crcs = [
+    ///     1593884597, 1029608590, 16840364, 4209099954, 3716821437, 165713182, 686540367, 4262755489,
+    ///     2208636505, 3047082366, 586413816, 2890424900, 3411535427, 3178880569, 153718440,
+    ///     3849392898, 3628627685, 2813112885, 1461700456, 2751169400, 2927815226,
+    /// ];
+    ///
+    /// assert!(checksum.validate(crcs).is_ok());
+    /// # Ok(())
+    /// # }
+    /// ```
+    /// 
     /// # Errors
     /// 
     /// When the lengths of the crc iterators don't match up because too many or too few indices 
     /// were shared between the client and the server, or if a crc value mismatches.
-    pub fn validate<'b, I>(&self, crcs: I) -> Result<(), ValidateError>
+    pub fn validate<I>(&self, crcs: I) -> Result<(), ValidateError>
     where
-        I: IntoIterator<Item = &'b u32>,
+        I: IntoIterator,
+        I::Item: Borrow<u32>,
         <I as IntoIterator>::IntoIter: ExactSizeIterator,
     {
         let crcs = crcs.into_iter();
@@ -189,11 +208,11 @@ impl Checksum {
             .zip(crcs)
             .enumerate()
         {
-            if internal != external {
+            if internal != external.borrow() {
                 return Err(ValidateError::InvalidCrc {
                     idx: index,
                     internal: *internal,
-                    external: *external,
+                    external: *external.borrow(),
                 });
             }
         }

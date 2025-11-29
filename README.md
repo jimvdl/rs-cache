@@ -32,7 +32,11 @@ Useful links:\
 
 ## Safety
 
-In order to read bytes in a high performant way the cache uses [memmap2](https://crates.io/crates/memmap2). This can be unsafe because of its potential for _Undefined Behaviour_ when the underlying file is subsequently modified, in or out of process. Using `Mmap` here is safe because the RuneScape cache is a read-only binary file system. The map will remain valid even after the `File` is dropped, it's completely independent of the `File` used to create it. Therefore, the use of unsafe is not propagated outwards. When the `Cache` is dropped memory will be subsequently unmapped.
+In order to read bytes in a high performant way the cache uses
+[memmap2](https://crates.io/crates/memmap2). This can be unsafe because of its potential for
+_Undefined Behaviour_ when the underlying file is subsequently modified, in or out of process. 
+
+Using `Mmap` here is safe because the RuneScape cache is a read-only binary file system. The map will remain valid even after the `File` is dropped, it's completely independent of the `File` used to create it. Therefore, the use of unsafe is not propagated outwards. When the `Cache` is dropped memory will be subsequently unmapped.
 
 ## Features
 
@@ -41,50 +45,63 @@ A lot of types derive [serde](https://crates.io/crates/serde)'s `Serialize` and 
 
 ## Quick Start
 
+The recommended usage would be to wrap it using
+[`std::sync::LazyLock`](https://doc.rust-lang.org/std/sync/struct.LazyLock.html) making it the
+easiest way to access cache data from anywhere and at any time. No need for an `Arc` or a `Mutex`
+because `Cache` will always be `Send + Sync`.
+```rust
+use rscache::Cache;
+use std::sync::LazyLock;
+
+static CACHE: LazyLock<Cache> = LazyLock::new(|| {
+    Cache::new("./data/osrs_cache")
+        .expect("cache files to be successfully memory mapped")
+});
+
+std::thread::spawn(|| -> Result<(), rscache::Error> {
+    let buffer = CACHE.read(0, 10)?;
+    Ok(())
+});
+
+std::thread::spawn(|| -> Result<(), rscache::Error> {
+    let buffer = CACHE.read(0, 10)?;
+    Ok(())
+});
+```
+
 For an instance that stays local to this thread you can simply use:
 ```rust
 use rscache::Cache;
 
-let cache = Cache::new("./data/osrs_cache").unwrap();
+let cache = Cache::new("./data/osrs_cache")
+        .expect("cache files to be successfully memory mapped");
 
 let index_id = 2; // Config index.
 let archive_id = 10; // Archive containing item definitions.
 
-let buffer = cache.read(index_id, archive_id).unwrap();
+let buffer = cache.read(index_id, archive_id)?;
 ```
 
-If you want to share the instance over multiple threads you can do so by wrapping it in an [`Arc`](https://doc.rust-lang.org/std/sync/struct.Arc.html)
+If you want to share the instance over multiple threads you can do so by wrapping it in an
+[`Arc`](https://doc.rust-lang.org/std/sync/struct.Arc.html)
 ```rust
 use rscache::Cache;
 use std::sync::Arc;
 
-let cache = Arc::new(Cache::new("./data/osrs_cache").unwrap());
-
+let cache = Arc::new(Cache::new("./data/osrs_cache")
+        .expect("cache files to be successfully memory mapped"));
+    
 let c = Arc::clone(&cache);
-std::thread::spawn(move || {
-    c.read(0, 10).unwrap();
+std::thread::spawn(move || -> Result<(), rscache::Error> {
+    // use the cloned handle
+    let buffer = c.read(0, 10)?;
+    Ok(())
 });
-
-std::thread::spawn(move || {
-    cache.read(0, 10).unwrap();
-});
-```
-
-The recommended usage would be to wrap it using [`once_cell`](https://docs.rs/once_cell/latest/once_cell/) making it the easiest way to access cache data from anywhere and at any time. No need for an `Arc` or a `Mutex` because `Cache` will always be `Send` & `Sync`.
-```rust
-use rscache::Cache;
-use once_cell::sync::Lazy;
-
-static CACHE: Lazy<Cache> = Lazy::new(|| {
-    Cache::new("./data/osrs_cache").unwrap()
-});
-
-std::thread::spawn(move || {
-    CACHE.read(0, 10).unwrap();
-});
-
-std::thread::spawn(move || {
-    CACHE.read(0, 10).unwrap();
+ 
+std::thread::spawn(move || -> Result<(), rscache::Error> {
+    // use handle directly and take ownership
+    let buffer = cache.read(0, 10)?;
+    Ok(())
 });
 ```
 
@@ -99,7 +116,7 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-rs-cache = "0.8.6"
+rs-cache = "0.8.8"
 ```
 
 Examples can be found in the [examples](examples/) directory which include both update protocols.
