@@ -16,6 +16,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: check
+          args: --all-features
 
   clippy:
     name: Clippy
@@ -31,3 +32,12 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: clippy
+          args: --all-features
+  
+  msrv:
+    name: MSRV
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: taiki-e/install-action@cargo-hack
+    - run: cargo hack check --rust-version --feature-powerset --all-targets
